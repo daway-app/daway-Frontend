@@ -114,7 +114,13 @@ export function createApiClient(deps: ApiClientDeps) {
       ...options.headers,
     };
 
-    if (options.body !== undefined) {
+    // `FormData` must NOT be JSON-encoded, and its Content-Type must be left
+    // unset so the browser adds the multipart boundary itself. Setting it by
+    // hand produces a body the server cannot parse.
+    const isFormData =
+      typeof FormData !== 'undefined' && options.body instanceof FormData;
+
+    if (options.body !== undefined && !isFormData) {
       headers['Content-Type'] = 'application/json';
     }
 
@@ -135,7 +141,12 @@ export function createApiClient(deps: ApiClientDeps) {
       return await doFetch(buildUrl(baseUrl, path, options.query), {
         method: options.method ?? 'GET',
         headers,
-        body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+        body:
+          options.body === undefined
+            ? undefined
+            : isFormData
+              ? (options.body as FormData)
+              : JSON.stringify(options.body),
         signal: controller.signal,
       });
     } finally {
@@ -231,6 +242,30 @@ export function createApiClient(deps: ApiClientDeps) {
   }
 
   return {
+    /**
+     * The resolved API origin. Exposed so callers can build URLs for things the
+     * JSON client cannot handle.
+     */
+    baseUrl,
+
+    /**
+     * Authenticated BINARY download.
+     *
+     * The xlsx template route sits behind `auth:sanctum` + `role:pharmacy`, so a
+     * plain `<a href>` cannot be used — the browser would send no `Authorization`
+     * header and the request would 401. This fetches with the token and returns
+     * the body as a Blob for the caller to save.
+     */
+    async download(path: string): Promise<Blob> {
+      const headers: Record<string, string> = { Accept: '*/*' };
+      const token = deps.getToken();
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await doFetch(buildUrl(baseUrl, path), { headers });
+      if (!res.ok) throw await toApiError(res);
+      return res.blob();
+    },
+
     request,
 
     get: <T>(path: string, options?: Omit<RequestOptions, 'method' | 'body'>) =>

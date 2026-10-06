@@ -1,0 +1,729 @@
+/* ==========================================================
+   Daway Pharmacy Hub — ph-* family
+   ==========================================================
+   Source: daway-backend/resources/css/pages/pharmacy_hub.css
+   Values are copied verbatim from Blade. Local --ph-* tokens are
+   aliases into tokens.css (the single source of truth) — no new
+   colour values are introduced here.
+   ========================================================== */
+
+:root {
+    --ph-teal:      var(--teal-primary);
+    --ph-teal-deep: var(--teal-deep);
+    --ph-teal-text: var(--teal-text);
+    --ph-teal-mist: var(--teal-mist);
+    --ph-ink:        var(--ink);
+    --ph-ink-soft:   var(--ink-soft);
+    --ph-ink-faint:  var(--ink-faint);
+    --ph-line:       var(--line);
+    --ph-line-soft:  var(--line-soft);
+    --ph-paper:      var(--paper);
+    --ph-canvas:     var(--canvas);
+    --ph-green:      var(--success);
+    --ph-green-bg:   var(--success-bg);
+    --ph-orange:     var(--warning);
+    --ph-orange-bg:  var(--warning-bg);
+    --ph-red:        var(--danger);
+    --ph-red-bg:     var(--danger-bg);
+    --ph-blue:       var(--info);
+    --ph-blue-bg:    var(--info-bg);
+    --ph-green-text:  var(--success-text);
+    --ph-orange-text: var(--warning-text);
+    --ph-red-text:    var(--danger-text);
+    --ph-blue-text:   var(--info-text);
+    --ph-r-sm: 8px; --ph-r-md: 12px; --ph-r-lg: 16px; --ph-r-xl: 20px;
+    --ph-r-full: 9999px;
+    --ph-r-pill: 9999px;
+    --ph-sh:    var(--sh-sm);
+    --ph-sh-sm: var(--sh-sm);
+    --ph-sh-md: 0 8px 24px rgba(21,94,133,.10);
+    --ph-sh-lg: var(--sh-lg);
+    --ph-tr: 200ms var(--ease);
+}
+
+html.dark-mode,
+body.dark-mode {
+    --ph-green:  #4ADE80;  --ph-green-bg:  #0E3226;
+    --ph-orange: #FBBF24;  --ph-orange-bg: #3A2E14;
+    --ph-red:    #F87171;  --ph-red-bg:    #3A1D1D;
+    --ph-blue:   #60A5FA;  --ph-blue-bg:   #12283C;
+}
+
+.ph-page { padding: 24px; color: var(--ph-ink); }
+@media(max-width:768px){ .ph-page { padding: 16px; } }
+
+.ph-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-block-end: 24px; flex-wrap: wrap; }
+.ph-head h1 { font-size: 1.7rem; margin: 0; font-weight: 700; }
+.ph-head p { margin: 4px 0 0; color: var(--ph-ink-faint); }
+.ph-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/*
+ * AUDIT B-5 FIX — `.ph-page-title` was used by 19 call sites (PageHeader plus
+ * every standalone accounting page header) but defined NOWHERE, in this file or
+ * in the Blade CSS it was ported from. Standalone uses (cash, refunds/*, sales
+ * pages — those WITHOUT a wrapping `.ph-head`) therefore rendered their <h1>
+ * with raw browser defaults, and their `.subtitle` paragraph completely
+ * unstyled.
+ *
+ * Rather than delete the hook (which would leave `.ph-head h1` as the only rule
+ * and silently change nothing for the standalone pages), it is now a real,
+ * owning definition. The `:not(.ph-head *)` guard would be ideal but has poor
+ * support, so precedence is controlled by keeping these two selectors at equal
+ * specificity and letting source order decide — `.ph-head h1` is more specific
+ * (0,2,1 vs 0,1,1) and still wins inside a `.ph-head`, so nesting is harmless.
+ */
+.ph-page-title h1 { font-size: 1.7rem; margin: 0; font-weight: 700; }
+.ph-page-title .subtitle,
+.ph-page-title p { margin: 4px 0 0; color: var(--ph-ink-faint); }
+.ph-page-title:not(.ph-head .ph-page-title) { margin-block-end: 24px; }
+
+.ph-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-block-end: 24px; }
+.ph-stat { background: var(--ph-paper); border: 1px solid var(--ph-line-soft); border-radius: var(--ph-r-lg); padding: 18px; display: flex; align-items: center; gap: 14px; box-shadow: var(--ph-sh); transition: var(--ph-tr); }
+.ph-stat:hover { transform: translateY(-2px); box-shadow: var(--ph-sh-md); }
+.ph-stat i { width: 46px; height: 46px; border-radius: var(--ph-r-full); display: grid; place-items: center; font-size: 1.2rem; flex-shrink: 0; }
+.ph-stat .teal { background: var(--ph-teal-mist); color: var(--ph-teal-text); }
+.ph-stat .green { background: var(--ph-green-bg); color: var(--ph-green-text); }
+.ph-stat .orange { background: var(--ph-orange-bg); color: var(--ph-orange-text); }
+.ph-stat .red { background: var(--ph-red-bg); color: var(--ph-red-text); }
+.ph-stat .blue { background: var(--ph-blue-bg); color: var(--ph-blue-text); }
+.ph-stat .gray { background: var(--ph-line-soft); color: var(--ph-ink-soft); }
+.ph-stat div { display: flex; flex-direction: column; gap: 2px; }
+.ph-stat strong { font-size: 1.6rem; line-height: 1; }
+.ph-stat span { font-size: .85rem; color: var(--ph-ink-faint); }
+
+.ph-card { background: var(--ph-paper); border: 1px solid var(--ph-line-soft); border-radius: var(--ph-r-lg); box-shadow: var(--ph-sh); overflow: hidden; margin-block-end: 20px; }
+.ph-card-head { padding: 18px 22px; border-block-end: 1px solid var(--ph-line-soft); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ph-card-head h2 { font-size: 1.05rem; margin: 0; display: flex; align-items: center; gap: 10px; }
+.ph-card-head h2 i, .ph-card-head h2 svg { color: var(--ph-teal-text); }
+.ph-card-head p { margin: 4px 0 0; font-size: .82rem; color: var(--ph-ink-faint); flex-basis: 100%; }
+.ph-card-body { padding: 22px; }
+
+.ph-donut-wrap { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.ph-donut-chart { position: relative; flex: 0 0 200px; height: 200px; }
+.ph-donut-chart canvas { width: 100% !important; height: 100% !important; }
+.ph-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+.ph-donut-center strong { font-size: 1.5rem; color: var(--ph-ink); line-height: 1; }
+.ph-donut-center span { font-size: .8rem; color: var(--ph-ink-faint); margin-block-start: 4px; }
+
+.ph-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 160px; }
+.ph-legend li { display: flex; align-items: center; gap: 8px; font-size: .85rem; color: var(--ph-ink-soft); }
+.ph-legend li b { margin-inline-start: auto; color: var(--ph-ink); font-weight: 700; }
+.ph-legend .dot { width: 9px; height: 9px; border-radius: var(--ph-r-full); flex-shrink: 0; }
+
+.ph-inquiry-mini { padding: 12px 0; border-block-end: 1px solid var(--ph-line-soft); }
+.ph-inquiry-mini:last-child { border-block-end: none; }
+.ph-inquiry-mini .who { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-block-end: 4px; }
+.ph-inquiry-mini .who strong { font-size: .9rem; }
+.ph-inquiry-mini .who span { font-size: .78rem; color: var(--ph-ink-faint); }
+.ph-inquiry-mini p { margin: 0; font-size: .85rem; color: var(--ph-ink-soft); }
+
+.ph-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .92rem; }
+.ph-table th { background: var(--ph-canvas); color: var(--ph-ink-soft); font-weight: 600; padding: 14px 18px; text-align: start; border-block-end: 1px solid var(--ph-line); white-space: nowrap; }
+.ph-table td { padding: 14px 18px; border-block-end: 1px solid var(--ph-line-soft); vertical-align: middle; }
+.ph-table tr:last-child td { border-block-end: none; }
+.ph-table tr:hover td { background: rgba(123,193,183,.04); }
+.ph-table-wrap { overflow-x: auto; }
+
+.ph-med-thumb { width: 44px; height: 44px; border-radius: var(--ph-r-md); background: var(--ph-canvas); border: 1px solid var(--ph-line-soft); display: grid; place-items: center; overflow: hidden; flex-shrink: 0; }
+.ph-med-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+.ph-med-thumb i { color: var(--ph-teal-text); font-size: 1.1rem; }
+
+.ph-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: var(--ph-r-full); font-size: .78rem; font-weight: 700; white-space: nowrap; }
+.ph-badge::before { content: ''; width: 7px; height: 7px; border-radius: var(--ph-r-full); }
+.ph-badge.ok { background: var(--ph-green-bg); color: var(--ph-green-text); }
+.ph-badge.ok::before { background: var(--ph-green); }
+.ph-badge.low { background: var(--ph-orange-bg); color: var(--ph-orange-text); }
+.ph-badge.low::before { background: var(--ph-orange); }
+.ph-badge.out { background: var(--ph-red-bg); color: var(--ph-red-text); }
+.ph-badge.out::before { background: var(--ph-red); }
+.ph-badge.new { background: var(--ph-teal-mist); color: var(--ph-teal-text); }
+.ph-badge.new::before { background: var(--ph-teal-text); }
+.ph-badge.ans { background: var(--ph-blue-bg); color: var(--ph-blue-text); }
+.ph-badge.ans::before { background: var(--ph-blue); }
+.ph-badge.closed { background: var(--ph-line-soft); color: var(--ph-ink-faint); }
+.ph-badge.closed::before { background: var(--ph-ink-faint); }
+
+.ph-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border-radius: var(--ph-r-md); font-weight: 600; font-size: .9rem; border: 1px solid transparent; cursor: pointer; transition: var(--ph-tr); text-decoration: none; line-height: 1; white-space: nowrap; }
+.ph-btn.primary { background: var(--ph-teal); color: #fff; border-color: transparent; }
+.ph-btn.primary:hover { background: var(--ph-teal-deep); }
+.ph-btn.outline { background: transparent; color: var(--ph-teal-text); border-color: var(--ph-teal-text); }
+.ph-btn.outline:hover { background: var(--ph-teal-mist); }
+.ph-btn.ghost { background: transparent; color: var(--ph-ink-soft); border-color: var(--line-strong); }
+.ph-btn.ghost:hover { background: var(--ph-canvas); }
+.ph-btn.danger { background: var(--ph-red-bg); color: var(--ph-red-text); border-color: transparent; }
+.ph-btn.danger:hover { background: var(--ph-red); color: #fff; }
+body.dark-mode .ph-btn.danger { border-color: var(--danger-text); }
+body.dark-mode .ph-btn.danger:hover { background: var(--danger-strong); border-color: var(--danger-strong); }
+.ph-btn.sm { padding: 7px 12px; font-size: .82rem; }
+.ph-btn.xs { font-size: .72rem; padding: 4px 8px; border-radius: var(--ph-r-sm); }
+.ph-btn.icon { width: 34px; height: 34px; padding: 0; }
+
+.ph-filters { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-block-end: 20px; flex-wrap: wrap; }
+
+/*
+  🔴 إصلاح React (خلل موروث من Blade):
+
+  قوالب Blade تضع أدوات التصفية داخل `<form>`:
+      <div class="ph-filters ac-filters"><form> <input> <select> <button> </form></div>
+  لكن لا `.ph-filters` ولا `ac-filters` يعرّف أي قاعدة لـ`form` الداخلية.
+  النتيجة: الـ`form` يصبح عنصر flex وحيدًا بعرض محتواه الأدنى، وحقل البحث
+  (`input` بلا `width`) ينكمش إلى عرض شبه معدوم — يظهر مربّعًا صغيرًا لا
+  يمكن الكتابة فيه عمليًا. يظهر بوضوح في صفحتي «المرتجعات» و«الصندوق»
+  حيث الأدوات قليلة، ويختفي في «المبيعات» لأن أدواتها أطول فتُملأ الصف.
+
+  الإصلاح: نجعل الـ`form` صفَّ flex يملأ المساحة المتاحة ويتولّى المحاذاة
+  بنفسه، مع حدٍّ أدنى معقول لحقل البحث. لا تغيير بصري مقصود سوى أن الحقول
+  تأخذ حجمها الطبيعي.
+*/
+.ph-filters form {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.ph-filters form .ph-input,
+.ph-filters form input[type="text"],
+.ph-filters form input[type="search"] {
+    flex: 1 1 220px;
+    min-width: 180px;
+}
+.ph-filters form select { flex: 0 0 auto; }
+
+.ph-filter-chips { display: inline-flex; gap: 6px; flex-wrap: wrap; background: var(--ph-canvas); padding: 4px; border-radius: var(--ph-r-pill); }
+.ph-chip { padding: 6px 14px; border-radius: var(--ph-r-pill); font-size: .82rem; font-weight: 600; color: var(--ph-ink-soft); text-decoration: none; transition: var(--ph-tr); white-space: nowrap; }
+.ph-chip:hover { background: var(--ph-paper); color: var(--ph-ink); }
+.ph-chip.active { background: var(--ph-teal); color: #fff; }
+
+.ph-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.ph-tab { padding: 8px 16px; border-radius: var(--ph-r-full); border: 1px solid var(--ph-line); background: var(--ph-paper); color: var(--ph-ink-soft); font-weight: 600; font-size: .85rem; cursor: pointer; transition: var(--ph-tr); }
+.ph-tab:hover { border-color: var(--ph-teal-text); color: var(--ph-teal-text); }
+.ph-tab.active { background: var(--ph-teal); color: #fff; border-color: var(--ph-teal); }
+
+.ph-search { position: relative; min-width: 260px; }
+.ph-search input { width: 100%; padding: 10px 14px 10px 38px; border: 1px solid var(--line-strong); border-radius: var(--ph-r-full); background: var(--ph-paper); color: var(--ph-ink); font-size: .9rem; outline: none; }
+.ph-search input:focus { border-color: var(--ph-teal-text); }
+.ph-search i, .ph-search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--ph-ink-faint); pointer-events: none; }
+html[dir='rtl'] .ph-search input { padding: 10px 38px 10px 14px; }
+html[dir='rtl'] .ph-search i, html[dir='rtl'] .ph-search svg { left: auto; right: 14px; }
+
+.ph-form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-block-end: 18px; }
+.ph-group { display: flex; flex-direction: column; gap: 6px; }
+.ph-group label { font-size: .85rem; font-weight: 600; color: var(--ph-ink-soft); }
+.ph-group label .req { color: var(--ph-red-text); }
+.ph-control, .ph-select, .ph-textarea { padding: 11px 14px; border: 1px solid var(--ph-line); border-radius: var(--ph-r-md); background: var(--ph-paper); color: var(--ph-ink); font-size: .95rem; outline: none; transition: var(--ph-tr); }
+.ph-control:focus, .ph-select:focus, .ph-textarea:focus { border-color: var(--ph-teal-text); box-shadow: 0 0 0 3px rgba(28,114,166,.12); }
+.ph-textarea { resize: vertical; min-height: 100px; }
+.ph-hint { font-size: .8rem; color: var(--ph-ink-faint); }
+
+.ph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+
+/* ----------------------------------------------------------
+   🔴 إصلاح React: `.ph-form-group` و`.ph-card-title` صنفان بلا نمط
+   ----------------------------------------------------------
+   تردان في قوالب المحاسبة لكن لا قاعدة لهما في Blade (لا في
+   pharmacy_hub.css ولا في pharmacy_accounting.css) ⇒ العنوان يلتصق
+   بالحافة، وحقل «سبب الإرجاع» يقع تحت نصّ التسمية بدل أن يتراصّا
+   عموديًا. نعرّفهما هنا كمجموعة حقل عادية (نفس نمط `.ph-group`).
+   ---------------------------------------------------------- */
+.ph-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+.ph-form-group label {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--ph-ink-soft);
+}
+.ph-form-group .ph-textarea,
+.ph-form-group .ph-control,
+.ph-form-group .ph-select {
+    width: 100%;
+    min-width: 0;
+}
+
+.ph-med { background: var(--ph-paper); border: 1px solid var(--ph-line-soft); border-radius: var(--ph-r-lg); box-shadow: var(--ph-sh); overflow: hidden; display: flex; flex-direction: column; transition: var(--ph-tr); }
+.ph-med:hover { transform: translateY(-3px); box-shadow: var(--ph-sh-md); }
+.ph-med-img { height: 150px; background: var(--ph-canvas); display: grid; place-items: center; border-block-end: 1px solid var(--ph-line-soft); overflow: hidden; }
+.ph-med-img img { width: 100%; height: 100%; object-fit: contain; padding: 16px; }
+.ph-med-img .fallback { font-size: 3rem; color: var(--ph-teal-text); }
+.ph-med-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.ph-med-body h3 { margin: 0; font-size: 1.05rem; }
+.ph-med-body p { margin: 0; font-size: .85rem; color: var(--ph-ink-faint); }
+.ph-med-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-block-start: auto; padding-block-start: 12px; border-block-start: 1px solid var(--ph-line-soft); }
+.ph-med-price { color: var(--ph-teal-text); font-weight: 700; }
+.ph-med-actions { display: flex; gap: 8px; }
+
+.ph-stepper { display: inline-flex; align-items: center; gap: 8px; }
+.ph-stepper button { width: 32px; height: 32px; border-radius: var(--ph-r-md); border: 1px solid var(--line-strong); background: var(--ph-paper); color: var(--ph-ink); cursor: pointer; display: grid; place-items: center; transition: var(--ph-tr); }
+.ph-stepper button:hover { background: var(--ph-teal-mist); border-color: var(--ph-teal-text); color: var(--ph-teal-text); }
+.ph-stepper input { width: 60px; text-align: center; padding: 6px; border: 1px solid var(--line-strong); border-radius: var(--ph-r-md); font-weight: 700; }
+.ph-stepper input::-webkit-outer-spin-button, .ph-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.ph-inquiry { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 0; border-block-end: 1px solid var(--ph-line-soft); }
+.ph-inquiry:last-child { border-block-end: none; }
+.ph-inquiry-info { flex: 1; }
+.ph-inquiry-info h4 { margin: 0 0 4px; font-size: .95rem; }
+.ph-inquiry-info p { margin: 0; font-size: .85rem; color: var(--ph-ink-faint); }
+.ph-inquiry-actions { display: flex; gap: 8px; }
+
+.ph-stars { color: var(--warning-text); }
+.ph-rating-card { background: var(--ph-paper); border: 1px solid var(--ph-line-soft); border-radius: var(--ph-r-lg); padding: 18px; box-shadow: var(--ph-sh); }
+.ph-rating-card .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-block-end: 10px; }
+.ph-rating-card .head strong { font-size: .95rem; }
+.ph-rating-card .head span { font-size: .8rem; color: var(--ph-ink-faint); }
+.ph-rating-card p { margin: 0; font-size: .9rem; color: var(--ph-ink-soft); line-height: 1.5; }
+
+.ph-empty { text-align: center; padding: 48px 20px; color: var(--ph-ink-faint); }
+.ph-empty i { font-size: 3rem; margin-block-end: 12px; color: var(--ph-teal-text); display: block; }
+.ph-empty h3 { margin: 0 0 8px; color: var(--ph-ink); }
+
+.ph-alt-detail { display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--ph-canvas); border-radius: var(--ph-r-md); border: 1px solid var(--ph-line-soft); }
+.ph-alt-detail .row { display: flex; align-items: center; justify-content: space-between; font-size: .85rem; }
+.ph-alt-detail .row span { color: var(--ph-ink-faint); }
+.ph-alt-notice { margin-block-start: 14px; padding: 12px 14px; background: var(--ph-orange-bg); color: #92610a; border-radius: var(--ph-r-md); font-size: .8rem; display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
+
+.ph-map { height: 320px; border-radius: var(--ph-r-lg); border: 1px solid var(--ph-line); overflow: hidden; background: var(--ph-canvas); }
+.ph-map-sm { height: 260px; }
+.ph-map-edit { height: 300px; }
+
+.ph-avatar-sm { width: 34px; height: 34px; border-radius: var(--ph-r-full); background: var(--ph-teal-mist); color: var(--ph-teal-text); display: inline-flex; align-items: center; justify-content: center; font-size: .78rem; font-weight: 700; flex-shrink: 0; }
+.ph-avatar { width: 90px; height: 90px; border-radius: var(--ph-r-full); object-fit: cover; border: 4px solid var(--ph-paper); box-shadow: var(--ph-sh); }
+.ph-banner { height: 170px; border-radius: var(--ph-r-lg); background: linear-gradient(135deg, var(--ph-teal), var(--ph-teal-deep)); display: flex; align-items: flex-start; padding: 24px; position: relative; margin-block-end: 50px; }
+.ph-banner .ph-avatar { position: absolute; inset-block-end: -40px; inset-inline-start: 30px; }
+.ph-banner h2 { margin: 0; color: #fff; font-size: 1.4rem; }
+.ph-banner p { margin: 4px 0 0; color: rgba(255,255,255,.85); font-size: .9rem; }
+
+.ph-hours .day-row { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(90px,1fr) minmax(90px,1fr); grid-template-areas: "day from to" "quick quick quick"; align-items: center; gap: 10px; padding: 14px 0; border-block-end: 1px solid var(--ph-line-soft); }
+.ph-hours .day-row label { grid-area: day; }
+.ph-hours .day-row .ph-group:nth-child(2) { grid-area: from; }
+.ph-hours .day-row .ph-group:nth-child(3) { grid-area: to; }
+.ph-hours .day-row .day-quick { grid-area: quick; justify-content: flex-start; }
+.ph-hours .day-row:last-child { border-block-end: none; }
+.ph-hours .day-row .day-quick { display: flex; gap: 6px; justify-content: flex-start; flex-wrap: wrap; }
+.ph-hours-quickbar { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 0 14px; margin-block-end: 6px; border-block-end: 1px dashed var(--ph-line-soft); }
+.ph-hours label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; }
+.ph-hours input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--ph-teal-text); }
+.ph-hours input[type=time] { width: 100%; min-width: 0; box-sizing: border-box; }
+
+.ph-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
+body.ph-modal-open { overflow: hidden; }
+.ph-modal-overlay.active { display: flex; }
+.ph-modal { background: var(--ph-paper); border-radius: var(--ph-r-lg); width: 100%; max-width: 560px; max-height: 90vh; overflow: auto; box-shadow: var(--ph-sh-lg); }
+.ph-modal-head { padding: 18px 22px; border-block-end: 1px solid var(--ph-line-soft); display: flex; align-items: center; justify-content: space-between; }
+.ph-modal-head h3 { margin: 0; font-size: 1.1rem; }
+.ph-modal-body { padding: 22px; }
+.ph-modal-foot { padding: 18px 22px; border-block-start: 1px solid var(--ph-line-soft); display: flex; justify-content: flex-end; gap: 10px; }
+.ph-close { background: none; border: none; font-size: 1.4rem; color: var(--ph-ink-faint); cursor: pointer; }
+
+.ph-text-action { background: none; border: none; color: var(--ph-teal-text); font-weight: 600; font-size: .85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; padding: 0; }
+.ph-text-action:hover { text-decoration: underline; }
+.ph-text-action i { color: var(--ph-teal-text); }
+.ph-logo-preview { width: 120px; height: 120px; border-radius: var(--ph-r-full); object-fit: cover; border: 1px solid var(--ph-line); margin-inline: auto; display: block; }
+
+/*
+  Blade patched the column order with `.ph-profile-grid .ph-profile-main { order: -1 }`
+  because it declared `side` before `main`. In React the DOM order is already
+  `main` then `side`, so the override is removed entirely — no `order`, correct
+  tab order, and both grid modes (2-column and the ≤900px single column) stack
+  exactly like the intended design without fighting an override.
+*/
+.ph-profile-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
+.ph-complete-grid { grid-template-columns: 1fr 340px; }
+@media(max-width:900px){ .ph-complete-grid { grid-template-columns: 1fr; } .ph-profile-grid { grid-template-columns: 1fr; } }
+.ph-profile-grid .ph-control, .ph-profile-grid .ph-select { width: 100%; min-width: 0; box-sizing: border-box; }
+/*
+  Blade applied `width:100%` to `.ph-control`/`.ph-select` inside the profile grid
+  but NOT to `.ph-textarea`, and also left `.ph-group` as a flex column without
+  `min-width:0`. The address textarea therefore sized to its content width and the
+  grid item refused to shrink, clipping the field. Both are fixed here.
+*/
+.ph-profile-grid .ph-textarea { width: 100%; min-width: 0; box-sizing: border-box; }
+.ph-profile-grid .ph-group { min-width: 0; }
+.ph-profile-grid > * { min-width: 0; }
+
+.ph-hours-compact { display: flex; flex-direction: column; }
+.ph-hours-compact .hc-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-block-end: 1px solid var(--ph-line-soft); font-size: .9rem; }
+.ph-hours-compact .hc-row:last-child { border-block-end: none; }
+.ph-hours-compact .hc-day { font-weight: 600; color: var(--ph-ink); }
+.ph-hours-compact .hc-time { color: var(--ph-ink-soft); flex: 1; text-align: center; font-variant-numeric: tabular-nums; }
+.ph-hours-compact .hc-row i { color: var(--ph-ink-faint); }
+
+.ph-hours-list { display: flex; flex-direction: column; gap: 10px; }
+.ph-hours-chips { display: flex; gap: 10px; margin-block-end: 4px; }
+.ph-chip-accent { background: var(--ph-teal-mist); border-color: var(--ph-teal-mist); }
+.ph-chip-label { font-size: .72rem; color: var(--ph-ink-faint); margin-block-end: 2px; }
+.ph-chip-accent .ph-chip-label { color: var(--ph-teal-text); }
+.ph-chip-value { font-size: .9rem; font-weight: 600; color: var(--ph-ink); font-variant-numeric: tabular-nums; }
+.ph-day-card { border: 1px solid var(--ph-line-soft); border-radius: var(--ph-r-md); padding: 14px 16px; }
+.ph-day-top { display: flex; align-items: center; gap: 10px; }
+.ph-day-name { font-size: .95rem; font-weight: 600; color: var(--ph-ink); min-width: 60px; }
+.ph-day-status { flex: 1; font-size: .85rem; color: var(--ph-ink-soft); font-variant-numeric: tabular-nums; }
+.ph-switch { position: relative; width: 44px; height: 24px; flex-shrink: 0; display: inline-block; }
+.ph-switch-input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+.ph-switch-knob { position: absolute; inset: 0; border-radius: 999px; background: var(--ph-line); transition: background .2s; display: block; }
+.ph-switch-knob::after { content: ''; position: absolute; top: 2px; inset-inline-start: 2px; width: 20px; height: 20px; border-radius: 50%; background: var(--paper); box-shadow: var(--ph-sh-sm); transition: transform .2s; }
+.ph-switch-input:checked + .ph-switch-knob { background: var(--ph-teal); }
+.ph-switch-input:checked + .ph-switch-knob::after { transform: translateX(-20px); }
+[dir='ltr'] .ph-switch-input:checked + .ph-switch-knob::after { transform: translateX(20px); }
+.ph-day-controls { display: flex; align-items: center; gap: 10px; margin-block-start: 12px; }
+.ph-day-24 { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--ph-ink-soft); cursor: pointer; margin-inline-start: auto; white-space: nowrap; }
+.ph-day-24 input { width: 16px; height: 16px; accent-color: var(--ph-teal-text); }
+@media(max-width:768px){ .ph-day-controls { flex-wrap: wrap; } .ph-day-24 { margin-inline-start: 0; flex-basis: 100%; } }
+
+.ph-hours-editor { padding: 14px; }
+.ph-hours-editor .ph-hours-chips { margin-block-end: 8px; }
+.ph-hours-editor .ph-chip { padding: 6px 8px; }
+.ph-hours-editor .ph-chip-value { font-size: .82rem; }
+.ph-hours-editor .ph-day-card { padding: 8px 10px; }
+.ph-hours-editor .ph-day-name { font-size: .85rem; min-width: 48px; }
+.ph-hours-editor .ph-day-status { font-size: .78rem; }
+.ph-hours-editor .ph-day-controls { margin-block-start: 6px; gap: 8px; }
+.ph-hours-editor .ph-day-controls .ph-control { padding: 5px 8px; height: 32px; font-size: .8rem; }
+.ph-hours-editor .ph-day-24 { font-size: .7rem; gap: 4px; }
+.ph-hours-editor .ph-day-24 input { width: 14px; height: 14px; }
+@media(max-width:560px){ .ph-hours-editor { padding: 12px; } .ph-hours-editor .ph-day-controls { flex-wrap: wrap; } .ph-hours-editor .ph-day-24 { flex-basis: 100%; margin-inline-start: 0; } }
+
+.chart-box { position: relative; height: 260px; }
+.chart-sm { height: 220px; }
+
+@media(max-width:768px){
+    .ph-stats { grid-template-columns: repeat(2,1fr); }
+    .ph-grid { grid-template-columns: 1fr; }
+    .ph-hours .day-row { grid-template-columns: 1fr; gap: 10px; }
+    .ph-head { flex-direction: column; align-items: flex-start; }
+    .ph-filters { flex-direction: column; align-items: stretch; }
+    .ph-search { min-width: auto; width: 100%; }
+    .chart-box { height: 220px; }
+}
+
+/* ==========================================================
+   تفاعلية المربعات والأزرار (pharmacy views)
+   ========================================================== */
+.ph-stat {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--ph-paper) 0%, var(--ph-canvas) 100%);
+    border: 1px solid transparent;
+    background-clip: padding-box;
+}
+.ph-stat::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--ph-r-lg);
+    padding: 1.5px;
+    background: linear-gradient(135deg, var(--ph-teal-mist) 0%, transparent 50%, var(--ph-teal-mist) 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+    transition: opacity .3s var(--ease);
+}
+.ph-stat:hover::before { opacity: 1; }
+.ph-stat:hover { transform: translateY(-3px); box-shadow: 0 12px 24px -8px rgba(28,114,166,.25); }
+body.dark-mode .ph-stat {
+    background: linear-gradient(155deg, #1E3A5F 0%, #0A1A2E 100%);
+    border: 1px solid var(--line-strong);
+    box-shadow: 0 8px 20px rgba(0,0,0,.45);
+}
+body.dark-mode .ph-stat:hover {
+    box-shadow: 0 12px 28px -6px rgba(28,114,166,.45);
+    border-color: var(--focus-ring);
+}
+body.dark-mode .ph-stat::before {
+    background: linear-gradient(135deg, var(--focus-ring) 0%, transparent 50%, var(--focus-ring) 100%);
+    opacity: .35;
+}
+body.dark-mode .ph-stat:hover::before { opacity: .85; }
+
+.ph-stat-progress {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--ph-teal) 0%, var(--ph-teal-deep) 100%);
+    transform: scaleX(0);
+    transform-origin: start;
+    transition: transform .4s var(--ease);
+}
+.ph-stat:hover .ph-stat-progress { transform: scaleX(1); }
+body.dark-mode .ph-stat-progress {
+    background: linear-gradient(90deg, var(--teal-primary) 0%, var(--focus-ring) 100%);
+    box-shadow: 0 0 12px var(--focus-ring);
+}
+
+.ph-btn {
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s var(--ease), box-shadow .2s var(--ease), background .2s var(--ease);
+}
+.ph-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.25) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform .6s ease;
+    pointer-events: none;
+}
+.ph-btn:hover::after { transform: translateX(100%); }
+.ph-btn:active { transform: translateY(1px); }
+
+.ph-btn.primary {
+    background: linear-gradient(135deg, var(--ph-teal) 0%, var(--ph-teal-deep) 100%);
+    color: #fff;
+    box-shadow: 0 6px 16px -4px rgba(28,114,166,.45);
+}
+.ph-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px -4px rgba(28,114,166,.6);
+    filter: brightness(1.05);
+}
+body.dark-mode .ph-btn.primary {
+    background: linear-gradient(90deg, #0E97B4 0%, #24D2E8 100%);
+    color: #04141A;
+    box-shadow: 0 6px 18px -4px rgba(28,114,166,.45);
+}
+body.dark-mode .ph-btn.primary:hover {
+    box-shadow: 0 10px 26px -4px rgba(74,155,212,.7);
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.ph-btn.outline { background: transparent; color: var(--ph-teal-text); border-color: var(--ph-teal-text); }
+.ph-btn.outline:hover { background: var(--ph-teal-mist); }
+body.dark-mode .ph-btn.outline { color: var(--ph-teal-text); border-color: var(--ph-teal-text); background: var(--teal-mist); }
+body.dark-mode .ph-btn.outline:hover {
+    background: rgba(124,196,236,.16);
+    border-color: var(--ph-teal-text);
+    box-shadow: 0 0 16px rgba(124,196,236,.25);
+}
+
+.ph-btn.ghost { background: transparent; color: var(--ph-ink-soft); border-color: var(--line-strong); }
+.ph-btn.ghost:hover { background: var(--ph-canvas); }
+body.dark-mode .ph-btn.ghost { color: var(--ink); background: var(--paper); border-color: var(--line-strong); }
+body.dark-mode .ph-btn.ghost:hover { background: var(--teal-mist); border-color: var(--line-strong); color: var(--ph-teal-text); }
+
+.ph-table tr { transition: background .2s var(--ease); }
+.ph-table tr:hover td { background: rgba(28,114,166,.06); }
+body.dark-mode .ph-table tr:hover td { background: var(--teal-mist); }
+body.dark-mode .ph-table th { background: var(--teal-mist); color: var(--ph-teal-text); border-bottom: 1px solid var(--line); }
+
+.ph-stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--ph-canvas);
+    border: 1px solid var(--ph-line);
+    border-radius: var(--ph-r-md);
+    padding: 2px;
+    transition: border-color .2s var(--ease);
+}
+.ph-stepper:focus-within { border-color: var(--ph-teal-text); box-shadow: 0 0 0 3px rgba(28,114,166,.15); }
+.ph-stepper button {
+    width: 28px; height: 28px;
+    border: none; background: var(--ph-paper);
+    color: var(--ph-teal-text);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background .15s var(--ease), transform .15s var(--ease);
+}
+.ph-stepper button:hover { background: var(--ph-teal-mist); }
+.ph-stepper button:active { transform: scale(.92); }
+.ph-stepper input {
+    width: 70px; text-align: center;
+    border: none; background: transparent;
+    font-weight: 700; color: var(--ph-ink);
+    outline: none;
+    -moz-appearance: textfield;
+}
+.ph-stepper input::-webkit-outer-spin-button,
+.ph-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+body.dark-mode .ph-stepper { background: var(--canvas); border-color: var(--line-strong); }
+body.dark-mode .ph-stepper:focus-within { border-color: var(--focus-ring); box-shadow: 0 0 0 3px rgba(56,189,248,.28); }
+body.dark-mode .ph-stepper button { background: var(--paper); color: var(--ph-teal-text); }
+body.dark-mode .ph-stepper button:hover { background: var(--teal-mist); }
+body.dark-mode .ph-stepper input { color: var(--ink); }
+
+.ph-empty { text-align: center; padding: 40px 20px; color: var(--ph-ink-faint); }
+.ph-empty i { font-size: 3rem; color: var(--ph-teal-text); opacity: .4; margin-block-end: 10px; }
+.ph-empty h3 { font-size: 1rem; margin-block-end: 4px; }
+body.dark-mode .ph-empty i { color: var(--ph-teal-text); opacity: .5; }
+body.dark-mode .ph-alt-notice { color: var(--ph-orange-text); }
+
+.ph-filters {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px; margin-block-end: 20px; flex-wrap: wrap;
+}
+.ph-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.ph-pill {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px; font-weight: 700;
+    border: 1.5px solid var(--ph-line);
+    background: var(--ph-paper);
+    color: var(--ph-ink-soft);
+    cursor: pointer;
+    transition: var(--ph-tr);
+}
+.ph-pill:hover { color: var(--ph-teal-text); border-color: var(--ph-teal-text); transform: translateY(-1px); }
+.ph-pill.active {
+    background: linear-gradient(135deg, var(--ph-teal) 0%, var(--ph-teal-deep) 100%);
+    color: #fff; border-color: transparent;
+    box-shadow: 0 4px 12px -2px rgba(28,114,166,.4);
+}
+body.dark-mode .ph-pill { background: var(--paper); border-color: var(--line-strong); color: var(--ink-soft); }
+body.dark-mode .ph-pill:hover { color: var(--ph-teal-text); border-color: var(--ph-teal-text); background: var(--teal-mist); }
+body.dark-mode .ph-pill.active {
+    background: linear-gradient(90deg, #0E97B4 0%, #24D2E8 100%);
+    color: #04141A; border-color: transparent;
+    box-shadow: 0 4px 12px -2px rgba(74,155,212,.5);
+}
+
+.ph-search { position: relative; min-width: 260px; }
+.ph-search input {
+    width: 100%;
+    padding: 9px 14px 9px 38px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line-strong);
+    background: var(--ph-paper);
+    color: var(--ph-ink);
+    font-size: 13px;
+    outline: none;
+    transition: var(--ph-tr);
+}
+.ph-search input:focus { border-color: var(--ph-teal-text); box-shadow: 0 0 0 3px rgba(28,114,166,.15); }
+.ph-search input::placeholder { color: var(--ph-ink-faint); }
+.ph-search i {
+    position: absolute;
+    inset-inline-start: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--ph-ink-faint);
+    pointer-events: none;
+    transition: color .2s var(--ease);
+}
+.ph-search input:focus + i,
+.ph-search:focus-within i { color: var(--ph-teal-text); }
+body.dark-mode .ph-search input { background: var(--field-bg); border-color: var(--line-strong); color: var(--ink); }
+body.dark-mode .ph-search input:focus { border-color: var(--focus-ring); box-shadow: 0 0 0 3px rgba(56,189,248,.30); }
+body.dark-mode .ph-search i { color: var(--ink-faint); }
+body.dark-mode .ph-search input:focus + i,
+body.dark-mode .ph-search:focus-within i { color: var(--ph-teal-text); }
+
+.ph-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: .01em;
+    transition: var(--ph-tr);
+}
+.ph-badge.ok, body.dark-mode .ph-badge.ok {
+    background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
+    color: #166534; border: 1px solid #86EFAC;
+}
+.ph-badge.low, body.dark-mode .ph-badge.low {
+    background: linear-gradient(135deg, #FEF9C3 0%, #FDE68A 100%);
+    color: #854D0E; border: 1px solid #FDE047;
+}
+.ph-badge.out, body.dark-mode .ph-badge.out {
+    background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+    color: #991B1B; border: 1px solid #FCA5A5;
+}
+body.dark-mode .ph-badge.ok { background: var(--ph-green-bg); color: var(--ph-green-text); border-color: rgba(74,222,128,.65); }
+body.dark-mode .ph-badge.low { background: var(--ph-orange-bg); color: var(--ph-orange-text); border-color: rgba(251,191,36,.65); }
+body.dark-mode .ph-badge.out { background: var(--ph-red-bg); color: var(--ph-red-text); border-color: var(--danger-text); }
+
+/* ==========================================================
+   الوضع الداكن — حقول الإدخال
+   ========================================================== */
+body.dark-mode .ph-control,
+body.dark-mode .ph-select,
+body.dark-mode .ph-textarea { background: var(--field-bg); border-color: var(--line-strong); }
+body.dark-mode .ph-control:hover,
+body.dark-mode .ph-select:hover,
+body.dark-mode .ph-textarea:hover { border-color: var(--focus-ring); }
+body.dark-mode .ph-control:focus,
+body.dark-mode .ph-select:focus,
+body.dark-mode .ph-textarea:focus { border-color: var(--focus-ring); box-shadow: 0 0 0 3px rgba(56,189,248,.28); }
+body.dark-mode .ph-control::placeholder,
+body.dark-mode .ph-textarea::placeholder { color: var(--ink-faint); }
+body.dark-mode .ph-select option { background: var(--paper); color: var(--ink); }
+body.dark-mode .ph-hours input[type=time] { background: var(--field-bg); border-color: var(--line-strong); color: var(--ink); }
+body.dark-mode .ph-day-card { border-color: var(--line); }
+body.dark-mode .ph-switch-knob { background: var(--line); }
+body.dark-mode .ph-switch-knob::after { background: var(--ink-faint); }
+body.dark-mode .ph-modal { border: 1px solid var(--line); }
+
+/* ==========================================================
+   Async states — Loading / Error / (Empty is above)
+   ==========================================================
+   Added for the live-API screens. Uses only the --ph-* aliases
+   above, so light + dark themes are handled by tokens.css with
+   no extra rules here.
+   ========================================================== */
+
+/* Visually hidden, still announced by screen readers. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.ph-loading { padding: 8px 0; }
+.ph-skel-stack { display: flex; flex-direction: column; gap: 12px; }
+
+/* Skeleton bar. Keeps the layout height stable so data arrival
+   does not shift the page (no layout jank). */
+.ph-skel-row {
+    height: 52px;
+    border-radius: var(--ph-r-md, 10px);
+    background: linear-gradient(
+        90deg,
+        var(--ph-canvas) 25%,
+        var(--ph-line-soft) 37%,
+        var(--ph-canvas) 63%
+    );
+    background-size: 400% 100%;
+    animation: ph-skel 1.4s ease-in-out infinite;
+}
+
+@keyframes ph-skel {
+    0%   { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+}
+
+/* Respect reduced-motion: hold a static tint instead of shimmering. */
+@media (prefers-reduced-motion: reduce) {
+    .ph-skel-row {
+        animation: none;
+        background: var(--ph-canvas);
+        border: 1px solid var(--ph-line-soft);
+    }
+}
+
+.ph-error {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ph-ink-soft);
+    border: 1px dashed var(--ph-line);
+    border-radius: var(--ph-r-lg, 14px);
+    background: var(--ph-paper);
+}
+.ph-error i {
+    font-size: 2.25rem;
+    color: var(--ph-red);
+    display: block;
+    margin-block-end: 12px;
+}
+.ph-error h3 { margin: 0 0 8px; color: var(--ph-ink); font-size: 1.05rem; }
+.ph-error p { margin: 0 0 16px; font-size: .9rem; color: var(--ph-ink-faint); line-height: 1.6; }

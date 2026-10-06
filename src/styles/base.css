@@ -1,0 +1,118 @@
+/* ==========================================================
+   Daway Pharmacy Web — base / reset
+   ==========================================================
+   Mirrors the reset + primitives from the Blade app:
+     · daway-backend/resources/css/app.css        (global foundation)
+     · daway-backend/resources/css/layout/app_layout.css (layout bits)
+   Values are taken from Blade, not invented.
+   ========================================================== */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 15px;
+    scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+}
+
+/*
+  🔴 حارس ضد تمرير أفقي على مستوى الصفحة:
+
+  `body` قد تصبح حاوية flex (لو استورد أي ملف قواعد `body { display:flex }`
+  كما كان يفعل `auth-forms.css`). في تلك الحالة `#root` عنصر flex بـ
+  `min-width: auto` افتراضيًا، فلا يقبل الانكماش تحت عرض محتواه الأدنى —
+  وأي جدول عريض (12 عمودًا) يدفع المستند كله خارج المنفذ.
+
+  `min-width: 0` يجعل الانكماش ممكنًا دائمًا، والتمرير الأفقي يبقى محصورًا
+  في غلافه الصحيح `.tbl-wrap` / `.ac-table-wrap` بدل الصفحة كلها.
+  حارس بنيوي لا يغيّر أي شكل مرئي.
+*/
+#root {
+    min-width: 0;
+}
+
+body {
+    font-family: 'Tajawal', system-ui, -apple-system, sans-serif;
+    background-color: var(--canvas);
+    color: var(--ink);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .3s ease, color .3s ease;
+}
+
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }
+ul, ol { list-style: none; }
+img { max-width: 100%; display: block; }
+
+/*
+ * AUDIT B-9 + B-16 FIX — shared dark-mode treatment for read-only/disabled
+ * fields. This visual was duplicated verbatim in TWO stylesheets with DIFFERENT
+ * tokens (`--field-bg` in topbar.css vs `--canvas` in users-create.css), i.e.
+ * two slightly different greys for the same state, each escalating with
+ * `!important` because neither owned the rule.
+ *
+ * Single owner now, using `--field-bg` (the semantic "a field's background"
+ * token, which is what a disabled input is). The `!important`s are still needed
+ * here because component stylesheets set field backgrounds with higher
+ * specificity, but there is now exactly ONE place that declares them.
+ */
+body.dark-mode input:disabled,
+body.dark-mode input[readonly],
+body.dark-mode select:disabled,
+body.dark-mode textarea:disabled,
+body.dark-mode textarea[readonly],
+body.dark-mode .form-control:disabled,
+body.dark-mode .form-control[readonly],
+body.dark-mode .form-group input:disabled,
+body.dark-mode .form-group input[readonly] {
+    background: var(--field-bg) !important;
+    color: var(--ink-faint) !important;
+    border-color: var(--line-strong) !important;
+    opacity: 1;
+    cursor: not-allowed;
+}
+
+::selection { background: var(--teal-light); color: var(--teal-deeper); }
+body.dark-mode ::selection { background: var(--teal-primary); color: #ffffff; }
+
+:focus-visible {
+    outline: 2px solid var(--teal-primary);
+    outline-offset: 2px;
+}
+
+/* -- شريط التمرير الملون (بألوان الهوية) -- */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--teal-primary) var(--canvas);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--canvas); }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--teal-primary), var(--teal-deep));
+    border-radius: 999px;
+    border: 2px solid var(--canvas);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--teal-deep); }
+::-webkit-scrollbar-corner { background: var(--canvas); }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+    }
+}

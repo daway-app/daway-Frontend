@@ -1,0 +1,74 @@
+/* ==========================================================
+   Daway Pharmacy Web — self-hosted fonts
+   ==========================================================
+   Cairo + Tajawal are copied from the Laravel backend's compiled
+   Vite assets (daway-backend/public/build/assets/), which are the
+   exact files the Blade app serves. Files live in public/fonts/.
+   No external font requests.
+   ========================================================== */
+
+/* ---------- Cairo ---------- */
+@font-face {
+    font-family: 'Cairo';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/cairo-400.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Cairo';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('/fonts/cairo-500.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Cairo';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('/fonts/cairo-600.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Cairo';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/cairo-700.woff2') format('woff2');
+}
+
+/* ---------- Tajawal ---------- */
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/tajawal-400.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('/fonts/tajawal-500.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/tajawal-700.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Tajawal';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url('/fonts/tajawal-800.woff2') format('woff2');
+}

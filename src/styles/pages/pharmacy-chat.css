@@ -1,0 +1,90 @@
+/* Chat bubbles + composer — extracted VERBATIM from the inline
+   `@push('styles')` block of `resources/views/pharmacy/inquiries/chat.blade.php`.
+   React has no per-view style push, so the rules live here instead.
+   The backend is read-only; values are carried forward unchanged. */
+
+.ph-chat-messages .ph-chat-bubble {
+    display: inline-block;
+    max-width: 70%;
+    padding: 10px 16px;
+    border-radius: var(--ph-r-lg);
+    margin: 8px 0;
+    position: relative;
+}
+.ph-chat-bubble .ph-chat-text {
+    font-size: .95rem;
+    color: var(--ph-ink);
+    word-break: break-word;
+}
+.ph-chat-bubble .ph-chat-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: .72rem;
+    color: var(--ph-ink-faint);
+}
+.ph-chat-bubble .ph-chat-time { font-variant-numeric: tabular-nums; }
+
+.ph-chat-bubble.ph-chat-mine {
+    background: var(--ph-teal-mist);
+    border: 1px solid var(--ph-teal-mist);
+    margin-inline-start: auto;
+    border-start-start-radius: 2px;
+    border-end-start-radius: var(--ph-r-lg);
+}
+.ph-chat-bubble.ph-chat-mine .ph-chat-text { color: var(--ph-teal-text); }
+.ph-chat-bubble.ph-chat-mine .ph-chat-meta { justify-content: flex-end; color: var(--ph-teal-text); opacity: .7; }
+
+.ph-chat-bubble.ph-chat-other {
+    background: var(--ph-canvas);
+    border: 1px solid var(--ph-line-soft);
+    margin-inline-end: auto;
+    border-start-end-radius: 2px;
+    border-end-end-radius: var(--ph-r-lg);
+}
+.ph-chat-bubble.ph-chat-other .ph-chat-text { color: var(--ph-ink); }
+
+.ph-chat-input-wrap {
+    margin-top: 16px;
+}
+.ph-chat-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.ph-chat-input-row input:focus {
+    border-color: var(--ph-teal);
+    box-shadow: 0 0 0 3px var(--ph-teal-mist);
+}
+
+/* RTL adjustments */
+[dir="rtl"] .ph-chat-bubble.ph-chat-mine {
+    border-start-start-radius: var(--ph-r-lg);
+    border-end-start-radius: 2px;
+}
+[dir="rtl"] .ph-chat-bubble.ph-chat-other {
+    border-start-end-radius: var(--ph-r-lg);
+    border-end-end-radius: 2px;
+}
+
+@media (max-width: 768px) {
+    .ph-chat-messages .ph-chat-bubble { max-width: 85%; }
+    .ph-chat-input-row { flex-direction: column; }
+    .ph-chat-input-row input { width: 100%; }
+}
+
+/* ------------------------------------------------------------------
+   Dark mode — the Blade inline block had NO dark rules, so the
+   bubbles kept their light backgrounds on a dark canvas (a real defect).
+   These overrides derive from the same `--ph-*` tokens every other
+   screen uses, so the chat now matches the rest of the app.
+   ------------------------------------------------------------------ */
+body.dark-mode .ph-chat-bubble.ph-chat-other {
+    background: var(--ph-paper);
+    border-color: var(--ph-line-soft);
+}
+body.dark-mode .ph-chat-bubble.ph-chat-mine {
+    background: var(--ph-teal-mist);
+    border-color: var(--ph-teal-mist);
+}

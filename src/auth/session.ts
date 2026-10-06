@@ -1,5 +1,6 @@
 import { createApiClient, type ApiClient } from '@/api/client';
 import { createAuthApi, type AuthApi } from '@/api/authApi';
+import { createPharmacyApi, type PharmacyApi } from '@/api/pharmacyApi';
 import { createTokenManager, type TokenManager } from './tokenStorage';
 import type { AuthUser } from './authContract';
 
@@ -59,6 +60,7 @@ export function createApiStack(options?: {
   });
 
   const auth: AuthApi = createAuthApi(client);
+  const pharmacy: PharmacyApi = createPharmacyApi(client);
 
   // Wire the cycle: refresh now delegates to the auth API.
   refreshImpl = () => auth.refresh();
@@ -66,6 +68,7 @@ export function createApiStack(options?: {
   return {
     client,
     auth,
+    pharmacy,
     tokens,
 
     /** Current user, or `null` when signed out. */

@@ -35,3 +35,12 @@ coverage
 
 # Vitest writes these while loading its config; they must never be committed.
 vitest.config.ts.timestamp-*.mjs
+
+# QA evidence — regenerable screenshots and JSON reports, not source.
+# `outputs/*.md` (the written reports) ARE committed; the images are not.
+qa/
+harness/
+outputs/qa/
+
+# Stray debug screenshots left at the repo root by an earlier session.
+restored-*.png

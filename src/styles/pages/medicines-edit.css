@@ -1,0 +1,215 @@
+/* /resources/css/medicines_edit.css */
+
+.edit-medicine-page-wrapper {
+    max-width: 850px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+    animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Header */
+.page-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+.page-heading-icon {
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    font-size: 24px;
+    background: linear-gradient(135deg, #f0fdfa, #e0f2fe);
+    color: var(--teal-text);
+    box-shadow: 0 8px 22px rgba(28, 114, 166, 0.12);
+}
+.page-heading h1 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--ink);
+}
+.page-heading p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 13px;
+}
+
+/* Card */
+.premium-card {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255,255,255,.94);
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    box-shadow: 0 8px 28px rgba(15,23,42,.055);
+    margin-bottom: 20px;
+}
+.card-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 17px 20px;
+    border-bottom: 1px solid #edf2f7;
+    background: linear-gradient(135deg, #ffffff, #f8fafc);
+}
+.card-head-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.card-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+}
+.card-icon.teal {
+    background: var(--teal-mist);
+    box-shadow: 0 7px 18px rgba(13,148,136,.12);
+}
+.card-head h2 {
+    margin: 0 0 3px;
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+}
+.card-head p {
+    margin: 0;
+    font-size: 11px;
+    color: var(--ink-soft);
+}
+.card-body {
+    padding: 22px;
+}
+
+/* Form */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.fg {
+    margin-bottom: 17px;
+}
+.fl {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--ink);
+    margin-bottom: 7px;
+}
+.req {
+    color: var(--danger-text);
+}
+.fc {
+    width: 100%;
+    height: 44px;
+    padding: 10px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 11px;
+    font-size: 13px;
+    background: var(--paper);
+    color: var(--ink);
+    outline: none;
+    box-sizing: border-box;
+    transition: all 0.25s ease;
+}
+.fc:focus {
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 4px rgba(13,148,136,.09);
+}
+
+/* Alternatives Section */
+.alternatives-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+.alternative-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--canvas);
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+.remove-alternative-btn {
+    background: var(--danger-bg);
+    color: var(--danger-text);
+    border: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Actions */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+.btn-cancel {
+    background: var(--line-soft);
+    color: var(--ink-soft);
+    padding: 12px 24px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 700;
+}
+.btn-submit {
+    background: #1C72A6;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Dark Mode */
+body.dark-mode .page-heading h1,
+body.dark-mode .card-head h2,
+body.dark-mode .fl,
+body.dark-mode .fc {
+    color: var(--ink);
+}
+body.dark-mode .page-heading p,
+body.dark-mode .card-head p {
+    color: var(--ink-soft);
+}
+body.dark-mode .premium-card,
+body.dark-mode .fc,
+body.dark-mode .card-head {
+    background: var(--paper);
+    border-color: var(--line-strong);
+}
+body.dark-mode .alternative-item {
+    background: var(--line-soft);
+    border-color: var(--line-strong);
+}
+body.dark-mode .btn-cancel {
+    background: var(--line-soft);
+    color: var(--ink);
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* الوضع الداكن — التدرّج الفاتح كان يُرسم كما هو */
+body.dark-mode .page-heading-icon { background: var(--teal-mist); }

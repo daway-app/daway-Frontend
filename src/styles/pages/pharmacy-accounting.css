@@ -1,0 +1,1566 @@
+/* ==========================================================
+   Daway — Pharmacy Accounting (Frontend)
+   ==========================================================
+   ⚠️ لا تُعرَّف أي قيمة لونية هنا. كل الألوان والظلال عبر var()
+   من resources/css/tokens.css و resources/css/pages/pharmacy_hub.css.
+
+   تُحمَّل هذه الطبقة **بعد** pharmacy_hub.css في @vite([...]) — فهي
+   تُكمل نظام التصميم ولا تستبدله. كل الأصناف بادئتها `ac-` لتفادي
+   أي تعارض مع `ph-*`.
+   ========================================================== */
+
+/* ---------- متغيّرات محلية (أسماء مستعارة فقط) ---------- */
+:root {
+    --ac-ink: var(--ph-ink);
+    --ac-ink-soft: var(--ph-ink-soft);
+    --ac-ink-faint: var(--ph-ink-faint);
+    --ac-line: var(--ph-line);
+    --ac-line-soft: var(--ph-line-soft);
+    --ac-paper: var(--ph-paper);
+    --ac-canvas: var(--ph-canvas);
+    --ac-teal: var(--ph-teal);
+    --ac-teal-text: var(--ph-teal-text);
+    --ac-teal-deep: var(--ph-teal-deep);
+    --ac-teal-mist: var(--ph-teal-mist);
+    --ac-green-bg: var(--ph-green-bg);
+    --ac-green-text: var(--ph-green-text);
+    --ac-orange-bg: var(--ph-orange-bg);
+    --ac-orange-text: var(--ph-orange-text);
+    --ac-red-bg: var(--ph-red-bg);
+    --ac-red-text: var(--ph-red-text);
+    --ac-blue-bg: var(--ph-blue-bg);
+    --ac-blue-text: var(--ph-blue-text);
+    --ac-r-sm: var(--ph-r-sm);
+    --ac-r-md: var(--ph-r-md);
+    --ac-r-lg: var(--ph-r-lg);
+    --ac-r-full: var(--ph-r-full);
+    --ac-sh: var(--ph-sh);
+    --ac-sh-md: var(--ph-sh-md);
+    --ac-tr: var(--ph-tr);
+    /* مجموع ارتفاع الشريط العلوي — يُستخدم في sticky panels */
+    --ac-topbar: var(--topbar-height, 64px);
+}
+
+/* ==========================================================
+   شريط تنبيه «بيانات تجريبية»
+   ========================================================== */
+.ac-demo-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    margin-block-end: 18px;
+    border-radius: var(--ac-r-md);
+    background: var(--ac-blue-bg);
+    color: var(--ac-blue-text);
+    border: 1px solid transparent;
+    font-size: .82rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+.ac-demo-banner i { flex-shrink: 0; }
+body.dark-mode .ac-demo-banner { border-color: var(--line); }
+
+/* ==========================================================
+   شبكات عامة
+   ========================================================== */
+.ac-grid { display: grid; gap: 20px; }
+.ac-grid-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+.ac-grid-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.ac-stack { display: flex; flex-direction: column; gap: 8px; }
+
+/* شريط فلاتر عام — يكمّل .ph-filters (لا يستبدله) */
+.ac-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-block-end: 18px;
+    padding: 14px 18px;
+    background: var(--ac-paper);
+    border: 1px solid var(--ac-line-soft);
+    border-radius: var(--ac-r-lg);
+    box-shadow: var(--ac-sh);
+}
+.ac-filter-bar .ac-filter-field { display: flex; flex-direction: column; gap: 4px; min-width: 150px; }
+.ac-filter-bar label {
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--ac-ink-faint);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.ac-filter-bar .ph-control,
+.ac-filter-bar .ph-select { padding: 8px 12px; font-size: .85rem; }
+.ac-filter-bar .ac-filter-grow { flex: 1 1 240px; }
+.ac-filter-bar .ac-filter-end { margin-inline-start: auto; display: flex; gap: 8px; align-items: flex-end; }
+
+/* ==========================================================
+   بطاقة المؤشّر (KPI)
+   ========================================================== */
+.ac-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-block-end: 24px;
+}
+.ac-kpi {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px;
+    background: var(--ac-paper);
+    border: 1px solid var(--ac-line-soft);
+    border-radius: var(--ac-r-lg);
+    box-shadow: var(--ac-sh);
+    text-decoration: none;
+    color: inherit;
+    transition: var(--ac-tr);
+}
+a.ac-kpi:hover { transform: translateY(-2px); box-shadow: var(--ac-sh-md); }
+a.ac-kpi:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.ac-kpi-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: var(--ac-r-full);
+    display: grid;
+    place-items: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+.ac-kpi-icon.teal { background: var(--ac-teal-mist); color: var(--ac-teal-text); }
+.ac-kpi-icon.green { background: var(--ac-green-bg); color: var(--ac-green-text); }
+.ac-kpi-icon.orange { background: var(--ac-orange-bg); color: var(--ac-orange-text); }
+.ac-kpi-icon.red { background: var(--ac-red-bg); color: var(--ac-red-text); }
+.ac-kpi-icon.blue { background: var(--ac-blue-bg); color: var(--ac-blue-text); }
+.ac-kpi-icon.gray { background: var(--ac-line-soft); color: var(--ac-ink-soft); }
+.ac-kpi-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ac-kpi-value {
+    font-size: 1.45rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--ac-ink);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+.ac-kpi-label { font-size: .8rem; color: var(--ac-ink-faint); }
+.ac-kpi-caret { margin-inline-start: auto; color: var(--ac-ink-faint); font-size: .8rem; }
+
+/* ==========================================================
+   قائمة الأسطورة + شرائح النِسب
+   ========================================================== */
+.ac-breakdown { display: flex; flex-direction: column; gap: 14px; }
+.ac-breakdown-row { display: flex; flex-direction: column; gap: 6px; }
+.ac-breakdown-top { display: flex; align-items: center; gap: 8px; font-size: .85rem; }
+.ac-breakdown-top .dot { width: 9px; height: 9px; border-radius: var(--ac-r-full); flex-shrink: 0; }
+.ac-breakdown-top .name { color: var(--ac-ink-soft); }
+.ac-breakdown-top .amount { margin-inline-start: auto; font-weight: 700; color: var(--ac-ink); font-variant-numeric: tabular-nums; }
+.ac-breakdown-top .pct { color: var(--ac-ink-faint); font-size: .78rem; min-width: 44px; text-align: end; font-variant-numeric: tabular-nums; }
+.ac-bar { height: 6px; border-radius: var(--ac-r-full); background: var(--ac-line-soft); overflow: hidden; }
+.ac-bar > span { display: block; height: 100%; border-radius: var(--ac-r-full); }
+
+/* ==========================================================
+   التنبيهات
+   ========================================================== */
+.ac-alert {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    border-radius: var(--ac-r-md);
+    border-inline-start: 4px solid transparent;
+    background: var(--ac-canvas);
+    margin-block-end: 12px;
+    line-height: 1.5;
+}
+.ac-alert:last-child { margin-block-end: 0; }
+.ac-alert > i { font-size: 1rem; flex-shrink: 0; margin-block-start: 2px; }
+.ac-alert .ac-alert-title { font-weight: 700; font-size: .88rem; }
+.ac-alert .ac-alert-desc { font-size: .82rem; color: var(--ac-ink-soft); margin-block-start: 2px; }
+.ac-alert.warning { border-inline-start-color: var(--ph-orange); }
+.ac-alert.warning > i { color: var(--ac-orange-text); }
+.ac-alert.danger { border-inline-start-color: var(--ph-red); }
+.ac-alert.danger > i { color: var(--ac-red-text); }
+.ac-alert.info { border-inline-start-color: var(--ph-blue); }
+.ac-alert.info > i { color: var(--ac-blue-text); }
+
+/* ==========================================================
+   وصفة الحالة — امتداد .ph-badge
+   ========================================================== */
+.ph-badge.paid { background: var(--ac-green-bg); color: var(--ac-green-text); }
+.ph-badge.paid::before { background: var(--ph-green); }
+.ph-badge.partial { background: var(--ac-orange-bg); color: var(--ac-orange-text); }
+.ph-badge.partial::before { background: var(--ph-orange); }
+.ph-badge.unpaid { background: var(--ac-red-bg); color: var(--ac-red-text); }
+.ph-badge.unpaid::before { background: var(--ph-red); }
+.ph-badge.refunded { background: var(--ac-blue-bg); color: var(--ac-blue-text); }
+.ph-badge.refunded::before { background: var(--ph-blue); }
+.ph-badge.cancelled { background: var(--ac-line-soft); color: var(--ac-ink-faint); }
+.ph-badge.cancelled::before { background: var(--ac-ink-faint); }
+.ph-badge.credit { background: var(--ac-orange-bg); color: var(--ac-orange-text); }
+.ph-badge.credit::before { background: var(--ph-orange); }
+
+/* ==========================================================
+   عناصر الجداول المحاسبية
+   ========================================================== */
+.ac-num { font-variant-numeric: tabular-nums; text-align: end; white-space: nowrap; }
+.ac-strong { font-weight: 700; }
+.ac-muted { color: var(--ac-ink-faint); font-size: .82rem; }
+.ac-neg { color: var(--ac-red-text); }
+.ac-pos { color: var(--ac-green-text); }
+/*
+  Blade's `.ac-mono` sets only a font — no `white-space`. In the narrow RTL
+  reference column of the transactions table this made `SALE-2026-0042` break
+  at every hyphen into three lines, inflating every row. The identifiers are
+  atomic, so wrapping them is never desirable; `nowrap` is the correct rule.
+  (`tabular-nums` also stops the digits from jittering between rows.)
+*/
+.ac-mono {
+    font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+    font-size: .84rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+.ac-row-actions { display: flex; gap: 6px; align-items: center; }
+.ac-table-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    padding: 12px 18px;
+    border-block-start: 1px solid var(--ac-line-soft);
+    background: var(--ac-canvas);
+    font-size: .84rem;
+}
+.ac-table-summary span { color: var(--ac-ink-faint); }
+.ac-table-summary b { color: var(--ac-ink); font-variant-numeric: tabular-nums; }
+
+/* خلية داخلية متعددة الأسطر (رقم + تسمية) */
+.ac-cell-stack { display: flex; flex-direction: column; gap: 2px; line-height: 1.35; }
+
+/* ==========================================================
+   أزرار صغيرة الأيقونة (view / print)
+   ========================================================== */
+.ac-icon-btn {
+    width: 32px;
+    height: 32px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: var(--ac-r-sm);
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--ac-ink-soft);
+    cursor: pointer;
+    transition: var(--ac-tr);
+    text-decoration: none;
+}
+.ac-icon-btn:hover {
+    color: var(--ac-teal-text);
+    border-color: var(--ac-teal-text);
+    background: var(--ac-teal-mist);
+}
+.ac-icon-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.ac-icon-btn[disabled] { opacity: .45; cursor: not-allowed; }
+.ac-icon-btn[disabled]:hover { color: var(--ac-ink-soft); border-color: var(--line-strong); background: transparent; }
+
+/* ==========================================================
+   الرسوم البيانية + تبويبات الفترة
+   ========================================================== */
+.ac-chart-box { position: relative; height: 260px; }
+.ac-range-tabs { display: inline-flex; gap: 4px; background: var(--ac-canvas); padding: 4px; border-radius: var(--ac-r-full); flex-wrap: wrap; }
+.ac-range-tab {
+    padding: 6px 14px;
+    border-radius: var(--ac-r-full);
+    border: none;
+    background: transparent;
+    color: var(--ac-ink-soft);
+    font-size: .8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--ac-tr);
+    font-family: inherit;
+    white-space: nowrap;
+}
+.ac-range-tab:hover { background: var(--ac-paper); color: var(--ac-ink); }
+.ac-range-tab.active { background: var(--ac-teal); color: #fff; }
+.ac-range-tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* ==========================================================
+   POS — شاشة البيع
+   ========================================================== */
+.ac-pos { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 20px; align-items: start; }
+.ac-pos-left { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.ac-pos-right { position: sticky; top: calc(var(--ac-topbar) + 16px); }
+
+/* حقل الباركود — كبير وواضح، جاهز للماسح */
+.ac-barcode-wrap {
+    background: linear-gradient(135deg, var(--ac-paper) 0%, var(--ac-canvas) 100%);
+    border: 1px solid var(--ac-line-soft);
+    border-radius: var(--ac-r-lg);
+    padding: 16px 18px;
+    box-shadow: var(--ac-sh);
+}
+.ac-barcode-row { display: flex; gap: 10px; align-items: stretch; }
+.ac-barcode-input-wrap { position: relative; flex: 1; }
+.ac-barcode-input-wrap > i {
+    position: absolute;
+    inset-inline-start: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ac-ink-faint);
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+.ac-barcode-input {
+    width: 100%;
+    padding: 14px 14px 14px 44px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+    letter-spacing: .04em;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--ac-r-md);
+    background: var(--field-bg);
+    color: var(--ac-ink);
+    outline: none;
+    transition: var(--ac-tr);
+}
+html[dir='rtl'] .ac-barcode-input { padding: 14px 44px 14px 14px; }
+.ac-barcode-input:focus {
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 3px rgba(28, 114, 166, .15);
+}
+.ac-barcode-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-block-start: 10px;
+    font-size: .76rem;
+    color: var(--ac-ink-faint);
+}
+.ac-barcode-meta .ready-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--ac-r-full);
+    background: var(--ph-green);
+    flex-shrink: 0;
+}
+
+/* البحث عن دواء */
+.ac-search-results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 320px;
+    overflow-y: auto;
+    border-block-start: 1px solid var(--ac-line-soft);
+}
+.ac-search-results:empty { display: none; }
+.ac-search-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 18px;
+    border-block-end: 1px solid var(--ac-line-soft);
+    cursor: pointer;
+    transition: background .15s var(--ease);
+    width: 100%;
+    text-align: start;
+    background: transparent;
+    border-inline: none;
+    border-block-start: none;
+    font-family: inherit;
+    font-size: .88rem;
+    color: var(--ac-ink);
+}
+.ac-search-item:hover,
+.ac-search-item:focus-visible { background: var(--ac-teal-mist); outline: none; }
+.ac-search-item.is-out { opacity: .62; }
+.ac-search-item .ac-si-body { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.ac-search-item .ac-si-name { font-weight: 700; }
+.ac-search-item .ac-si-sub { font-size: .76rem; color: var(--ac-ink-faint); }
+.ac-search-item .ac-si-price { font-weight: 700; color: var(--ac-teal-text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* السلة */
+.ac-cart-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .88rem; }
+.ac-cart-table th {
+    background: var(--ac-canvas);
+    color: var(--ac-ink-soft);
+    font-weight: 700;
+    font-size: .74rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    padding: 10px 12px;
+    text-align: start;
+    white-space: nowrap;
+    border-block-end: 1px solid var(--ac-line);
+}
+.ac-cart-table td { padding: 10px 12px; border-block-end: 1px solid var(--ac-line-soft); vertical-align: middle; }
+.ac-cart-table tr:last-child td { border-block-end: none; }
+.ac-cart-table input.ac-line-input {
+    width: 100%;
+    min-width: 72px;
+    padding: 7px 9px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--ac-r-sm);
+    background: var(--field-bg);
+    color: var(--ac-ink);
+    font-size: .85rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    outline: none;
+    transition: var(--ac-tr);
+}
+.ac-cart-table input.ac-line-input:focus {
+    border-color: var(--focus-ring);
+    box-shadow: 0 0 0 3px rgba(28, 114, 166, .15);
+}
+.ac-cart-table input.ac-line-input.is-error { border-color: var(--ph-red); }
+.ac-cart-table .ac-line-total { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ac-cart-wrap { overflow-x: auto; }
+.ac-cart-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* لوحة الفاتورة */
+.ac-invoice-panel {
+    background: var(--ac-paper);
+    border: 1px solid var(--ac-line-soft);
+    border-radius: var(--ac-r-lg);
+    box-shadow: var(--ac-sh);
+    overflow: hidden;
+}
+.ac-invoice-head {
+    padding: 16px 18px;
+    border-block-end: 1px solid var(--ac-line-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.ac-invoice-head h2 { margin: 0; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+.ac-invoice-head h2 i { color: var(--ac-teal-text); }
+.ac-invoice-body { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.ac-invoice-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .88rem; }
+.ac-invoice-line .label { color: var(--ac-ink-soft); }
+.ac-invoice-line .value { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ac-ink); }
+.ac-invoice-line.is-total { padding-block-start: 12px; border-block-start: 1px dashed var(--ac-line); font-size: 1.05rem; }
+.ac-invoice-line.is-total .value { font-size: 1.25rem; color: var(--ac-teal-text); }
+.ac-invoice-line.is-remaining.warn .value { color: var(--ac-red-text); }
+.ac-invoice-foot { padding: 16px 18px; border-block-start: 1px solid var(--ac-line-soft); background: var(--ac-canvas); }
+.ac-invoice-foot .ph-btn { width: 100%; }
+.ac-invoice-note {
+    margin-block-start: 10px;
+    font-size: .74rem;
+    color: var(--ac-ink-faint);
+    text-align: center;
+    line-height: 1.45;
+}
+
+/* رسالة مضمنة (نجاح/خطأ/تحذير) */
+.ac-inline-msg {
+    display: none;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: var(--ac-r-md);
+    font-size: .82rem;
+    line-height: 1.5;
+    margin-block-start: 10px;
+}
+.ac-inline-msg.show { display: flex; }
+.ac-inline-msg.success { background: var(--ac-green-bg); color: var(--ac-green-text); }
+.ac-inline-msg.error { background: var(--ac-red-bg); color: var(--ac-red-text); }
+.ac-inline-msg.warning { background: var(--ac-orange-bg); color: var(--ac-orange-text); }
+.ac-inline-msg > i { margin-block-start: 2px; flex-shrink: 0; }
+
+/* حالات عامة */
+.ac-hidden { display: none !important; }
+.ac-loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px;
+    color: var(--ac-ink-faint);
+    font-size: .84rem;
+}
+.ac-loading .spinner {
+    width: 15px;
+    height: 15px;
+    border: 2px solid var(--ac-line);
+    border-block-start-color: var(--ac-teal-text);
+    border-radius: 50%;
+    animation: ac-spin .7s linear infinite;
+    flex-shrink: 0;
+}
+@keyframes ac-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    .ac-loading .spinner { animation-duration: 2s; }
+}
+
+/* ==========================================================
+   تفاصيل الفاتورة (صفحة العرض / الطباعة)
+   ========================================================== */
+.ac-invoice-doc {
+    background: var(--ac-paper);
+    border: 1px solid var(--ac-line-soft);
+    border-radius: var(--ac-r-lg);
+    box-shadow: var(--ac-sh);
+    overflow: hidden;
+    max-width: 880px;
+}
+.ac-invoice-doc-head {
+    padding: 22px;
+    border-block-end: 1px solid var(--ac-line-soft);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.ac-invoice-doc-head h2 { margin: 0 0 4px; font-size: 1.3rem; }
+.ac-invoice-doc-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; padding: 18px 22px; border-block-end: 1px solid var(--ac-line-soft); }
+.ac-invoice-doc-meta dt { font-size: .72rem; text-transform: uppercase; letter-spacing: .03em; color: var(--ac-ink-faint); margin-block-end: 3px; }
+.ac-invoice-doc-meta dd { margin: 0; font-size: .9rem; font-weight: 600; color: var(--ac-ink); }
+.ac-totals-block { padding: 18px 22px; display: flex; flex-direction: column; gap: 8px; max-width: 340px; margin-inline-start: auto; }
+
+/* ==========================================================
+   الصفحات القادمة (Placeholders) — لا روابط ميتة
+   ========================================================== */
+.ac-soon {
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 56px 24px;
+    background: var(--ac-paper);
+    border: 1px dashed var(--ac-line);
+    border-radius: var(--ac-r-lg);
+}
+.ac-soon i { font-size: 2.6rem; color: var(--ac-teal-text); opacity: .45; margin-block-end: 14px; display: block; }
+.ac-soon h2 { margin: 0 0 8px; font-size: 1.1rem; }
+.ac-soon p { margin: 0 0 4px; color: var(--ac-ink-faint); font-size: .88rem; max-width: 480px; line-height: 1.6; }
+.ac-soon .ac-soon-badge {
+    margin-block-start: 14px;
+    font-size: .74rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: var(--ac-r-full);
+    background: var(--ac-teal-mist);
+    color: var(--ac-teal-text);
+}
+
+/* ==========================================================
+   الاستجابة — الحاسوب → الجوال
+   ========================================================== */
+@media (max-width: 1100px) {
+    .ac-pos { grid-template-columns: minmax(0, 1fr) 340px; }
+}
+
+@media (max-width: 900px) {
+    .ac-pos { grid-template-columns: 1fr; }
+    .ac-pos-right { position: static; }
+    .ac-chart-box { height: 220px; }
+    .ac-invoice-doc { max-width: 100%; }
+    .ac-totals-block { max-width: 100%; }
+}
+
+@media (max-width: 768px) {
+    .ac-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .ac-kpi { padding: 14px; gap: 10px; }
+    .ac-kpi-value { font-size: 1.15rem; }
+    .ac-kpi-icon { width: 38px; height: 38px; font-size: 1rem; }
+    .ac-filter-bar { flex-direction: column; align-items: stretch; padding: 14px; }
+    .ac-filter-bar .ac-filter-field { min-width: 0; }
+    .ac-filter-bar .ac-filter-end { margin-inline-start: 0; }
+    .ac-filter-bar .ac-filter-end .ph-btn { flex: 1; }
+    .ac-barcode-row { flex-direction: column; }
+    .ac-barcode-row .ph-btn { width: 100%; }
+    .ac-range-tabs { width: 100%; justify-content: space-between; }
+    .ac-invoice-doc-meta { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+    .ac-invoice-doc-meta { grid-template-columns: 1fr; }
+    .ac-table-summary { gap: 6px 14px; font-size: .78rem; }
+    .ac-demo-banner { font-size: .76rem; padding: 10px 12px; }
+}
+
+/* ==========================================================
+   ملاءمة الجداول العريضة على الجوال
+   ----------------------------------------------------------
+   .ph-table-wrap يوفّر overflow-x — نخفّض الحشو على الشاشات
+   الصغيرة حتى لا يصير التمرير الأفقي مزعجًا.
+   ========================================================== */
+@media (max-width: 600px) {
+    .ph-table-wrap .ph-table th,
+    .ph-table-wrap .ph-table td { padding: 10px 12px; font-size: .84rem; }
+    .ac-cart-table th,
+    .ac-cart-table td { padding: 8px 9px; font-size: .8rem; }
+    .ac-cart-table input.ac-line-input { min-width: 58px; padding: 6px; font-size: .8rem; }
+}
+
+/* ==========================================================
+   الباركود — نظام الحالة و المكوّنات القابلة لإعادة الاستخدام
+   ==========================================================
+   ⚠️ المبدأ: **قاعدة الأدوية لا تحتوي باركودًا كاملًا.** «باركود غير معروف»
+   حالة يومية طبيعية، لذلك ألوانها **محايدة** (`--ph-line-soft` / `--ph-ink-faint`)
+   وليست حمراء/صفراء. لو لوّنّاها تحذيريًّا لصار الصيدلي يرى خطأً في كل مسح
+   لدواء جديد — وهذا بالضبط ما نرفضه.
+
+   الحالات الأربع:
+     .is-unknown   محايد   — غير مسجَّل بعد (عادي)
+     .is-pending   أزرق    — مسجَّل بانتظار التوثيق (قابل للبيع)
+     .is-verified  أخضر    — مسجَّل وموثَّق
+     .is-conflict  أحمر    — مرتبط بدواء آخر (يتطلب قرارًا بشريًّا)
+   ========================================================== */
+
+/* ---------- شارة الحالة ---------- */
+.ac-bcode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--ac-r-full);
+    font-size: .74rem;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+.ac-bcode-badge.is-sm { padding: 3px 8px; font-size: .68rem; }
+
+.ac-bcode-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--ac-r-full);
+    flex-shrink: 0;
+}
+
+.ac-bcode-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--ac-r-full);
+    background: var(--ph-paper);
+    color: var(--ac-ink-soft);
+    font-size: .66rem;
+    font-weight: 800;
+}
+
+/* الحالات — تعبئة صلبة داكنة في الداكن، لا شفافة */
+.ac-bcode-badge.is-unknown {
+    background: var(--ph-line-soft);
+    color: var(--ac-ink-soft);
+}
+.ac-bcode-badge.is-unknown .ac-bcode-dot { background: var(--ac-ink-faint); }
+
+.ac-bcode-badge.is-pending {
+    background: var(--ac-blue-bg);
+    color: var(--ac-blue-text);
+}
+.ac-bcode-badge.is-pending .ac-bcode-dot { background: var(--ac-blue-text); }
+
+.ac-bcode-badge.is-verified {
+    background: var(--ac-green-bg);
+    color: var(--ac-green-text);
+}
+.ac-bcode-badge.is-verified .ac-bcode-dot { background: var(--ac-green-text); }
+
+.ac-bcode-badge.is-conflict {
+    background: var(--ac-red-bg);
+    color: var(--ac-red-text);
+}
+.ac-bcode-badge.is-conflict .ac-bcode-dot { background: var(--ac-red-text); }
+
+/* ---------- حقل الباركود ---------- */
+.ac-field { margin-block-end: 16px; }
+.ac-field-label {
+    display: block;
+    margin-block-end: 6px;
+    font-size: .84rem;
+    font-weight: 700;
+    color: var(--ac-ink-soft);
+}
+.ac-req { color: var(--ac-red-text); margin-inline-start: 3px; }
+.ac-field-help {
+    margin: 6px 0 0;
+    font-size: .76rem;
+    line-height: 1.5;
+    color: var(--ac-ink-faint);
+}
+/* تلميح المبدأ — دائم وهادئ، لا يصرخ */
+.ac-barcode-hint {
+    display: flex;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: var(--ac-r-sm);
+    background: var(--ph-canvas);
+    color: var(--ac-ink-faint);
+    font-weight: 500;
+}
+
+.ac-barcode-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--ac-r-md);
+    background: var(--ph-paper);
+    transition: var(--ac-tr);
+    overflow: hidden;
+}
+.ac-barcode-wrap:focus-within {
+    border-color: var(--focus-ring, var(--ac-teal));
+    box-shadow: 0 0 0 3px var(--ac-teal-mist);
+}
+
+.ac-barcode-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 12px;
+    color: var(--ac-ink-faint);
+    flex-shrink: 0;
+}
+
+.ac-barcode-input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 12px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--ac-ink);
+    font-size: .95rem;
+    font-weight: 600;
+    /* الباركود رقمي/لاتيني — محاذاة يسار دائمًا حتى في RTL */
+    text-align: left;
+    letter-spacing: .5px;
+    font-variant-numeric: tabular-nums;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.ac-barcode-input::placeholder {
+    color: var(--ac-ink-faint);
+    font-weight: 500;
+    letter-spacing: 0;
+    font-family: inherit;
+}
+
+/* الحقل يلوّن حدّه حسب آخر نتيجة مسح */
+.ac-barcode-input.is-pending   { box-shadow: inset 3px 0 0 0 var(--ac-blue-text); }
+.ac-barcode-input.is-verified  { box-shadow: inset 3px 0 0 0 var(--ac-green-text); }
+.ac-barcode-input.is-conflict  { box-shadow: inset 3px 0 0 0 var(--ac-red-text); }
+.ac-barcode-input.is-invalid   { box-shadow: inset 3px 0 0 0 var(--ac-red-text); }
+
+.ac-barcode-state {
+    flex-shrink: 0;
+    padding-inline: 10px;
+    font-size: .72rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--ac-ink-faint);
+}
+.ac-barcode-state.is-pending  { color: var(--ac-blue-text); }
+.ac-barcode-state.is-verified { color: var(--ac-green-text); }
+.ac-barcode-state.is-conflict { color: var(--ac-red-text); }
+.ac-barcode-state.is-invalid  { color: var(--ac-red-text); }
+.ac-barcode-state.is-loading  { color: var(--ac-ink-faint); }
+
+/* ---------- زر المسح — بنفس وزن البحث النصّي ---------- */
+.ac-scan-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: var(--ac-r-md);
+    font-size: .9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--ac-tr);
+    line-height: 1;
+    white-space: nowrap;
+    border: 1.5px solid var(--ac-teal-text);
+    background: transparent;
+    color: var(--ac-teal-text);
+}
+.ac-scan-btn:hover:not(:disabled) { background: var(--ac-teal-mist); }
+.ac-scan-btn.is-solid {
+    background: var(--ac-teal);
+    color: #fff;
+    border-color: transparent;
+}
+.ac-scan-btn.is-solid:hover:not(:disabled) { background: var(--ac-teal-deep); }
+.ac-scan-btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+}
+.ac-scan-btn:focus-visible {
+    outline: 2px solid var(--focus-ring, var(--ac-teal));
+    outline-offset: 2px;
+}
+.ac-scan-icon { display: flex; flex-shrink: 0; }
+
+/* الحجم الكبير — للموبايل: هدف لمس واضح */
+.ac-scan-btn.is-lg {
+    width: 100%;
+    padding: 15px 20px;
+    font-size: 1rem;
+}
+.ac-scan-btn.is-lg .ac-scan-icon svg { width: 24px; height: 24px; }
+
+/* ---------- حوارات الباركود ---------- */
+.ac-modal-overlay { z-index: 2100; }
+.ac-modal.is-wide { max-width: 620px; }
+
+.ac-modal-head.is-conflict h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ac-red-text);
+}
+.ac-modal-title-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--ac-r-full);
+    font-size: .9rem;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+.ac-modal-title-icon.is-conflict {
+    background: var(--ac-red-bg);
+    color: var(--ac-red-text);
+}
+
+.ac-modal-sub {
+    margin: 4px 0 0;
+    font-size: .82rem;
+    color: var(--ac-ink-faint);
+}
+
+/* الباركود الممسوح — ثابت وبارز */
+.ac-linked-barcode {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    margin-block-end: 16px;
+    border-radius: var(--ac-r-md);
+    background: var(--ph-canvas);
+    border: 1px solid var(--ac-line-soft);
+}
+.ac-linked-barcode-label {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--ac-ink-faint);
+}
+.ac-linked-barcode-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--ac-ink);
+    letter-spacing: .5px;
+    direction: ltr;
+}
+
+/* ---------- ملاحظات معلوماتية/تحذيرية ---------- */
+.ac-note {
+    display: flex;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--ac-r-md);
+    margin-block-end: 16px;
+    font-size: .82rem;
+    line-height: 1.55;
+    border: 1px solid transparent;
+}
+.ac-note strong { display: block; margin-block-end: 3px; font-size: .84rem; }
+.ac-note p { margin: 0; }
+.ac-note-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: var(--ac-r-full);
+    font-size: .72rem;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+/* معلوماتي = أزرق (نمو تغطية، لا مشكلة) */
+.ac-note.is-info {
+    background: var(--ac-blue-bg);
+    color: var(--ac-blue-text);
+}
+.ac-note.is-info .ac-note-icon { background: var(--ac-blue-text); color: var(--ac-blue-bg); }
+/* تحذيري = برتقالي (يحتاج انتباهًا) */
+.ac-note.is-warn {
+    background: var(--ac-orange-bg);
+    color: var(--ac-orange-text);
+}
+.ac-note.is-warn .ac-note-icon { background: var(--ac-orange-text); color: var(--ac-orange-bg); }
+
+/* ---------- مربّع البحث داخل الحوارات ---------- */
+.ac-search-wrap {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--ac-r-md);
+    background: var(--ph-paper);
+    transition: var(--ac-tr);
+}
+.ac-search-wrap:focus-within {
+    border-color: var(--focus-ring, var(--ac-teal));
+    box-shadow: 0 0 0 3px var(--ac-teal-mist);
+}
+.ac-search-icon {
+    display: flex;
+    padding-inline: 12px;
+    color: var(--ac-ink-faint);
+    flex-shrink: 0;
+}
+.ac-search-input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 12px 11px 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--ac-ink);
+    font-size: .9rem;
+}
+
+/* NOTE (audit B-7/B-8) — the dead "link results / conflict compare / coverage
+   card / activity card / inline-empty" blocks that used to sit here were moved
+   to styles/legacy/accounting-unported-screens.css (not imported). See that
+   file's header before re-adding anything. */
+
+/* ---------- إشعار عائم ---------- */
+.ac-toast-host {
+    position: fixed;
+    inset-block-end: 24px;
+    inset-inline-start: 50%;
+    transform: translateX(-50%) translateY(120%);
+    z-index: 2400;
+    max-width: min(92vw, 420px);
+    padding: 12px 20px;
+    border-radius: var(--ac-r-md);
+    font-size: .84rem;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: var(--ac-sh-md);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .25s ease, opacity .25s ease;
+}
+.ac-toast-host.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+.ac-toast-host.is-success { background: var(--ac-green-bg); color: var(--ac-green-text); }
+.ac-toast-host.is-warn { background: var(--ac-orange-bg); color: var(--ac-orange-text); }
+.ac-toast-host.is-error { background: var(--ac-red-bg); color: var(--ac-red-text); }
+.ac-toast-host.is-info { background: var(--ac-blue-bg); color: var(--ac-blue-text); }
+
+/* ---------- نتيجة المسح داخل نقطة البيع ---------- */
+.ac-scan-found {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    border-radius: var(--ac-r-md);
+    background: var(--ac-green-bg);
+    border: 1px solid transparent;
+    margin-block-end: 14px;
+}
+.ac-scan-found-body { flex: 1; min-width: 0; }
+.ac-scan-found-name {
+    font-size: .92rem;
+    font-weight: 800;
+    color: var(--ac-green-text);
+    margin-block-end: 2px;
+}
+.ac-scan-found-meta {
+    font-size: .76rem;
+    color: var(--ac-green-text);
+    opacity: .9;
+}
+.ac-scan-found .ph-btn { flex-shrink: 0; }
+
+/* ---------- مسار مزدوج: بحث + مسح — وزن بصري متساوٍ ---------- */
+.ac-dual-path {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: end;
+}
+.ac-dual-path .ac-field { margin-block-end: 0; }
+
+/* ---------- أعمدة المخزون ---------- */
+.ac-bcode-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.ac-bcode-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .78rem;
+    color: var(--ac-ink-soft);
+    direction: ltr;
+    letter-spacing: .3px;
+}
+.ac-bcode-none {
+    font-size: .78rem;
+    color: var(--ac-ink-faint);
+    font-style: italic;
+}
+
+/* ---------- الاستجابة ---------- */
+@media (max-width: 768px) {
+    .ac-dual-path { grid-template-columns: 1fr; }
+    .ac-coverage-ring { width: 92px; height: 92px; }
+    .ac-activity-row {
+        grid-template-columns: 1fr auto;
+        gap: 6px 10px;
+    }
+    .ac-activity-code { grid-column: 1 / -1; }
+    .ac-activity-name { grid-column: 1; }
+    .ac-activity-time { grid-column: 2; justify-self: end; }
+    .ac-toast-host { inset-block-end: 16px; max-width: 94vw; }
+}
+
+@media (max-width: 480px) {
+    .ac-scan-found { flex-direction: column; align-items: stretch; }
+    .ac-scan-found .ph-btn { width: 100%; }
+    .ac-link-results { max-height: 200px; }
+    .ac-conflict-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .ac-conflict-val { text-align: start; }
+}
+
+/* ==========================================================
+   المسح بالهاتف — الهاتف كقارئ باركود عن بُعد
+   ==========================================================
+   ⚠️ الهاتف طريقة إدخال ثالثة بنفس وزن البحث والمسح المحلي.
+   ترتيب طرق الإدخال في الواجهة:
+     ⌨️ البحث / قارئ لوحة المفاتيح  ·  🔌 قارئ USB  ·  📱 الهاتف
+   ========================================================== */
+
+/* ---------- زر المسح بالهاتف ---------- */
+.ac-phone-scan-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: var(--ac-r-md);
+    border: 1.5px solid var(--ac-line);
+    background: var(--ph-canvas);
+    color: var(--ac-ink-soft);
+    font-size: .9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--ac-tr);
+    line-height: 1;
+    white-space: nowrap;
+}
+.ac-phone-scan-btn:hover {
+    background: var(--ph-paper);
+    border-color: var(--ac-teal-text);
+    color: var(--ac-teal-text);
+}
+.ac-phone-scan-btn:focus-visible {
+    outline: 2px solid var(--focus-ring, var(--ac-teal));
+    outline-offset: 2px;
+}
+.ac-phone-scan-btn.is-lg { width: 100%; padding: 15px 20px; font-size: 1rem; }
+.ac-phone-scan-icon { display: flex; flex-shrink: 0; }
+
+/* نقطة «جهاز متصل» — تظهر فقط عند وجود اقتران فعلي */
+.ac-phone-scan-dot {
+    position: absolute;
+    inset-block-start: 6px;
+    inset-inline-end: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--ac-r-full);
+    background: var(--ac-green-text);
+    box-shadow: 0 0 0 2px var(--ph-canvas);
+}
+
+/* ---------- صفّ أزرار الإدخال ---------- */
+.ac-scan-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-block-start: 4px;
+}
+.ac-scan-or {
+    font-size: .76rem;
+    font-weight: 700;
+    color: var(--ac-ink-faint);
+    padding-inline: 2px;
+}
+.ac-entry-card { margin-block-end: 18px; }
+
+/* ---------- النافذة ---------- */
+.ac-phone-modal { max-width: 600px; }
+
+.ac-phone-modal-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--ac-r-full);
+    background: var(--ac-teal-mist);
+    color: var(--ac-teal-text);
+    margin-inline-end: 4px;
+    vertical-align: middle;
+}
+
+/* خطوات الاقتران */
+.ac-pair-steps {
+    margin: 0 0 16px;
+    padding-inline-start: 20px;
+    font-size: .84rem;
+    line-height: 1.85;
+    color: var(--ac-ink-soft);
+}
+.ac-pair-steps li::marker {
+    color: var(--ac-teal-text);
+    font-weight: 800;
+}
+
+/* ---------- مؤشّر الحالة ---------- */
+.ac-session-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--ac-r-md);
+    border: 1px solid var(--ac-line-soft);
+    background: var(--ph-canvas);
+    font-size: .86rem;
+    font-weight: 700;
+    margin-block-end: 16px;
+}
+.ac-session-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--ac-r-full);
+    flex-shrink: 0;
+    background: var(--ac-ink-faint);
+}
+.ac-session-label { flex: 1; min-width: 0; color: var(--ac-ink); }
+.ac-session-timer {
+    font-size: .76rem;
+    font-weight: 700;
+    color: var(--ac-ink-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+/* الحالات — لون دلالي واحد لكل حالة */
+.ac-session-status.is-waiting { background: var(--ac-blue-bg); border-color: transparent; }
+.ac-session-status.is-waiting .ac-session-dot { background: var(--ac-blue-text); }
+.ac-session-status.is-waiting .ac-session-label { color: var(--ac-blue-text); }
+
+.ac-session-status.is-connecting { background: var(--ac-blue-bg); border-color: transparent; }
+.ac-session-status.is-connecting .ac-session-dot { background: var(--ac-blue-text); animation: ac-pulse 1.1s ease-in-out infinite; }
+.ac-session-status.is-connecting .ac-session-label { color: var(--ac-blue-text); }
+
+.ac-session-status.is-connected { background: var(--ac-green-bg); border-color: transparent; }
+.ac-session-status.is-connected .ac-session-dot { background: var(--ac-green-text); }
+.ac-session-status.is-connected .ac-session-label { color: var(--ac-green-text); }
+
+.ac-session-status.is-scanning { background: var(--ac-orange-bg); border-color: transparent; }
+.ac-session-status.is-scanning .ac-session-dot { background: var(--ac-orange-text); animation: ac-pulse .8s ease-in-out infinite; }
+.ac-session-status.is-scanning .ac-session-label { color: var(--ac-orange-text); }
+
+.ac-session-status.is-received { background: var(--ac-green-bg); border-color: transparent; }
+.ac-session-status.is-received .ac-session-dot { background: var(--ac-green-text); }
+.ac-session-status.is-received .ac-session-label { color: var(--ac-green-text); }
+
+.ac-session-status.is-disconnected { background: var(--ac-orange-bg); border-color: transparent; }
+.ac-session-status.is-disconnected .ac-session-dot { background: var(--ac-orange-text); }
+.ac-session-status.is-disconnected .ac-session-label { color: var(--ac-orange-text); }
+
+.ac-session-status.is-expired { background: var(--ac-red-bg); border-color: transparent; }
+.ac-session-status.is-expired .ac-session-dot { background: var(--ac-red-text); }
+.ac-session-status.is-expired .ac-session-label { color: var(--ac-red-text); }
+
+.ac-session-status.is-error { background: var(--ac-red-bg); border-color: transparent; }
+.ac-session-status.is-error .ac-session-dot { background: var(--ac-red-text); }
+.ac-session-status.is-error .ac-session-label { color: var(--ac-red-text); }
+
+@keyframes ac-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .45; transform: scale(.82); }
+}
+
+/* ---------- بطاقة الاقتران ---------- */
+.ac-pair-card {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+    padding: 18px;
+    border: 1px solid var(--ac-line-soft);
+    border-radius: var(--ac-r-lg);
+    background: var(--ph-canvas);
+}
+.ac-pair-qr { text-align: center; flex-shrink: 0; }
+.ac-pair-qr-render,
+.ac-pair-qr-placeholder {
+    width: 168px;
+    height: 168px;
+    border-radius: var(--ac-r-md);
+    background: var(--ph-paper);
+    border: 1px solid var(--ac-line-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.ac-pair-qr-render svg { width: 100%; height: 100%; }
+.ac-pair-qr-cap {
+    margin: 8px 0 0;
+    font-size: .74rem;
+    color: var(--ac-ink-faint);
+    max-width: 168px;
+    line-height: 1.45;
+}
+.ac-pair-qr-cap.is-pending { font-weight: 600; }
+
+/* شبكة رمزية للـQR المؤقّت — تُفهَم بصريًّا كـ«QR قادم» لا كـQR حقيقي */
+.ac-pair-qr-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
+    padding: 16px;
+    width: 100%;
+    height: 100%;
+}
+.ac-pair-qr-cell {
+    border-radius: 2px;
+    background: var(--ac-line-soft);
+}
+.ac-pair-qr-cell.is-on { background: var(--ac-ink-faint); }
+
+/* الرمز القصير */
+.ac-pair-code-box { flex: 1; min-width: 190px; }
+.ac-pair-code-label {
+    display: block;
+    font-size: .76rem;
+    font-weight: 700;
+    color: var(--ac-ink-faint);
+    margin-block-end: 4px;
+}
+.ac-pair-code {
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: .22em;
+    color: var(--ac-ink);
+    line-height: 1.2;
+    direction: ltr;
+    /* قابل للتحديد بسهولة — الصيدلي قد يحتاج نسخه أو كتابته يدويًّا */
+    user-select: all;
+}
+.ac-pair-code-hint {
+    margin: 8px 0 0;
+    font-size: .76rem;
+    color: var(--ac-ink-faint);
+    line-height: 1.5;
+}
+
+/* ---------- الباركود الوارد ---------- */
+.ac-received {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    border-radius: var(--ac-r-md);
+    background: var(--ac-green-bg);
+    color: var(--ac-green-text);
+    margin-block-end: 14px;
+    font-size: .84rem;
+    font-weight: 700;
+}
+.ac-received-label { flex-shrink: 0; }
+.ac-received-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    direction: ltr;
+}
+.ac-received-hint { font-size: .78rem; opacity: .9; }
+
+/* ---------- طابور المسح ---------- */
+.ac-queue {
+    padding: 10px 14px;
+    border-radius: var(--ac-r-md);
+    border: 1px dashed var(--ac-line);
+    margin-block-end: 14px;
+}
+.ac-queue-label {
+    display: block;
+    font-size: .74rem;
+    font-weight: 700;
+    color: var(--ac-ink-faint);
+    margin-block-end: 6px;
+}
+.ac-queue-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.ac-queue-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .78rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--ac-ink-soft);
+}
+.ac-queue-item.is-current { color: var(--ac-orange-text); font-weight: 700; }
+.ac-queue-item.is-done { color: var(--ac-ink-faint); }
+
+/* ---------- الأجهزة ---------- */
+.ac-phone-divider {
+    height: 1px;
+    background: var(--ac-line-soft);
+    margin: 18px 0;
+}
+.ac-devices-head { margin-block-end: 8px; }
+.ac-devices-title {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--ac-ink-faint);
+}
+.ac-devices-list { list-style: none; margin: 0; padding: 0; }
+
+.ac-device-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: var(--ac-r-md);
+    border: 1px solid var(--ac-line-soft);
+    background: var(--ph-paper);
+    font-size: .84rem;
+}
+.ac-device-row.is-active { border-color: var(--ac-green-text); }
+.ac-device-icon { display: flex; color: var(--ac-ink-faint); flex-shrink: 0; }
+.ac-device-row.is-active .ac-device-icon { color: var(--ac-green-text); }
+.ac-device-name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 700;
+    color: var(--ac-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ac-device-badge {
+    padding: 3px 9px;
+    border-radius: var(--ac-r-full);
+    background: var(--ac-green-bg);
+    color: var(--ac-green-text);
+    font-size: .68rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.ac-device-empty {
+    padding: 14px;
+    text-align: center;
+    font-size: .82rem;
+    color: var(--ac-ink-faint);
+    border: 1px dashed var(--ac-line);
+    border-radius: var(--ac-r-md);
+}
+
+/* طلب اقتران جهاز آخر */
+.ac-device-request {
+    margin-block-start: 10px;
+    padding: 12px 14px;
+    border-radius: var(--ac-r-md);
+    background: var(--ac-orange-bg);
+    color: var(--ac-orange-text);
+    border: 1px solid transparent;
+}
+.ac-device-request-title {
+    margin: 0 0 4px;
+    font-size: .84rem;
+    font-weight: 800;
+}
+.ac-device-request-name {
+    margin: 0 0 10px;
+    font-size: .8rem;
+    font-weight: 600;
+}
+.ac-device-request-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.ac-phone-foot-note {
+    margin: 14px 0 0;
+    font-size: .74rem;
+    line-height: 1.55;
+    color: var(--ac-ink-faint);
+}
+
+/* ---------- الاستجابة ---------- */
+@media (max-width: 640px) {
+    .ac-pair-card { flex-direction: column; align-items: stretch; gap: 16px; }
+    .ac-pair-qr { align-self: center; }
+    .ac-pair-code { font-size: 1.6rem; letter-spacing: .16em; }
+    .ac-scan-actions { flex-direction: column; align-items: stretch; }
+    .ac-scan-actions .ph-btn,
+    .ac-phone-scan-btn { width: 100%; }
+    .ac-scan-or { text-align: center; padding-block: 2px; }
+    .ac-device-row { flex-wrap: wrap; }
+    .ac-received { flex-direction: column; align-items: flex-start; gap: 6px; }
+}
+
+/* ==========================================================
+   الطباعة — صفحة/فاتورة نظيفة بلا عناصر تنقّل
+   ========================================================== */
+@media print {
+    .sidebar-pro,
+    .topbar,
+    .ac-demo-banner,
+    .ac-invoice-actions,
+    .breadcrumb-nav,
+    .sync-banner,
+    .ac-no-print { display: none !important; }
+    .main-wrapper { margin: 0 !important; }
+    .main-content { padding: 0 !important; }
+    .ph-page { padding: 0 !important; }
+    .ac-invoice-doc { box-shadow: none; border: none; max-width: 100%; }
+    body { background: #fff !important; color: #000 !important; }
+}
+
+/* ==========================================================
+   إضافات React — أنماط مفقودة في Blade
+
+   السبب: هذه الأصناف موجودة في Blade كـ«خطّافات بلا نمط» — تُكتب في
+   الـHTML ولا توجد لها أي قاعدة CSS في `pharmacy_accounting.css` ولا في
+   `pharmacy_hub.css`. النتيجة في الواجهة القديمة: بطاقة الرصيد تظهر كنصّ
+   عارٍ بلا صندوق، وعناصر `.ph-grid-item` تتلاصق بلا فواصل، وحقلا الكمية/
+   الخصم في سلة الـPOS يظهران بعرض المتصفّح الافتراضي فيطغيان على الجدول.
+
+   القيم أدناه مشتقّة من توكنات التصميم نفسها (لا ألوان جديدة) — أي أنها
+   تُصلح الخلل دون إدخال هوية بصرية جديدة.
+   ========================================================== */
+
+/* بطاقة الرصيد — صندوق بارز مطابق لبقية بطاقات ph-card */
+.ac-balance-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 22px;
+}
+.ac-balance-card .label {
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--ph-ink-faint);
+}
+.ac-balance-card .value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--ph-teal-text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.15;
+}
+
+/* عناصر شبكة الملخّص (صفحات الإرجاع) — بطاقة صغيرة لكل قيمة */
+.ph-grid-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    border: 1px solid var(--ph-line-soft);
+    border-radius: var(--ph-r-md);
+    background: var(--ph-canvas);
+}
+.ph-grid-item .label {
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--ph-ink-faint);
+}
+.ph-grid-item .value {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ph-ink);
+    font-variant-numeric: tabular-nums;
+}
+.ph-grid-item .value a { color: var(--ph-teal-text); text-decoration: none; }
+.ph-grid-item .value a:hover { text-decoration: underline; }
+
+body.dark-mode .ph-grid-item { background: var(--field-bg); border-color: var(--line); }
+
+/* ----------------------------------------------------------
+   🔴 إصلاح React: بطاقة بـ`ph-card-title` مباشر بلا حشو
+   ----------------------------------------------------------
+   `.ph-card` حشوها صفر — الحشو يسكن في `.ph-card-head` / `.ph-card-body`
+   فقط. لكن قوالب المحاسبة (refunds/create · refunds/show · invoice)
+   تستعمل نمطًا ثالثًا لم يُعرَّف له أي نمط في Blade:
+
+       <div class="ph-card">
+           <h3 class="ph-card-title">العنوان</h3>
+           <div class="ph-grid">…</div>
+       </div>
+
+   `ph-card-title` صنف «خطّاف بلا نمط» (لا قاعدة له في pharmacy_hub.css ولا
+   في pharmacy_accounting.css)، والـ`.ph-card` بلا حشو ⇒ العنوان يلتصق
+   بحافة البطاقة والشبكة تتلاصق بالحدود، فتبدو الصفحة مقطّعة وبها فراغات
+   غريبة. نمنح هذا النمط حشوًا وعنوانًا مرتّبين — دون لمس `.ph-card` عمومًا
+   كي لا تتأثّر البطاقات التي تعتمد `ph-card-head/body`.
+   ---------------------------------------------------------- */
+.ph-card > .ph-card-title {
+    margin: 0;
+    padding: 18px 22px 0;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--ph-ink);
+}
+
+/* عندما تكون البطاقة بهذا النمط (عنوان + شبكة) تُضاف حشوة للشبكة وحدها
+   حتى تبقى البطاقة متناسقة مع بقية البطاقات (22px). */
+.ph-card > .ph-grid,
+.ph-card > .ph-table-wrap,
+.ph-card > form,
+.ph-card > p,
+.ph-card > .ph-form-group {
+    padding: 18px 22px;
+}
+.ph-card > .ph-table-wrap { padding: 0 22px 22px; }
+
+body.dark-mode .ph-card > .ph-card-title { color: var(--ink); }
+
+/* حقول الكمية/الخصم داخل سلة الـPOS — عرض محدود حتى لا تُشوّه الجدول */
+.ac-cart-qty,
+.ac-cart-disc {
+    width: 84px;
+    min-width: 0;
+    padding: 6px 8px;
+    text-align: center;
+}

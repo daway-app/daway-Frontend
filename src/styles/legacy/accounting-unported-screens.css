@@ -1,0 +1,273 @@
+/* ==========================================================
+   QUARANTINED — dead CSS from pharmacy-accounting.css (audit B-7/B-8).
+   ==========================================================
+   These rules have ZERO references anywhere in src/**/*.ts(x) — verified
+   with tools/dead-css.mjs, which is deliberately CONSERVATIVE (a class
+   counts as used if its token appears anywhere, including inside template
+   literals and props).
+
+   Kept rather than deleted because they are the ported half of Blade
+   screens that are NOT in this phase's scope (barcode link-results dialog,
+   conflict comparison, coverage card, activity card, inline-empty state).
+   Preserved verbatim so re-porting those screens is a move, not a rewrite.
+
+   THIS FILE IS NOT IMPORTED. If you port one of those screens, move the
+   rules you need back into pharmacy-accounting.css (or a feature file) and
+   re-run "node tools/dead-css.mjs". Do not @import this file wholesale.
+
+   Extracted from pharmacy-accounting.css lines 944-1197 on 2026-10-06.
+   ========================================================== */
+/* ---------- نتائج الربط ---------- */
+.ac-link-results {
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid var(--ac-line-soft);
+    border-radius: var(--ac-r-md);
+    background: var(--ph-paper);
+    margin-block-start: 8px;
+}
+.ac-link-placeholder {
+    padding: 22px 16px;
+    text-align: center;
+    font-size: .82rem;
+    color: var(--ac-ink-faint);
+}
+.ac-link-result {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: 11px 14px;
+    border: none;
+    border-block-end: 1px solid var(--ac-line-soft);
+    background: transparent;
+    text-align: start;
+    cursor: pointer;
+    transition: var(--ac-tr);
+    font-family: inherit;
+}
+.ac-link-result:last-child { border-block-end: none; }
+.ac-link-result:hover { background: var(--ac-teal-mist); }
+.ac-link-result:focus-visible {
+    outline: 2px solid var(--focus-ring, var(--ac-teal));
+    outline-offset: -2px;
+}
+.ac-link-result-name {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--ac-ink);
+}
+.ac-link-result-ing {
+    font-size: .74rem;
+    color: var(--ac-ink-faint);
+}
+
+/* الدواء المختار */
+.ac-link-chosen {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-block-start: 12px;
+    padding: 11px 14px;
+    border-radius: var(--ac-r-md);
+    background: var(--ac-green-bg);
+    color: var(--ac-green-text);
+    font-size: .82rem;
+}
+.ac-link-chosen-label { font-weight: 700; }
+.ac-link-chosen-name { font-weight: 800; }
+
+/* رسالة داخل الحوار */
+.ac-modal-flash {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: var(--ac-r-sm);
+    font-size: .8rem;
+    font-weight: 600;
+}
+.ac-modal-flash.is-warn { background: var(--ac-orange-bg); color: var(--ac-orange-text); }
+.ac-modal-flash.is-error { background: var(--ac-red-bg); color: var(--ac-red-text); }
+.ac-modal-flash.is-info { background: var(--ac-blue-bg); color: var(--ac-blue-text); }
+
+/* ---------- مقارنة التعارض ---------- */
+.ac-conflict-text {
+    margin: 0 0 16px;
+    font-size: .88rem;
+    line-height: 1.65;
+    color: var(--ac-ink-soft);
+}
+.ac-conflict-compare {
+    border: 1px solid var(--ac-line-soft);
+    border-radius: var(--ac-r-md);
+    overflow: hidden;
+    margin-block-end: 16px;
+}
+.ac-conflict-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 11px 14px;
+    border-block-end: 1px solid var(--ac-line-soft);
+    background: var(--ph-paper);
+}
+.ac-conflict-row:last-child { border-block-end: none; }
+.ac-conflict-row.is-existing { background: var(--ac-red-bg); }
+.ac-conflict-row.is-attempt { background: var(--ph-canvas); }
+.ac-conflict-key {
+    font-size: .78rem;
+    font-weight: 700;
+    color: var(--ac-ink-faint);
+    flex-shrink: 0;
+}
+.ac-conflict-row.is-existing .ac-conflict-key { color: var(--ac-red-text); }
+.ac-conflict-val {
+    font-size: .84rem;
+    font-weight: 700;
+    color: var(--ac-ink);
+    text-align: end;
+}
+.ac-conflict-val.is-name { font-weight: 800; }
+.ac-conflict-row.is-existing .ac-conflict-val { color: var(--ac-red-text); }
+.ac-conflict-val[dir="ltr"] {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: .5px;
+}
+
+/* ---------- بطاقة التغطية ---------- */
+.ac-coverage-meter {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+.ac-coverage-ring {
+    position: relative;
+    width: 108px;
+    height: 108px;
+    flex-shrink: 0;
+}
+.ac-coverage-ring svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+.ac-coverage-track { stroke: var(--ac-line-soft); }
+.ac-coverage-fill {
+    stroke: var(--ac-teal);
+    stroke-linecap: round;
+    transition: stroke-dashoffset .6s ease;
+}
+.ac-coverage-value {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+}
+.ac-coverage-pct {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--ac-ink);
+    line-height: 1;
+}
+.ac-coverage-cap {
+    font-size: .64rem;
+    font-weight: 700;
+    color: var(--ac-ink-faint);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+.ac-coverage-breakdown {
+    flex: 1;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.ac-coverage-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: .84rem;
+}
+.ac-coverage-item-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--ac-r-full);
+    flex-shrink: 0;
+}
+.ac-coverage-item-dot.is-linked { background: var(--ac-teal); }
+.ac-coverage-item-dot.is-unlinked { background: var(--ac-ink-faint); }
+.ac-coverage-item-label { color: var(--ac-ink-soft); font-weight: 600; }
+.ac-coverage-item-value {
+    margin-inline-start: auto;
+    font-weight: 800;
+    color: var(--ac-ink);
+    font-variant-numeric: tabular-nums;
+}
+.ac-coverage-foot {
+    margin: 14px 0 0;
+    font-size: .74rem;
+    color: var(--ac-ink-faint);
+    line-height: 1.5;
+}
+
+/* ---------- بطاقة آخر نشاط ---------- */
+.ac-activity-body { padding-block-start: 8px; }
+.ac-activity-list { list-style: none; margin: 0; padding: 0; }
+.ac-activity-row {
+    display: grid;
+    grid-template-columns: 128px 1fr auto auto;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 0;
+    border-block-end: 1px solid var(--ac-line-soft);
+    font-size: .82rem;
+}
+.ac-activity-row:last-child { border-block-end: none; }
+.ac-activity-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--ac-ink-soft);
+    direction: ltr;
+}
+.ac-activity-name {
+    font-weight: 700;
+    color: var(--ac-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ac-activity-time {
+    font-size: .74rem;
+    color: var(--ac-ink-faint);
+    white-space: nowrap;
+}
+
+/* فراغ مضمّن — مفيد لا معتذر */
+.ac-empty-inline { text-align: center; padding: 26px 16px; }
+.ac-empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--ac-r-full);
+    background: var(--ph-canvas);
+    color: var(--ac-teal-text);
+    margin-block-end: 12px;
+}
+.ac-empty-title {
+    margin: 0 0 5px;
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--ac-ink);
+}
+.ac-empty-desc {
+    margin: 0;
+    font-size: .78rem;
+    color: var(--ac-ink-faint);
+    line-height: 1.5;
+}

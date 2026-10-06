@@ -1,0 +1,354 @@
+/* ==========================================
+   Modern Card & Grid Layout
+   ========================================== */
+.page-wrapper {
+    /*
+     * AUDIT B-14 FIX — `direction: rtl; text-align: right;` were hardcoded here
+     * while every other page relies on the shell's `<html dir="rtl">` and uses
+     * logical properties. That meant this page would NOT flip if the document
+     * direction ever changed (and it double-applied RTL inside an already-RTL
+     * document).
+     *
+     * Direction is now inherited from the document; text alignment uses the
+     * logical `start`, which resolves to right under `dir="rtl"` and would
+     * resolve to left under `dir="ltr"` — no hardcoded side.
+     */
+    text-align: start;
+    max-width: 750px;
+    margin: 40px auto;
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.main-card {
+    background: var(--paper);
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Coloured, prominent card header */
+.card-header-modern {
+    background: linear-gradient(135deg, #155E85 0%, #0F766E 100%);
+    color: #ffffff;
+    padding: 25px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.header-title-area h2 {
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0 0 5px 0;
+    color: #ffffff;
+}
+
+.header-title-area p {
+    font-size: 13px;
+    margin: 0;
+    color: #ccfbf1;
+    opacity: 0.9;
+}
+
+.header-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    backdrop-filter: blur(5px);
+}
+
+/* Form card body */
+.card-body-modern {
+    padding: 30px;
+}
+
+/* Field grid layout */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group.full-width {
+    grid-column: span 2;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+}
+
+.form-group label span {
+    color: var(--danger-text);
+}
+
+.form-control {
+    width: 100%;
+    padding: 11px 16px;
+    font-size: 13px;
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    outline: none;
+    background-color: var(--canvas);
+    color: var(--ink);
+    box-sizing: border-box;
+    transition: all 0.25s ease;
+}
+
+.form-control:hover {
+    border-color: var(--line-strong);
+    background-color: var(--paper);
+}
+
+.form-control:focus {
+    border-color: var(--focus-ring);
+    background-color: var(--paper);
+    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+}
+
+/* Password field wrapper + eye toggle */
+.password-container {
+    position: relative;
+    width: 100%;
+}
+
+.password-container .form-control {
+    padding-left: 45px;
+}
+
+.toggle-password {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font-size: 16px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.toggle-password:hover {
+    color: var(--teal-text);
+}
+
+/* Password-strength indicator (animation + bar) */
+.password-strength-meter {
+    margin-top: 8px;
+}
+
+.strength-bar-container {
+    width: 100%;
+    height: 6px;
+    background-color: var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.strength-bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.4s ease, background-color 0.4s ease;
+    border-radius: 4px;
+}
+
+.strength-text {
+    font-size: 11px;
+    margin-top: 5px;
+    display: block;
+    font-weight: 500;
+    color: var(--ink-soft);
+    transition: color 0.3s ease;
+}
+
+/* Dropdown list */
+select.form-control {
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: left 14px center;
+    background-size: 16px;
+}
+
+/* Action buttons */
+.card-footer-modern {
+    background-color: var(--canvas);
+    border-top: 1px solid #e2e8f0;
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-submit {
+    background-color: var(--teal-fill);
+    color: #ffffff;
+    padding: 11px 24px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 13px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
+}
+
+.btn-submit:hover {
+    background-color: #1C72A6;
+    transform: translateY(-1px);
+}
+
+.btn-cancel {
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 11px 18px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+    background-color: var(--line);
+    color: var(--ink);
+}
+
+/* Error box */
+.alert-danger-modern {
+    background-color: var(--danger-bg);
+    border: 1px solid #fecaca;
+    color: var(--danger-text);
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 13px;
+    margin-bottom: 25px;
+}
+
+/* Success message */
+.success-alert-modern {
+    background-color: var(--success-bg);
+    border: 1px solid #86EFAC;
+    color: var(--success-text);
+    padding: 14px 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .form-group.full-width {
+        grid-column: span 1;
+    }
+}
+
+/* ==========================================
+   Dark Mode
+   ========================================== */
+body.dark-mode .main-card {
+    background: var(--paper);
+    border-color: var(--line);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
+}
+
+body.dark-mode .card-footer-modern {
+    background-color: var(--canvas);
+    border-top-color: var(--line);
+}
+
+body.dark-mode .form-group label {
+    color: var(--ink);
+}
+
+body.dark-mode .form-control {
+    background-color: var(--canvas);
+    border-color: var(--line-strong);
+    color: var(--ink);
+}
+
+body.dark-mode .form-control:hover {
+    border-color: #14b8a6;
+    background-color: var(--paper);
+}
+
+body.dark-mode .form-control:focus {
+    border-color: #14b8a6;
+    background-color: var(--paper);
+    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
+}
+
+body.dark-mode .form-control::placeholder {
+    color: var(--ink-faint);
+}
+
+/* AUDIT B-9/B-16 — dark read-only/disabled field rule consolidated into
+   base.css so this visual has one owner and one token pair. */
+
+body.dark-mode .toggle-password {
+    color: var(--ink-soft);
+}
+
+body.dark-mode .toggle-password:hover {
+    color: #14b8a6;
+}
+
+body.dark-mode .strength-bar-container {
+    background-color: var(--line-soft);
+}
+
+body.dark-mode .strength-text {
+    color: var(--ink-soft);
+}
+
+body.dark-mode select.form-control {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%237BC1B7'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+}
+
+body.dark-mode .btn-cancel {
+    color: var(--ink-soft);
+}
+
+body.dark-mode .btn-cancel:hover {
+    background-color: var(--line-soft);
+    color: var(--ink);
+}
+
+body.dark-mode .alert-danger-modern {
+    background-color: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
+}
+
+body.dark-mode .success-alert-modern {
+    background-color: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+}

@@ -1,0 +1,173 @@
+/* ==========================================================
+   Daway — Design Tokens (mirror)
+   ==========================================================
+   Source of truth: daway-backend/resources/css/tokens.css
+   The backend is READ-ONLY, so this file carries the values
+   forward verbatim. Values must stay byte-identical to the
+   backend file — do not invent or "improve" any value.
+
+   ⚠️ Theme switching relies on the .dark-mode class on BOTH
+      <html> and <body> (same as Blade), so dark values are
+      declared for both selectors.
+
+   React divergence (audit B-15): lib/theme.ts ALSO sets
+   data-theme="dark"|"light" on <html>. That attribute is now
+   consumed as an equivalent selector below, so it is a real API
+   rather than a dead write. Class and attribute stay in sync.
+   ========================================================== */
+
+:root {
+    /* ---------- الهوية: التيل (لا تتغير بين الوضعين) ---------- */
+    --teal-deep:    #155E85;
+    --teal-primary: #1C72A6;
+    --teal-light:   #7BC1B7;
+    --teal-deeper:  #004452;
+
+    --teal-mist:    #EAF5F4;   /* لمسة تيل للـ hover */
+    --teal-mist-2:  #F5FAF9;   /* خلفية فاتحة جداً */
+
+    /* ---------- المحايدات (الفاتح) ---------- */
+    --ink:          #0C2224;
+    --ink-soft:     #4C6669;
+    --ink-faint:    #5C7073;
+    --line:         #DEE8E7;
+    --line-soft:    #EEF4F3;
+    --line-strong:  #728B89;
+    --paper:        #FFFFFF;
+    --canvas:       #F5FAF9;
+    --field-bg:     #FFFFFF;
+    --focus-ring:   #1C72A6;
+
+    /* ---------- الحالات الدلالية ---------- */
+    --success:      #16A34A;
+    --success-bg:   #DCFCE7;
+    --warning:      #CA8A04;
+    --warning-bg:   #FEF9C3;
+    --danger:       #DC2626;
+    --danger-bg:    #FEE2E2;
+    --danger-strong:#B91C1C;
+    --info:         #0369A1;
+    --info-bg:      #E0F2FE;
+
+    /* ---------- نصوص دلالية ---------- */
+    --success-text: #14702F;
+    --warning-text: #B45309;
+    --danger-text:  #B91C1C;
+    --info-text:    #0369A1;
+    --teal-text:    #1C72A6;
+    --pink-text:    #BE185D;
+    --indigo-text:  #4338CA;
+
+    /* ---------- تعبئات ثابتة ---------- */
+    --success-fill: #15803D;
+    --warning-fill: #B45309;
+    --info-fill:    #0369A1;
+    --danger-fill:  #B91C1C;
+    --teal-fill:    #1C72A6;
+
+    /* ---------- القياسات ---------- */
+    --sidebar-width: 260px;
+    --topbar-height: 64px;
+
+    --r-sm:  8px;
+    --r-md:  12px;
+    --r-lg:  18px;
+    --r-xl:  24px;
+    --r-full: 9999px;
+
+    --sh-sm: 0 1px 2px rgba(12,34,36,.06);
+    --sh-md: 0 8px 20px rgba(21,94,133,.10);
+    --sh-lg: 0 20px 40px -12px rgba(0,68,82,.20);
+
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* ---------- أسماء مستعارة للتوافق الخلفي ---------- */
+    --white:             var(--paper);
+    --gray-50:           var(--canvas);
+    --gray-100:          var(--canvas);
+    --gray-200:          var(--line);
+    --gray-400:          var(--ink-faint);
+    --gray-600:          var(--ink-soft);
+    --gray-800:          var(--ink);
+    --accent-teal:       var(--teal-primary);
+    --accent-teal-dark:  var(--teal-deep);
+    --unread-notification-bg: #f0f9ff;
+
+    --topbar-bg:         var(--paper);
+    --text-primary:      var(--ink);
+    --text-secondary:    var(--ink-soft);
+    --border-color:      var(--line);
+    --sidebar-bg:        var(--paper);
+    --sidebar-bg-2:      var(--canvas);
+    --sidebar-border:    var(--line);
+    --active-bg:         var(--teal-mist);
+
+    color-scheme: light;
+}
+
+/* ==========================================================
+   الوضع الداكن — نفس الأسماء، قيم مختلفة
+   ========================================================== */
+html.dark-mode,
+body.dark-mode,
+/* AUDIT B-15 FIX — `data-theme="dark"` was being SET by lib/theme.ts but read
+   by no CSS, i.e. a dead hook that would mislead anyone who assumed a
+   [data-theme] contract existed. Rather than delete the attribute, it is now a
+   real (and preferred) selector: an attribute selector is more robust than a
+   class because it cannot be clobbered by another class on the same element,
+   and it survives element swaps. Kept alongside `.dark-mode` so the Blade
+   behaviour and the pre-paint snippet both keep working unchanged. */
+html[data-theme='dark'],
+body[data-theme='dark'] {
+    /* ---------- المحايدات (الداكن) ---------- */
+    --ink:          #EAF4F8;
+    --ink-soft:     #93C5FD;
+    --ink-faint:    #9DBACB;
+    --line:         #3A6383;
+    --line-soft:    #2A4761;
+    --line-strong:  #5A8FB5;
+    --paper:        #112433;
+    --canvas:       #050C12;
+    --field-bg:     #0C1B28;
+    --focus-ring:   #38BDF8;
+
+    /* لمسات التيل تتحول لأزرق شفاف في الداكن */
+    --teal-mist:    rgba(59,130,246,.12);
+    --teal-mist-2:  rgba(59,130,246,.06);
+
+    /* ---------- الحالات الدلالية ---------- */
+    --success:      #2FBF8F;
+    --success-bg:   #0E3226;
+    --warning:      #E0A83E;
+    --warning-bg:   #3A2E14;
+    --danger:       #F87171;
+    --danger-bg:    #3A1D1D;
+    --danger-strong:#B91C1C;
+    --info:         #1C72A6;
+    --info-bg:      #12283C;
+
+    /* ---------- نصوص دلالية (داكن) ---------- */
+    --success-text: #4ADE80;
+    --warning-text: #FBBF24;
+    --danger-text:  #FCA5A5;
+    --info-text:    #93C5FD;
+    --teal-text:    #7CC4EC;
+    --pink-text:    #F9A8D4;
+    --indigo-text:  #A5B4FC;
+
+    /* ---------- ظلال أعمق ---------- */
+    --sh-sm: 0 1px 3px rgba(0,0,0,.40);
+    --sh-md: 0 4px 6px -1px rgba(0,0,0,.40), 0 2px 4px -2px rgba(0,0,0,.30);
+    --sh-lg: 0 20px 25px -5px rgba(0,0,0,.60), 0 8px 10px -6px rgba(0,0,0,.40);
+
+    --unread-notification-bg: rgba(28, 114, 166, 0.15);
+
+    /* ---------- أسماء مستعارة داكنة ---------- */
+    --topbar-bg:      #081722;
+    --sidebar-bg:     #061019;
+    --sidebar-bg-2:   #0A1E2B;
+    --sidebar-border: var(--line-strong);
+    --active-bg:      rgba(28, 114, 166, 0.22);
+
+    color-scheme: dark;
+}

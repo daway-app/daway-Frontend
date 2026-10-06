@@ -11,7 +11,9 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:css": "node tools/dead-css-budget.mjs",
+    "check:css:list": "node tools/dead-css.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",

@@ -1,0 +1,216 @@
+/* ==========================================================
+   Daway Pharmacy Web — app layout
+   ==========================================================
+   Source: daway-backend/resources/css/layout/app_layout.css
+   Only the rules the React shell needs are carried over; the
+   notifications/table/med-cell blocks that belong to other
+   screens are kept because shared screens use them.
+   ========================================================== */
+
+/* خلفية ثابتة هادئة واحترافية — تدرجات شعاعية ناعمة جداً */
+.bg-anim-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(900px 520px at 88% -8%, rgba(28, 114, 166, .06), transparent 60%),
+        radial-gradient(760px 460px at 0% 104%, rgba(123, 193, 183, .07), transparent 55%);
+}
+
+body.dark-mode .bg-anim-layer {
+    background:
+        radial-gradient(1200px 700px at 12% -10%, #123244 0%, transparent 55%),
+        linear-gradient(165deg, #050C12 0%, #071722 45%, #0B2333 100%);
+}
+
+body.dark-mode {
+    background:
+        radial-gradient(1200px 700px at 12% -10%, #123244 0%, transparent 55%),
+        linear-gradient(165deg, #050C12 0%, #071722 45%, #0B2333 100%);
+    background-attachment: fixed;
+}
+
+/* انتقال دخول خفيف لمحتوى الصفحة عند التنقل بين الصفحات */
+@keyframes pageFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.main-content {
+    animation: pageFadeIn .35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .main-content { animation: none; }
+}
+
+/* Main layout container */
+.app-layout {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* Breadcrumb */
+.breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    color: var(--gray-600);
+    margin-bottom: 18px;
+}
+.breadcrumb-nav a {
+    color: var(--gray-600);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+.breadcrumb-nav a:hover { color: var(--accent-teal-dark); }
+.breadcrumb-nav .sep { color: var(--gray-400); }
+.breadcrumb-nav .cur { color: var(--gray-800); font-weight: 700; }
+body.dark-mode .breadcrumb-nav,
+body.dark-mode .breadcrumb-nav a { color: var(--ink-soft); }
+body.dark-mode .breadcrumb-nav .cur { color: var(--ink); }
+body.dark-mode .breadcrumb-nav .sep { color: var(--ink-faint); }
+body.dark-mode .breadcrumb-nav a:hover { color: var(--teal-text); }
+
+/* Main content wrapper adjustments */
+/*
+  The sidebar is `position: fixed` (layout/sidebar.css), so it is OUT OF FLOW.
+  That means `.app-layout` (a flex row) contains exactly ONE in-flow child:
+  `.main-wrapper`. Blade nevertheless gave the wrapper BOTH `flex: 1` and an
+  inline-start margin equal to the sidebar width — so the wrapper tried to be
+  the full 1440px *and* carry 260px of offset, and the row overflowed by that
+  260px (visible as a page-level horizontal scroll on the 12-column sales table,
+  the first screen wide enough to expose it).
+
+  Blades's intent was "leave room for the fixed sidebar". With a fixed sidebar
+  that is achieved by the margin alone, provided the flex item is allowed to
+  shrink — `flex: 1 1 0%` + `min-width: 0` does exactly that. No `width` calc.
+*/
+.main-wrapper {
+    flex: 1 1 0%;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    transition: background-color 0.3s;
+    font-size: 0;
+}
+
+.main-wrapper > * {
+    font-size: 16px;
+}
+
+html[dir="rtl"] .main-wrapper { margin-right: var(--sidebar-width); }
+html[dir="ltr"] .main-wrapper { margin-left: var(--sidebar-width); }
+
+.main-content {
+    padding: 28px;
+    flex: 1;
+    min-width: 0;
+}
+
+/* ==========================================
+   Site Toast Notifications (بديل alert المتصفح)
+   ========================================== */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    inset-inline-start: 50%;
+    transform: translateX(50%);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    max-width: min(420px, calc(100vw - 32px));
+}
+[dir="ltr"] .toast-container { transform: translateX(-50%); }
+.site-toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 18px;
+    border-radius: 14px;
+    background: #0f172a;
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 600;
+    box-shadow: 0 12px 32px rgba(0,0,0,.25);
+    pointer-events: auto;
+    animation: toastIn .3s cubic-bezier(0.16, 1, 0.3, 1) both;
+    border-inline-start: 4px solid var(--accent-teal, #1C72A6);
+}
+.site-toast.out { animation: toastOut .25s ease forwards; }
+.site-toast .toast-icon {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 800;
+    flex-shrink: 0;
+}
+.site-toast.success { border-inline-start-color: #16A34A; }
+.site-toast.success .toast-icon { background: var(--success-fill); }
+.site-toast.error { border-inline-start-color: #DC2626; }
+.site-toast.error .toast-icon { background: var(--danger-fill); }
+.site-toast.warning { border-inline-start-color: #CA8A04; }
+.site-toast.warning .toast-icon { background: var(--warning-fill); }
+.site-toast.info { border-inline-start-color: #1C72A6; }
+.site-toast.info .toast-icon { background: #1C72A6; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(-14px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { to { opacity: 0; transform: translateY(-10px) scale(.96); } }
+body.dark-mode .site-toast { background: #1a1a1e; border: 1px solid rgba(255,255,255,.08); border-inline-start-width: 4px; }
+
+/* ==========================================================
+   خلية نص مقتطعة — أسماء الأدوية الطويلة
+   ========================================================== */
+.med-cell-text {
+    min-width: 0;
+    max-width: 240px;
+}
+
+.med-cell-text > strong,
+.med-cell-text > small,
+.med-ingredient-text {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.med-ingredient-text { max-width: 240px; }
+
+@media (max-width: 1100px) {
+    .med-cell-text { max-width: 180px; }
+    .med-ingredient-text { max-width: 180px; }
+}
+
+@media (max-width: 768px) {
+    .med-cell-text { max-width: 140px; }
+    .med-ingredient-text { max-width: 140px; }
+}
+
+.med-name {
+    display: block;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 1100px) { .med-name { max-width: 180px; } }
+@media (max-width: 768px) { .med-name { max-width: 140px; } }
+
+/* ==========================================================
+   غلاف جدول قابل للتمرير أفقيًا
+   ========================================================== */
+.tbl-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}

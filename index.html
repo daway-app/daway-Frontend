@@ -4,6 +4,50 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>دواك — الصيدلية</title>
+    <!--
+      Font Awesome 6.7.2 — decision B8.
+      Blade loads FA from this exact CDN URL (layouts/app.blade.php); no local
+      FA assets exist in the backend, so the same CDN stylesheet is reused
+      like-for-like rather than introducing a new dependency.
+    -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    />
+    <!--
+      Chart.js 4 UMD — decision B7 (vendored, not an npm dependency).
+      The Blade pages load the identical file with `defer`; Chart.tsx reads
+      `window.Chart`. Without this tag the charts render empty canvases with no
+      console error (audit B-1), so it MUST stay here.
+
+      `defer` is required, not cosmetic: it guarantees Chart.js executes before
+      the module script but after HTML parsing, which is the ordering the
+      Chart.tsx mount path relies on.
+    -->
+    <script defer src="/vendor/chart.umd.js"></script>
+    <!--
+      Theme pre-paint — AUDIT (not in the original report; found while fixing
+      B-15/B-13). `initTheme()` lives in a Topbar effect, but the Topbar only
+      mounts AFTER login, so:
+        · the login screen could never render dark, and
+        · every authenticated load painted light first, then flipped to dark.
+      This inline snippet runs synchronously before first paint, exactly like the
+      Blade layout's own inline theme script, so the correct theme is on <html>
+      before anything is drawn. Kept dependency-free and wrapped in try/catch
+      because localStorage can throw in private/locked-down contexts.
+    -->
+    <script>
+      (function () {
+        try {
+          var dark = localStorage.getItem('theme') === 'dark';
+          var el = document.documentElement;
+          el.classList.toggle('dark-mode', dark);
+          el.setAttribute('data-theme', dark ? 'dark' : 'light');
+        } catch (e) {
+          /* storage unavailable — stay on the default light theme */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

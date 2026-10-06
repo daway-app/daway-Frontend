@@ -1,214 +1,58 @@
 /* ==========================================================
-   Daway Pharmacy Web — global styles + design tokens
+   Daway Pharmacy Web — global stylesheet entry
    ==========================================================
+   Import order mirrors the Blade app's load order:
+     tokens → fonts → base → layout → page families
+
    Tokens are MIRRORED from the backend's single source of truth:
      daway-backend/resources/css/tokens.css
-   The backend is read-only, so this file carries the values forward.
-   Values must stay in sync — do not invent new ones here.
+   The backend is read-only, so the values are carried forward.
    ========================================================== */
 
-:root {
-    /* ---------- الهوية: التيل ---------- */
-    --teal-deep:    #155E85;
-    --teal-primary: #1C72A6;
-    --teal-light:   #7BC1B7;
-    --teal-deeper:  #004452;
-    --teal-mist:    #EAF5F4;
-    --teal-mist-2:  #F5FAF9;
+@import './tokens.css';
+@import './fonts.css';
+@import './base.css';
+@import './layout/app-layout.css';
+@import './layout/sidebar.css';
+@import './layout/topbar.css';
+@import './pages/pharmacy-hub.css';
+@import './pages/pharmacy-import.css';
+@import './pages/medicines-edit.css';
+@import './pages/pharmacy-chat.css';
+/* Loaded before the accounting screens so the shared barcode/scan widgets
+   (`ac-*`) used by the medicine-request page render in the same order Blade
+   uses: the page CSS then the accounting layer. */
+@import './pages/pharmacy-accounting.css';
+@import './pages/users-create.css';
+@import './pages/profile-complete.css';
+@import './pages/auth-forms.css';
 
-    /* ---------- المحايدات ---------- */
-    --ink:          #0C2224;
-    --ink-soft:     #4C6669;
-    --ink-faint:    #5C7073;
-    --line:         #DEE8E7;
-    --line-soft:    #EEF4F3;
-    --line-strong:  #728B89;
-    --paper:        #FFFFFF;
-    --canvas:       #F5FAF9;
-    --field-bg:     #FFFFFF;
-    --focus-ring:   #1C72A6;
+/* ==========================================================
+   هيكل صفحات الدخول
+   ----------------------------------------------------------
+   `.auth-shell` نفسها (الخلفية والتوسيط) تُعرَّف في
+   `pages/auth-forms.css` — لأنه الملف الذي يحمل هوية صفحات الدخول
+   وهو المستورَد بعد هذا الملف فيتغلّب. أُبقيت هنا قواعد `__content` فقط.
 
-    /* ---------- الحالات الدلالية ---------- */
-    --success:      #16A34A;
-    --success-bg:   #DCFCE7;
-    --warning:      #CA8A04;
-    --warning-bg:   #FEF9C3;
-    --danger:       #DC2626;
-    --danger-bg:    #FEE2E2;
-    --danger-strong:#B91C1C;
-    --info:         #0369A1;
-    --info-bg:      #E0F2FE;
-
-    --success-text: #14702F;
-    --warning-text: #B45309;
-    --danger-text:  #B91C1C;
-    --info-text:    #0369A1;
-    --teal-text:    #1C72A6;
-
-    /* ---------- القياسات ---------- */
-    --sidebar-width: 260px;
-    --topbar-height: 64px;
-
-    --r-sm:  8px;
-    --r-md:  12px;
-    --r-lg:  18px;
-    --r-xl:  24px;
-    --r-full: 9999px;
-
-    --sh-sm: 0 1px 2px rgba(12,34,36,.06);
-    --sh-md: 0 8px 20px rgba(21,94,133,.10);
-    --sh-lg: 0 20px 40px -12px rgba(0,68,82,.20);
-
-    --ease: cubic-bezier(0.16, 1, 0.3, 1);
-
-    /* ---------- أسماء مستعارة ---------- */
-    --topbar-bg:      var(--paper);
-    --text-primary:   var(--ink);
-    --text-secondary: var(--ink-soft);
-    --border-color:   var(--line);
-    --sidebar-bg:     var(--paper);
-    --sidebar-bg-2:   var(--canvas);
-    --sidebar-border: var(--line);
-    --active-bg:      var(--teal-mist);
-
-    color-scheme: light;
-}
-
-/* ---------- الأساسيات ---------- */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-    height: 100%;
-}
-
-body {
-    margin: 0;
-    background: var(--canvas);
-    color: var(--ink);
-    font-family: system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-}
-
-:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
-}
-
-/* ---------- هيكل التطبيق (P0: بنية فقط) ---------- */
-.app-shell {
-    display: flex;
-    min-height: 100%;
-    direction: rtl;
-}
-
-.app-shell__sidebar {
-    width: var(--sidebar-width);
-    flex: 0 0 var(--sidebar-width);
-    background: var(--sidebar-bg);
-    border-inline-start: 1px solid var(--sidebar-border);
-}
-
-.app-shell__main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.app-shell__topbar {
-    height: var(--topbar-height);
-    background: var(--topbar-bg);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.app-shell__content {
-    flex: 1;
-    padding: 24px;
-}
-
-/* ---------- هيكل صفحات الدخول ---------- */
-.auth-shell {
-    display: grid;
-    place-items: center;
-    min-height: 100%;
-    padding: 24px;
-    background: var(--canvas);
-    direction: rtl;
-}
-
+   عرض المحتوى كان `max-width: 380px` — وهذا كان كافيًا لشاشة الدخول
+   البسيطة (P0) ولشاشة كلمة المرور. شاشة الدخول صارت الآن
+   `.auth-container` المطابقة لـBlade بعرض 1080px (تخطيط منقسم:
+   نموذج + hero)، فلازم يُرفع الحد وإلا يُقصّ التخطيط ويظهر عمودًا واحدًا.
+   `max-width: 1080px` هو نفسه المسجَّل على `.auth-container` في
+   `auth-forms.css` — لا رقم جديد.
+   ========================================================== */
 .auth-shell__content {
     width: 100%;
-    max-width: 380px;
+    max-width: 1080px;
 }
 
-/* ---------- تسجيل الدخول (P0: وظيفي) ---------- */
-.login {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    padding: 24px;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: var(--r-lg);
-    box-shadow: var(--sh-md);
-}
+/* ---------- تسجيل الدخول ----------
+   ملاحظة: كتلة `.login` / `.login__*` القديمة (شاشة P0 البسيطة) حُذفت.
+   `LoginPage` صار يستعمل بنية Blade الأصلية بكلاسات `auth-forms.css`
+   (`.auth-container` · `.auth-form-side` · `.fg`/`.fl`/`.fc` · `.btn-p` …)
+   فصارت تلك القواعد كودًا ميتًا. لم تكن مستعملة في أي شاشة أخرى. */
 
-.login__title {
-    margin: 0 0 4px;
-    font-size: 20px;
-    color: var(--ink);
-}
-
-.login__field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    font-size: 14px;
-    color: var(--text-secondary);
-}
-
-.login__field input {
-    padding: 10px 12px;
-    background: var(--field-bg);
-    border: 1px solid var(--line-strong);
-    border-radius: var(--r-sm);
-    font-size: 15px;
-    color: var(--ink);
-}
-
-.login__error {
-    margin: 0;
-    padding: 10px 12px;
-    background: var(--danger-bg);
-    color: var(--danger-text);
-    border-radius: var(--r-sm);
-    font-size: 14px;
-}
-
-.login__submit {
-    padding: 11px 16px;
-    background: var(--teal-primary);
-    color: #fff;
-    border: 0;
-    border-radius: var(--r-sm);
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.login__submit:disabled {
-    opacity: .6;
-    cursor: not-allowed;
-}
-
-/* ---------- صفحات مؤقّتة ---------- */
+/* ---------- صفحات مؤقّتة (كُتل هيكل أثناء الترحيل) ---------- */
 .placeholder {
     padding: 32px;
     background: var(--paper);

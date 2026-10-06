@@ -1,26 +1,32 @@
 import { Outlet } from 'react-router-dom';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { Topbar } from '@/components/layout/Topbar';
 
 /**
- * Shell for authenticated pharmacy pages.
+ * Authenticated pharmacy shell.
  *
- * P0 scope: this is the structural skeleton only — sidebar/topbar content is
- * built in P2. It exists so routing, guards and layout nesting are proven now.
+ * Structure mirrors the Blade layout (layouts/app.blade.php):
+ *   .bg-anim-layer
+ *   .app-layout
+ *     aside.sidebar-pro
+ *     .main-wrapper
+ *       .topbar
+ *       main.main-content  (breadcrumb + outlet)
  */
 export function AppLayout() {
   return (
-    <div className="app-shell">
-      <aside className="app-shell__sidebar" aria-label="التنقّل">
-        {/* P2: sidebar navigation */}
-      </aside>
-      <div className="app-shell__main">
-        <header className="app-shell__topbar">
-          {/* P2: topbar */}
-        </header>
-        <main className="app-shell__content">
-          <Outlet />
-        </main>
+    <>
+      <div className="bg-anim-layer" aria-hidden="true" />
+      <div className="app-layout">
+        <Sidebar />
+        <div className="main-wrapper">
+          <Topbar />
+          <main className="main-content">
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

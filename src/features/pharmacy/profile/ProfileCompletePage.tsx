@@ -117,13 +117,20 @@ export function ProfileCompletePage() {
     setSaved(false);
     try {
       await save.run({
-        pharmacy_name: form.pharmacy_name,
-        phone_number: form.phone_number,
+        /**
+         * Field names are the API contract, not the DB column names — see the
+         * longer note in `ProfilePage.tsx`. The controller translates `name` →
+         * `pharmacy_name`, `phone` → `phone_number`, `logo_url` → `logo`.
+         * Sending the DB names means those three fail validation and are
+         * silently dropped.
+         */
+        name: form.pharmacy_name,
+        phone: form.phone_number,
         address: form.address,
         region: form.region,
         latitude: lat === '' ? null : Number(lat),
         longitude: lng === '' ? null : Number(lng),
-        logo: logo || null,
+        logo_url: logo || null,
         // FULL REPLACE — all seven days, or untouched days become closed.
         working_hours: buildHoursPayload(
           Object.fromEntries(

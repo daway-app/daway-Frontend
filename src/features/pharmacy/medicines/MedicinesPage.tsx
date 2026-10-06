@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AR } from '@/lib/i18n';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -44,14 +45,27 @@ export function MedicinesPage() {
   const api = usePharmacyApi();
 
   const [status, setStatus] = useState<Tab>('all');
-  /** The committed search term — only this drives the request. */
+  /** The committed search term — filters the loaded rows. */
   const [q, setQ] = useState('');
-  /** The live input value (so typing does not refetch on every keystroke). */
+  /** The live input value. */
   const [draft, setDraft] = useState('');
 
+  /**
+   * ⚠️ The search is CLIENT-SIDE, on purpose.
+   *
+   * This screen originally sent `?q=` to `/api/pharmacy/inventory`, but
+   * `PharmacyInventoryController::index` does **not** read a `q` parameter at
+   * all — so the request succeeded and every row came back, i.e. the search box
+   * silently did nothing.
+   *
+   * Filtering the loaded page is the honest fix while the backend has no search
+   * parameter here. It is scoped to the rows fetched below (`per_page: 100`), so
+   * a catalogue larger than that needs server-side search — reported as GAP-4.
+   * The inventory screen (`/inventory`) filters the same way.
+   */
   const query = useApiQuery<{ data: ApiInventoryItem[] }>(
-    (signal) => api.inventory({ per_page: 100, ...(q ? { q } : {}) }, signal),
-    [q],
+    (signal) => api.inventory({ per_page: 100 }, signal),
+    [],
     { isEmpty: (r) => r.data.length === 0 },
   );
 
@@ -62,9 +76,17 @@ export function MedicinesPage() {
   const hasFilters = q !== '' || status !== 'all';
 
   const visible = useMemo(() => {
-    if (status === 'all') return rows;
-    return rows.filter((row) => stockStatus(row.quantity) === status);
-  }, [rows, status]);
+    const needle = q.trim().toLowerCase();
+    return rows.filter((row) => {
+      if (status !== 'all' && stockStatus(row.quantity) !== status) return false;
+      if (needle === '') return true;
+      const name = row.medicine?.trade_name ?? '';
+      const ingredient = row.medicine?.active_ingredient ?? '';
+      return (
+        name.toLowerCase().includes(needle) || ingredient.toLowerCase().includes(needle)
+      );
+    });
+  }, [rows, status, q]);
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -79,9 +101,15 @@ export function MedicinesPage() {
           <p>{M.subtitle_page}</p>
         </div>
         <div className="ph-actions">
-          <a href="/medicines/create" className="ph-btn primary">
+          {/*
+            Was `/medicines/create`, which has NO route in this SPA — the router
+            only declares `medicines/*` → a placeholder, so the button opened an
+            empty page. The working destination for adding a medicine is the
+            request form, which posts to `/api/pharmacy/medicine-requests`.
+          */}
+          <Link to="/medicines/request" className="ph-btn primary">
             <i className="fas fa-plus" /> {M.add_medicine}
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -214,13 +242,20 @@ export function MedicinesPage() {
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: 8 }}>
-                            <a
-                              href={`/medicines/${row.medicine_id ?? row.id}`}
+                            {/*
+                              ⚠️ There is no medicine-edit screen in this SPA yet,
+                              so this lands on the `medicines/*` placeholder. It is
+                              a `Link` (not a raw <a>) so the click stays inside
+                              the SPA and does not trigger a full page reload.
+                              Building the edit screen is an open follow-up.
+                            */}
+                            <Link
+                              to={`/medicines/${row.medicine_id ?? row.id}`}
                               className="ph-btn icon outline"
                               title={M.edit_tooltip}
                             >
                               <i className="fas fa-pen" />
-                            </a>
+                            </Link>
                             <button
                               type="button"
                               className="ph-btn icon danger"

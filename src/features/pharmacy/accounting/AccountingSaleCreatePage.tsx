@@ -9,6 +9,7 @@ import { money } from '@/lib/format';
 import { round2 } from '@/lib/money';
 import type { ApiCustomer, ApiInventoryItem, PaymentMethod } from '@/api/pharmacyTypes';
 import { ROUTES } from '@/routes/paths';
+import { buildSalePayload, type CartLine, type SalePayload } from './salePayload';
 
 /**
  * POS "new sale" — live against the real endpoints.
@@ -60,16 +61,6 @@ interface CatalogItem {
   price: number;
 }
 
-interface CartLine {
-  pharmacyMedicineId: number;
-  medicineId: number | null;
-  name: string;
-  barcode: string;
-  quantity: number;
-  unit_price: number;
-  discount: number;
-}
-
 export function AccountingSaleCreatePage() {
   const api = usePharmacyApi();
 
@@ -97,7 +88,7 @@ export function AccountingSaleCreatePage() {
     [],
   );
 
-  const createSale = useApiMutation((body: Record<string, unknown>) => api.createSale(body));
+  const createSale = useApiMutation((body: SalePayload) => api.createSale(body));
 
   /** The sellable catalogue, flattened from the inventory payload. */
   const catalog = useMemo<CatalogItem[]>(
@@ -246,21 +237,11 @@ export function AccountingSaleCreatePage() {
       return;
     }
     try {
-      const sale = await createSale.run({
-        ...(customerId ? { customer_id: customerId } : {}),
-        items: cart.map((l) => ({
-          pharmacy_medicine_id: l.pharmacyMedicineId,
-          ...(l.medicineId ? { medicine_id: l.medicineId } : {}),
-          medicine_name: l.name,
-          ...(l.barcode ? { barcode: l.barcode } : {}),
-          unit_price: l.unit_price,
-          quantity: l.quantity,
-          line_discount: l.discount,
-        })),
-        discount: totals.discount,
-        paid: totals.paid,
-        payment_method: method,
-      });
+      // Payload construction (and the double-discount rule) lives in
+      // `salePayload.ts` so it can be unit-tested — see `salePayload.test.ts`.
+      const sale = await createSale.run(
+        buildSalePayload({ cart, paid: totals.paid, method, customerId }),
+      );
       setSavedNumber(sale.number);
       // Reset the till for the next sale.
       setCart([]);

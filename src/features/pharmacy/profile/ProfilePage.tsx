@@ -143,13 +143,29 @@ export function ProfilePage() {
     setSaved(false);
     try {
       await save.run({
-        pharmacy_name: form.pharmacy_name,
-        phone_number: form.phone_number,
+        /**
+         * 🔴 FIELD-NAME FIX. The API contract uses `name` / `phone` /
+         * `logo_url` — NOT `pharmacy_name` / `phone_number` / `logo`.
+         *
+         * `PharmacyProfileRequest` validates exactly these keys, and the
+         * controller then TRANSLATES them onto the pharmacy row:
+         *
+         *     if (array_key_exists('name', $data))      $data['pharmacy_name'] = $data['name'];  $user->name = …
+         *     if (array_key_exists('phone', $data))     $user->phone = $data['phone']; $pharmacy->phone_number = …
+         *     if (array_key_exists('logo_url', $data))  $data['logo'] = $data['logo_url'];
+         *
+         * Sending the pharmacy-row names instead meant those three keys failed
+         * validation, never reached the translation, and were SILENTLY DROPPED —
+         * the name, phone and logo appeared to save but did not. Only address,
+         * region, coordinates and working hours round-tripped.
+         */
+        name: form.pharmacy_name,
+        phone: form.phone_number,
         address: form.address,
         region: form.region,
         latitude: lat === '' ? null : Number(lat),
         longitude: lng === '' ? null : Number(lng),
-        logo: logo || null,
+        logo_url: logo || null,
         working_hours: buildPayload(),
       });
       setSaved(true);

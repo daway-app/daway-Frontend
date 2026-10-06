@@ -103,6 +103,134 @@ aggregate is wrong. Screens **derive** the counts from the rows (approved rule:
 
 ---
 
+## 4b. Post-wiring audit — 4 defects found and fixed
+
+An independent read-only integration audit flagged three blockers. Every one was verified
+against the real code and the real backend before being accepted, and a **fourth** was found
+that the audit only hinted at.
+
+### 🔴 #1 — Double discount in the POS (financial data corruption)
+
+**Verified empirically**, not by reading code — `AccountingLedger::recordSale()` called inside a
+transaction that was rolled back, so **no data was written**:
+
+```
+item 100, line_discount 10, discount 10
+  → subtotal=90  discount=10  TOTAL=80  paid=80    ✗ cashier collected 90
+item 100, line_discount 10, discount 0
+  → subtotal=90  discount=0   TOTAL=90  paid=90    ✓
+```
+
+`recordSale()` computes `lineTotal = unitPrice × quantity − lineDiscount`, sums those into
+`subtotal`, then subtracts `discount` as an **additional** invoice-level discount. The POS sent
+the per-line discount total as `discount` as well, so it was applied twice — and `paid` was
+silently capped down to the (wrong) total, losing the difference.
+
+**Origin: the Blade POS has the same bug.** `resources/js/accounting/accounting-pos.js` sends
+`line_discount` per item *and* `discount: t.discount`, with a comment asserting
+«الخصم الكلي على الفاتورة = مجموع خصومات الأسطر». The port reproduced it faithfully — the real
+mistake was **not flagging it** as a Blade defect rather than porting it silently.
+
+**Fix:** send `discount: 0`; each line's discount stays recorded where it happened.
+
+### 🔴 #2 — The medicines search did nothing
+
+`MedicinesPage` sent `?q=` to `/api/pharmacy/inventory`, but `PharmacyInventoryController::index`
+**does not read a `q` parameter at all** — the request returned 200 with every row, so the search
+box was decorative.
+
+**Fix:** filter the loaded rows client-side (the same approach `/inventory` already uses), scoped
+to `per_page: 100`. Server-side search remains GAP-4.
+
+### 🔴 #3 — "Add medicine" was a dead link
+
+The button pointed at `/medicines/create`, which has **no route** — the router only declares
+`medicines/*` → a placeholder page. **Fix:** point it at `/medicines/request`, which exists and
+posts to `/api/pharmacy/medicine-requests`. The row-level **edit** link has the same problem and
+still lands on the placeholder; building an edit screen is an open follow-up.
+
+### 🔴 #4 — Profile save silently dropped the name, phone and logo
+
+Found while verifying the audit's own tables. The API contract is `name` / `phone` / `logo_url`;
+both profile pages sent `pharmacy_name` / `phone_number` / `logo`. `PharmacyProfileRequest`
+validates only the former, and the controller **translates** them onto the pharmacy row:
+
+```php
+if (array_key_exists('name', $data))      $data['pharmacy_name'] = $data['name']; $user->name = …
+if (array_key_exists('phone', $data))     $user->phone = $data['phone'];
+if (array_key_exists('logo_url', $data))  $data['logo'] = $data['logo_url'];
+```
+
+So the three keys failed validation, never reached the translation, and were **dropped without
+any error** — HTTP 200, nothing saved. Only address / region / coordinates / working hours
+round-tripped.
+
+**Verified end-to-end against the live backend, with the original values restored:**
+
+```
+قبل   : name="صيدلية الأمل"
+بعد   : name="PROBE-NAME-OK"        ← correct field names work
+مُرجَع : name="صيدلية الأمل"          ← restored, no residue
+```
+
+And the old names confirmed inert:
+
+```
+POST {pharmacy_name, phone_number, logo} → HTTP 200, name unchanged
+```
+
+**Fix:** send `name` / `phone` / `logo_url` from both profile pages.
+
+### 🔴 #5 — The client timeout was shorter than the backend's own latency
+
+Found while trying to *verify* the fixes: the browser kept landing on the timeout error state even
+though the API answered in 8–9 s from curl.
+
+`VITE_API_TIMEOUT_MS` was **20000**. Measured warm, repeatedly:
+
+| Endpoint | TTFB |
+|---|---|
+| `/api/pharmacy/inventory` | 3.7 – 9.2 s |
+| `/api/login/pharmacy` | 4.5 – 5.7 s |
+| `/api/pharmacy/accounting/overview` | 17 s · 18 s · **62 s** |
+
+So the app was configured to abort requests its own backend routinely completes — the accounting
+overview failed more often than it succeeded. The error state behaved correctly, but the user just
+saw a permanent failure.
+
+**Fix:** raise the default to **60 s** (`src/config/env.ts`, `.env.example`, `.env.local`), covering
+everything measured except the worst outlier.
+
+**This is a mitigation, not a fix** — the real answer is faster queries or a nearer database. The
+trade-off is that a genuinely hung request now holds its screen for longer, which is acceptable
+because the UI shows a skeleton (it is not frozen) and navigating away aborts the request.
+
+### Verification of the fixes
+
+| Fix | How it was verified | Result |
+|---|---|---|
+| #1 double discount | `AccountingLedger::recordSale()` run inside a transaction that was **rolled back** — no data written | `total` 80 → **90**, `paid` 80 → **90** ✓ |
+| #2 search | Headless browser: count rows, type a term, submit, count again (`tools/interact-search.mjs`) | **11 rows → 1 matching row** named `pandol`, no empty state ✓ |
+| #3 dead link | Router inspection + the button now resolves to a real screen | `/medicines/request` ✓ |
+| #4 profile fields | Live `POST /api/profile/pharmacy` with the correct names, then the originals restored | name changed → restored ✓ · old names confirmed inert (HTTP 200, nothing changed) ✓ |
+
+A regression test now guards #1: `src/features/pharmacy/accounting/salePayload.test.ts` (8 tests).
+The payload builder was **extracted out of the component** (`salePayload.ts`) precisely so it could
+be asserted on — the audit correctly noted that no test covered the sale contract, which is how
+the defect shipped.
+
+Test count: **48 → 56**.
+
+### On the audit's scores
+
+The report's headline metrics — *"Error Percentage: 14.5%"*, *"Frontend Readiness: 92%"*,
+*"Production Readiness: 81%"* — have **no stated measurement basis**. They are not derived from
+anything verifiable and should be ignored. The value in that report is its named findings, not
+its percentages. One of its own tables (`createRefund — Envelope ⚠️`) is asserted without
+explanation and did not reproduce as a practical problem.
+
+---
+
 ## 5. Documented gaps (backend-side, reported not patched)
 
 GAP-1 `region` accepted + persisted but never returned ·

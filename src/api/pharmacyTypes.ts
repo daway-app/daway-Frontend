@@ -700,3 +700,35 @@ export interface ApiImportSession {
   created_at?: string | null;
   rows?: ApiImportRow[];
 }
+
+// ══════════════════════════════════════════════════════════════════════
+// Accounting — create-sale payload
+// ══════════════════════════════════════════════════════════════════════
+
+export interface ApiSalePayloadItem {
+  pharmacy_medicine_id: number;
+  medicine_id?: number;
+  medicine_name: string;
+  barcode?: string;
+  unit_price: number;
+  quantity: number;
+  line_discount: number;
+}
+
+/**
+ * Body of `POST /api/pharmacy/accounting/sales`.
+ *
+ * ⚠️ `discount` is an ADDITIONAL invoice-level discount, applied AFTER the
+ * per-line discounts — `AccountingLedger::recordSale()` computes
+ * `$subtotal = Σ(unitPrice × quantity − lineDiscount)` and then
+ * `$total = $subtotal − $discount`. Since every discount in the POS is per-line,
+ * `discount` must be sent as **0** or the discount is applied twice. See
+ * `salePayload.ts` and `salePayload.test.ts`.
+ */
+export interface ApiSalePayload {
+  customer_id?: number;
+  items: ApiSalePayloadItem[];
+  discount: number;
+  paid: number;
+  payment_method: string;
+}

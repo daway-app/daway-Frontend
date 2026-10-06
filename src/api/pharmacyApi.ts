@@ -7,6 +7,7 @@ import type {
   ApiBarcodeMedicine,
   ApiCategory,
   ApiImportSession,
+  ApiSalePayload,
   ApiCashResponse,
   ApiCustomer,
   ApiCustomerDetail,
@@ -445,7 +446,7 @@ export function createPharmacyApi(client: ApiClient) {
       return res.data;
     },
 
-    async createSale(body: Record<string, unknown>): Promise<ApiSale> {
+    async createSale(body: ApiSalePayload): Promise<ApiSale> {
       const res = await client.post<ApiSuccess<ApiSale>>(P.accSales, body);
       return res.data;
     },

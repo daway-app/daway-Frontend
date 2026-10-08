@@ -1,3 +1,4 @@
+import { useEffect, useId, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -329,6 +330,31 @@ export function DataTable({
 /* ------------------------------------------------------------------ */
 /* Modal — `.ph-modal-overlay` / `.ph-modal`                           */
 /* ------------------------------------------------------------------ */
+/**
+ * Modal dialog with a real focus trap.
+ *
+ * WHAT WAS MISSING
+ * ----------------
+ * The dialog rendered fine but was invisible to the keyboard: Tab walked out of
+ * it and into the page behind, Escape did nothing, focus was never moved in on
+ * open nor returned to the trigger on close, and nothing announced it as a
+ * dialog. A keyboard or screen-reader user could end up typing into a form they
+ * could not see.
+ *
+ * WHAT IT DOES NOW
+ *   · `role="dialog"` + `aria-modal` + `aria-labelledby` pointing at the title
+ *   · focus moves to the first focusable element on open (or the dialog itself)
+ *   · Tab / Shift+Tab cycle INSIDE the dialog
+ *   · Escape closes it
+ *   · focus returns to whatever opened it
+ *   · the page behind cannot scroll while it is open
+ *
+ * The focusable-element query is the standard one; `[tabindex="-1"]` is included
+ * so a programmatically-focused container is reachable but not tabbable.
+ */
+const FOCUSABLE =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Modal({
   open,
   title,
@@ -342,15 +368,86 @@ export function Modal({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+
+    // Remember what had focus so it can be restored on close.
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+
+    const node = dialogRef.current;
+    const focusables = node
+      ? Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE))
+      : [];
+    // Prefer the first control; fall back to the dialog so focus is at least
+    // inside it and the trap has somewhere to start.
+    (focusables[0] ?? node)?.focus();
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+
+      const items = node
+        ? Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+            (el) => el.offsetParent !== null || el === document.activeElement,
+          )
+        : [];
+      if (items.length === 0) {
+        e.preventDefault();
+        return;
+      }
+
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+
+      if (e.shiftKey && (active === first || !node?.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !node?.contains(active))) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+
+    // Stop the page behind from scrolling under the overlay.
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus?.();
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
+
   return (
-    <div className="ph-modal-overlay active" onClick={(e) => {
+    <div
+      className="ph-modal-overlay active"
+      onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="ph-modal">
+      <div
+        className="ph-modal"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+      >
         <div className="ph-modal-head">
-          <h3>{title}</h3>
+          <h3 id={titleId}>{title}</h3>
           <button className="ph-close" onClick={onClose} aria-label="إغلاق">
             ×
           </button>

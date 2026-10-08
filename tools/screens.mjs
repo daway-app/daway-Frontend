@@ -222,9 +222,22 @@ await send('Page.enable', {}, sessionId);
 await send('Runtime.enable', {}, sessionId);
 await send('Network.enable', {}, sessionId);
 await send('Log.enable', {}, sessionId);
+/**
+ * Viewport. Overridable so the same harness can do responsive QA — a layout can
+ * be correct at 1440 and broken at 390, and a desktop-only capture never says so.
+ *   VIEWPORT=390  → phone      VIEWPORT=768  → tablet
+ */
+const VIEWPORT_W = Number(process.env.VIEWPORT) || 1440;
+const VIEWPORT_H = Number(process.env.VIEWPORT_H) || 1000;
+
 await send(
   'Emulation.setDeviceMetricsOverride',
-  { width: 1440, height: 1000, deviceScaleFactor: 1, mobile: false },
+  {
+    width: VIEWPORT_W,
+    height: VIEWPORT_H,
+    deviceScaleFactor: 1,
+    mobile: VIEWPORT_W < 768,
+  },
   sessionId,
 );
 

@@ -1,0 +1,90 @@
+name: keep-alive
+
+# Keeps the Render free-tier backend awake, with the same sleep window the
+# cron-job.org job uses (03:00-05:00 Asia/Hebron).
+#
+# WHY THIS EXISTS ALONGSIDE cron-job.org
+# --------------------------------------
+# cron-job.org is the primary keep-alive, but it caps a request at 30 seconds
+# and the Render cold start measures ~56 s — so its first run after a sleep
+# always *reports* a failure (the request still wakes the server, but the log
+# is misleading). This job has no such cap, so it is the one that tells you
+# the truth about whether the backend is actually reachable.
+#
+# ⚠️ GITHUB CRON IS ALWAYS UTC AND HAS NO TIMEZONE SUPPORT.
+#    `TZ=` in the workflow does NOT change when the schedule fires — it only
+#    changes what `date` prints. So the schedule below runs every 10 minutes
+#    around the clock, and the SLEEP WINDOW IS APPLIED INSIDE THE JOB by
+#    comparing the current Asia/Hebron hour.
+#
+#    That is deliberate: hard-coding UTC hours for the window would drift by
+#    an hour twice a year, because Gaza observes DST (UTC+2 winter, UTC+3
+#    summer). Reading the named zone at run time cannot drift.
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  # Allows a manual run from the Actions tab — useful for verifying the setup.
+  workflow_dispatch:
+
+# The job only reads a URL; it needs no write access at all.
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check the local hour (skip 03:00-05:00 Asia/Hebron)
+        id: gate
+        run: |
+          # 🔴 GUARD FIRST. If the runner's tzdata is missing or the zone name
+          # is not resolvable, `TZ=` fails SILENTLY and `date` falls back to
+          # UTC — which would move the sleep window to 06:00-08:00 local with
+          # no error anywhere. Gaza is never UTC+0, so a +0000 offset proves
+          # the lookup failed. Fail loudly instead of sleeping at the wrong
+          # time.
+          offset=$(TZ=Asia/Hebron date +%z)
+          echo "Asia/Hebron offset: $offset"
+          if [ "$offset" = "+0000" ]; then
+            echo "::error::TZ lookup for Asia/Hebron resolved to UTC — refusing to run, the sleep window would be wrong"
+            exit 1
+          fi
+
+          hour=$(TZ=Asia/Hebron date +%-H)
+          echo "Asia/Hebron hour: $hour"
+          if [ "$hour" -ge 3 ] && [ "$hour" -lt 5 ]; then
+            echo "Inside the sleep window — skipping this run."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Ping the health endpoint
+        if: steps.gate.outputs.skip == 'false'
+        run: |
+          URL=https://daway-backend-zlh2.onrender.com/healthz
+
+          # Two attempts: the first request after a sleep pays the ~56 s cold
+          # start. A single attempt would report a false failure.
+          for attempt in 1 2; do
+            echo "Attempt $attempt: $URL"
+            code=$(curl -sS --max-time 90 -o /tmp/body -w '%{http_code}' "$URL" || echo 000)
+            echo "  HTTP $code"
+            echo "  body: $(cat /tmp/body 2>/dev/null || echo '(none)')"
+
+            if [ "$code" = "200" ]; then
+              echo "✓ backend is awake"
+              exit 0
+            fi
+
+            if [ "$attempt" = "1" ]; then
+              echo "  retrying in 30s (cold start can exceed the first window)…"
+              sleep 30
+            fi
+          done
+
+          echo "::error::health endpoint did not return 200 after 2 attempts"
+          exit 1

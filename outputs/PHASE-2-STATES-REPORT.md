@@ -203,23 +203,71 @@ because the fact is not known any earlier.
 Shell integrity asserted on every capture (`sidebar = 260px`, `topbar = 81px`,
 `overflowX = false`) — a screenshot alone does not reveal a missing sidebar.
 
-**Harness bugs fixed along the way:** `screens.mjs` gained shell-integrity assertions and
-`THEME=dark`; `probe-inventory.mjs` used a fixed 3.5 s sleep before finding the login form and
-aborted falsely on a slow backend — it now polls.
+**Success notice — verified interactively, not just compiled.** `tools/verify-notice.mjs`
+performs a round trip: read the row's status → click the control → assert the notice →
+click again to restore.
+
+```
+· current status: 1
+· clicked: تم الرد
+✅ SUCCESS NOTICE RENDERED: "تم تحديث حالة الاستفسار إلى «تم الرد»"
+· round trip clean — data restored
+```
+
+**Responsive (added after the first pass)**
+
+| Viewport | Result |
+|---|---|
+| 390 px | 4 screens, zero errors, `overflowX: false` on all |
+| 768 px | 2 screens, zero errors, `overflowX: false` on all |
+
+No page-level horizontal scroll at either width. The full-width dark bar under
+768 px is the **existing** mobile treatment — the sidebar becomes
+`position: fixed; bottom: 0` — not a regression; it only looks mid-page because
+the capture goes beyond the viewport.
+
+**Harness bugs fixed along the way:** `screens.mjs` gained shell-integrity
+assertions, `THEME=dark` and `VIEWPORT`; `probe-inventory.mjs` used a fixed 3.5 s
+sleep before finding the login form and aborted falsely on a slow backend — it
+polls now.
 
 ---
 
 ## 7. Remaining
 
-1. **7 empty-state CTAs not added** — the remaining screens were checked and deliberately left
-   alone (§3.1), except `AccountingRefundsPage` and `AccountingSalesPage`, which would benefit
-   from a "view sales" link. Low value, not done.
-2. **No `window.confirm` replacement UI** for the disabled delete button — there is no endpoint,
-   so there is nothing to build yet. When the endpoint lands, the button becomes real and the
+1. **Alternatives link/unlink notice (3.2 / 3.3) not exercised end-to-end.** The
+   mechanism is proven — it is the same `Notice` component with the same wiring as
+   the inquiry notice above, which was verified interactively — but the specific
+   flow (pick a medicine → search → link → unlink) was not driven. Residual risk
+   is low; it is stated rather than assumed.
+2. **Password-change modal (3.4) not exercised.** Deliberately: the backend ends
+   **every** session on a password change, so testing it would sign the demo
+   account out. Needs a throwaway account.
+3. **Onboarding checklist verified with the gate temporarily forced.** The demo
+   pharmacy has stock AND a complete profile (name, phone, address, coordinates —
+   confirmed against the live API), so the real gate correctly resolves to
+   *hidden*. The component is confirmed rendered; the *gate* is type-checked and
+   reasoned but not visually confirmed in its "shown" branch with real data.
+4. **7 empty-state CTAs not added.** The remaining screens were checked and
+   deliberately left alone (§3.1) — the ones that could take a CTA
+   (`AccountingRefundsPage`, `AccountingSalesPage`) would only gain a "view sales"
+   link. Low value.
+5. **No replacement UI for the disabled delete button** — there is no endpoint, so
+   there is nothing to build. When it lands, the button becomes real and the
    modal pattern from `ProfilePage` is the template.
-3. **The onboarding checklist was verified with the gate temporarily forced** — the demo
-   pharmacy has stock and an incomplete profile, so the real gate does resolve to "show", but
-   the capture window (~10 s preflight) made it unreliable to observe directly. The component
-   itself is confirmed rendered; the *gate* is type-checked and reasoned, not visually confirmed
-   in both branches.
-4. **Responsive QA at 390 / 768 was not re-run** for Phase 2.
+
+---
+
+## 8. Where this work now lives
+
+All of Phase 1 + Phase 2 is **committed and pushed** to `develop`:
+
+| Commit | What |
+|---|---|
+| `3a85420` | Phase 1 — unified visual system |
+| `a6cb1ce` | Phase 2 — states, feedback, onboarding |
+| `0f34746` | README — production URL, keep-alive, `tsc -b` trap |
+| `04d2f26` | CI keep-alive backup + responsive harness |
+| `87b5ec2` | Interactive notice verifier |
+
+Phase 3 not started.

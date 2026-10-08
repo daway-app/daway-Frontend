@@ -95,11 +95,23 @@ export function DashboardPage() {
    * so it can never flash "0 of 4" at an established pharmacy.
    */
   const profile = profileQuery.data;
-  const profileDone =
-    profile != null &&
-    Boolean(profile.name?.trim()) &&
-    Boolean(profile.phone?.trim()) &&
-    Boolean(profile.address?.trim() || (profile.latitude != null && profile.longitude != null));
+  /*
+   * The profile step now uses the BACKEND'S OWN flag instead of guessing.
+   *
+   * This used to check `name && phone && (address || coords)`, which is a
+   * SMALLER set than the backend's rule — `isProfileComplete()` also requires
+   * `region` and at least one open working-hours day. So the checklist could
+   * report "profile complete" for a pharmacy the backend still considered
+   * incomplete. `region` was not even returned by the API at the time, so the
+   * guess could not have been made correct.
+   *
+   * `profile_completed_at` is the right signal HERE specifically because this is
+   * an onboarding step: it answers "have they finished setup at least once",
+   * which is what stops the checklist from nagging. It is deliberately NOT
+   * "is the profile complete right now" — that flag is set once and never
+   * cleared, so the two can disagree (see the type's note).
+   */
+  const profileDone = profile?.profile_completed_at != null;
 
   const salesTotal = salesQuery.data?.pagination?.total ?? 0;
   const stockTotal = data?.total_medicines ?? 0;

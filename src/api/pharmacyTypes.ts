@@ -208,10 +208,27 @@ export interface ApiPharmacyProfile {
   longitude: number | null;
   address: string | null;
   working_hours: Record<ApiDayKey, ApiWorkingHour>;
-  // NOTE (GAP-1): `region` is accepted + persisted by the backend but is NOT
-  // returned by `PharmacyProfileController::payload()`. Typed optional so the
-  // UI can read it if the backend is later fixed, without a breaking change.
-  region?: string | null;
+  /**
+   * RESOLVED (was GAP-1): `region` was accepted and persisted by the backend but
+   * not returned by `PharmacyProfileController::payload()`, so no client could
+   * evaluate the backend's own completeness rule — which requires it. The
+   * backend now returns it, so it is no longer optional.
+   */
+  region: string | null;
+  /**
+   * When the pharmacy first completed its profile, or `null` if it never has.
+   *
+   * ⚠️ Set ONCE and never cleared (`PharmacyProfileController::update()` guards
+   * on `=== null`), and the two flows disagree on when to set it: the API sets
+   * it only when `isProfileComplete()` passes, the web completion controller
+   * sets it unconditionally. So this answers "did they ever finish setup" —
+   * which is exactly what the first-run checklist needs — and NOT "is the
+   * profile complete right now". For the current state, read the fields.
+   *
+   * The demo pharmacy is a live example of the gap: `region` is null while this
+   * is set.
+   */
+  profile_completed_at: string | null;
 }
 
 // ══════════════════════════════════════════════════════════════════════

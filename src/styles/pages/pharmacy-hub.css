@@ -245,17 +245,16 @@ html[dir='rtl'] .ph-search i, html[dir='rtl'] .ph-search svg { left: auto; right
     min-width: 0;
 }
 
-.ph-med { background: var(--ph-paper); border: 1px solid var(--ph-line-soft); border-radius: var(--ph-r-lg); box-shadow: var(--ph-sh); overflow: hidden; display: flex; flex-direction: column; transition: var(--ph-tr); }
-.ph-med:hover { transform: translateY(-3px); box-shadow: var(--ph-sh-md); }
-.ph-med-img { height: 150px; background: var(--ph-canvas); display: grid; place-items: center; border-block-end: 1px solid var(--ph-line-soft); overflow: hidden; }
-.ph-med-img img { width: 100%; height: 100%; object-fit: contain; padding: 16px; }
-.ph-med-img .fallback { font-size: 3rem; color: var(--ph-teal-text); }
-.ph-med-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
-.ph-med-body h3 { margin: 0; font-size: 1.05rem; }
-.ph-med-body p { margin: 0; font-size: .85rem; color: var(--ph-ink-faint); }
-.ph-med-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-block-start: auto; padding-block-start: 12px; border-block-start: 1px solid var(--ph-line-soft); }
-.ph-med-price { color: var(--ph-teal-text); font-weight: 700; }
-.ph-med-actions { display: flex; gap: 8px; }
+/*
+  REMOVED — the old medicine CARD layout (`.ph-med`, `.ph-med-img`,
+  `.ph-med-body`, `.ph-med-meta`, `.ph-med-price`, `.ph-med-actions`).
+
+  `MedicinesPage` renders a table now (matching the Blade index), so nothing
+  produced this markup any more and the rules were dead. Verified with
+  `node tools/dead-css.mjs` before deleting, and `ph-med-thumb` — which IS still
+  used by the table's thumbnail cell — lives separately at the top of this file
+  and was left untouched.
+*/
 
 .ph-stepper { display: inline-flex; align-items: center; gap: 8px; }
 .ph-stepper button { width: 32px; height: 32px; border-radius: var(--ph-r-md); border: 1px solid var(--line-strong); background: var(--ph-paper); color: var(--ph-ink); cursor: pointer; display: grid; place-items: center; transition: var(--ph-tr); }
@@ -427,7 +426,7 @@ body.ph-modal-open { overflow: hidden; }
 .ph-stat:hover::before { opacity: 1; }
 .ph-stat:hover { transform: translateY(-3px); box-shadow: 0 12px 24px -8px rgba(28,114,166,.25); }
 body.dark-mode .ph-stat {
-    background: linear-gradient(155deg, #1E3A5F 0%, #0A1A2E 100%);
+    background: linear-gradient(155deg, #1E3A5F 0%, var(--sidebar-bg-2) 100%);
     border: 1px solid var(--line-strong);
     box-shadow: 0 8px 20px rgba(0,0,0,.45);
 }
@@ -485,7 +484,7 @@ body.dark-mode .ph-stat-progress {
 }
 body.dark-mode .ph-btn.primary {
     background: linear-gradient(90deg, #0E97B4 0%, #24D2E8 100%);
-    color: #04141A;
+    color: var(--on-accent);
     box-shadow: 0 6px 18px -4px rgba(28,114,166,.45);
 }
 body.dark-mode .ph-btn.primary:hover {
@@ -580,7 +579,7 @@ body.dark-mode .ph-pill { background: var(--paper); border-color: var(--line-str
 body.dark-mode .ph-pill:hover { color: var(--ph-teal-text); border-color: var(--ph-teal-text); background: var(--teal-mist); }
 body.dark-mode .ph-pill.active {
     background: linear-gradient(90deg, #0E97B4 0%, #24D2E8 100%);
-    color: #04141A; border-color: transparent;
+    color: var(--on-accent); border-color: transparent;
     box-shadow: 0 4px 12px -2px rgba(74,155,212,.5);
 }
 
@@ -623,7 +622,7 @@ body.dark-mode .ph-search:focus-within i { color: var(--ph-teal-text); }
 }
 .ph-badge.ok, body.dark-mode .ph-badge.ok {
     background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%);
-    color: #166534; border: 1px solid #86EFAC;
+    color: var(--success-text); border: 1px solid #86EFAC;
 }
 .ph-badge.low, body.dark-mode .ph-badge.low {
     background: linear-gradient(135deg, #FEF9C3 0%, #FDE68A 100%);

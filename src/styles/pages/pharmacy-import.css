@@ -491,7 +491,7 @@ body.dark-mode .pi-step.is-active {
 }
 body.dark-mode .pi-step.is-active .pi-step-no {
     background: var(--focus-ring);
-    color: #04141A;
+    color: var(--on-accent);
     border-color: transparent;
 }
 body.dark-mode .pi-step:not(.is-active) .pi-step-no {
@@ -529,7 +529,7 @@ body.dark-mode .pi-search-results {
 }
 body.dark-mode .pi-chip.active {
     background: var(--focus-ring);
-    color: #04141A;
+    color: var(--on-accent);
     border-color: transparent;
 }
 body.dark-mode .pi-column code { background: var(--line-soft); }

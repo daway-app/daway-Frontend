@@ -26,7 +26,7 @@
 
 .main-card {
     background: var(--paper);
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--line);
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04);
@@ -198,7 +198,7 @@ select.form-control {
 /* Action buttons */
 .card-footer-modern {
     background-color: var(--canvas);
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid var(--line);
     padding: 20px 30px;
     display: flex;
     align-items: center;

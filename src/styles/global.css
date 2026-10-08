@@ -28,6 +28,17 @@
 @import './pages/auth-forms.css';
 
 /* ==========================================================
+   UI System (Phase 1) — MUST be last.
+   ----------------------------------------------------------
+   A polish layer over the shared primitives (`.ph-btn`, `.ph-card`,
+   `.ph-control`, `.ph-table`, `.ph-badge`, `.ph-empty`). Loading it last lets
+   it win the cascade against the per-page stylesheets, so every screen picks
+   up the unified radii, heights, focus rings, hover states and motion without
+   being restyled individually.
+   ========================================================== */
+@import './ui-system.css';
+
+/* ==========================================================
    هيكل صفحات الدخول
    ----------------------------------------------------------
    `.auth-shell` نفسها (الخلفية والتوسيط) تُعرَّف في

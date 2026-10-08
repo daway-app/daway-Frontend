@@ -23,7 +23,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { measureDeadCss } from './dead-css.mjs';
 
-const BUDGET_FILE = 'qa/dead-css-budget.json';
+const BUDGET_FILE = 'tools/dead-css-budget.json';
 
 const now = measureDeadCss();
 

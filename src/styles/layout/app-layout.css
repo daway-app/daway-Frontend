@@ -21,13 +21,13 @@
 body.dark-mode .bg-anim-layer {
     background:
         radial-gradient(1200px 700px at 12% -10%, #123244 0%, transparent 55%),
-        linear-gradient(165deg, #050C12 0%, #071722 45%, #0B2333 100%);
+        linear-gradient(165deg, #050C12 0%, var(--topbar-bg) 45%, #0B2333 100%);
 }
 
 body.dark-mode {
     background:
         radial-gradient(1200px 700px at 12% -10%, #123244 0%, transparent 55%),
-        linear-gradient(165deg, #050C12 0%, #071722 45%, #0B2333 100%);
+        linear-gradient(165deg, #050C12 0%, var(--topbar-bg) 45%, #0B2333 100%);
     background-attachment: fixed;
 }
 

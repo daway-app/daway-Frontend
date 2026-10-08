@@ -408,7 +408,7 @@ html[dir="ltr"] .nav-item::before {
     transition: all 0.2s ease;
 }
 
-.confirm-modal-actions .modal-btn:hover { background: #eef2f7; }
+.confirm-modal-actions .modal-btn:hover { background: var(--line-soft); }
 
 .confirm-modal-actions .modal-btn.primary {
     background: var(--accent-teal, #1C72A6);

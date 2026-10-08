@@ -1,0 +1,730 @@
+/* ==========================================================
+   Daway Pharmacy Web — UI System (Phase 1)
+   ==========================================================
+   ⚠️ WHAT THIS FILE IS — AND IS NOT
+   ---------------------------------
+   This is a **polish layer over the primitives that already exist**, NOT the
+   start of a second design system.
+
+   The project already HAS a design system: `tokens.css` (the colour / radius /
+   shadow / easing vocabulary, mirrored from the Blade app) plus the shared
+   `.ph-*` classes in `pharmacy-hub.css`. That system is the source of truth and
+   stays authoritative. Nothing here replaces it, forks it, or renames it.
+
+   What this file does is fill the gaps that layer left open, so the existing
+   primitives behave consistently everywhere:
+     · the missing scale tokens (spacing, motion, control heights)
+     · interaction states the shared classes never defined (hover, press,
+       focus ring, disabled, error)
+     · one typographic hierarchy
+     · micro-motion
+
+   Everything is expressed with the EXISTING tokens. No colour is redefined, no
+   class is renamed, no component is replaced.
+
+   HOW TO USE IT
+   -------------
+   Add rules here only when they apply to a SHARED primitive — i.e. every screen
+   should get them for free. A rule for one screen belongs in that screen's
+   stylesheet, not here.
+
+   BLADE REMAINS THE DESIGN REFERENCE. This layer unifies what was already
+   there; it does not invent a new visual language, and it does not restyle the
+   Blade app or the light theme.
+   ========================================================== */
+
+/* ==========================================================
+   1. Scale tokens — the missing system layer
+   ----------------------------------------------------------
+   The project had radii, shadows and easing but NO spacing scale and NO motion
+   durations, so pages invented their own (`padding: 11px 14px`, `gap: 22px`,
+   `transition: .2s`). These tokens give one vocabulary. Values are the ones
+   already most common in the codebase, so adopting them is not a redesign.
+   ========================================================== */
+:root {
+    /* 4px base scale. */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 20px;
+    --sp-6: 24px;
+    --sp-8: 32px;
+
+    /* Motion — one vocabulary, always paired with the existing --ease. */
+    --dur-fast: 120ms;
+    --dur: 200ms;
+    --dur-slow: 300ms;
+    --tr-fast: var(--dur-fast) var(--ease);
+    --tr-base: var(--dur) var(--ease);
+    --tr-slow: var(--dur-slow) var(--ease);
+
+    /* Control metrics — one height per size, so inputs and buttons line up. */
+    --ctl-h-sm: 34px;
+    --ctl-h-md: 42px;
+    --ctl-h-lg: 46px;
+
+    /* Focus ring, built from the existing focus token (no new colour — this is
+       the same `--focus-ring` teal with alpha, matching the pattern already
+       used in `pharmacy-hub.css`). Written as rgba rather than `color-mix()`
+       because an unsupported function inside a custom property fails silently
+       at USE time, which would drop the whole `box-shadow`. */
+    --ring: 0 0 0 3px rgba(28, 114, 166, 0.22);
+
+    /* The one token `profile-complete.css` referenced but nothing defined.
+       It is the teal-light brand value, which is what the call site meant. */
+    --ph-teal-soft: var(--teal-light);
+
+    /* Text placed on a BRIGHT accent fill — the dark-mode teal gradient used by
+       primary buttons and active pills. A dark ink is required there, and no
+       surface token expresses it: `--sidebar-bg` happens to be dark in dark
+       mode but is WHITE in light mode, so using it for text would render the
+       label invisible the moment the rule applied outside `.dark-mode`.
+       This names the value the call sites already used; it is not a new colour. */
+    --on-accent: #04141a;
+}
+
+/* Dark mode: the ring needs more presence against a dark field. */
+html.dark-mode,
+body.dark-mode,
+html[data-theme='dark'],
+body[data-theme='dark'] {
+    --ring: 0 0 0 3px rgba(56, 189, 248, 0.35);
+}
+
+/* ==========================================================
+   2. Typography — one hierarchy
+   ----------------------------------------------------------
+   Arabic-first: Tajawal is already loaded, so nothing new is fetched.
+   `line-height` is slightly looser than the Latin default because Arabic needs
+   more vertical room for its ascenders/descenders and diacritics.
+   ========================================================== */
+body {
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+/* Page title — the single h1 of a screen. */
+.ph-page h1,
+.ph-head h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    color: var(--ph-ink);
+}
+
+/* Section/card headings. */
+.ph-card-head h2,
+.ph-card-title,
+.ph-modal-head h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--ph-ink);
+}
+
+/* Supporting text under a title. */
+.ph-head p,
+.ph-page-title .subtitle {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--ph-ink-faint);
+}
+
+/* Field labels — distinct from body text by weight, not by size. */
+.ph-form-label,
+.ac-field-label,
+.fl {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ph-ink-soft);
+}
+
+/* Helper / hint text. */
+.ph-hint,
+.ac-field-help {
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--ph-ink-faint);
+}
+
+/* Muted text used inside tables and summaries. */
+.ac-muted {
+    color: var(--ph-ink-faint);
+}
+
+/* Numeric cells must not shift between rows. */
+.ac-num {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================
+   3. Buttons — an explicit hierarchy
+   ----------------------------------------------------------
+   Primary · Secondary (outline) · Ghost · Destructive · Icon.
+   The `.ph-btn` base already existed; what was missing was a consistent
+   interaction set (hover / active / focus / disabled) and a shared height.
+
+   NOTE: `.ph-btn` used `var(--ph-r-md)` (12px) while `.btn-submit` in the auth
+   pages used its own radius, so the same "primary button" had two corner radii.
+   Both now resolve through `--ph-r-md`.
+   ========================================================== */
+.ph-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    min-height: var(--ctl-h-md);
+    padding: 0 var(--sp-4);
+    border: 1px solid transparent;
+    border-radius: var(--ph-r-md);
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        background-color var(--tr-fast),
+        border-color var(--tr-fast),
+        color var(--tr-fast),
+        box-shadow var(--tr-fast),
+        transform var(--tr-fast);
+}
+
+/* Sizes — one shared height each, so buttons and inputs align on a row. */
+.ph-btn.sm,
+.ph-btn.icon {
+    min-height: var(--ctl-h-sm);
+    padding: 0 var(--sp-3);
+    font-size: 0.85rem;
+}
+
+.ph-btn.icon {
+    padding: 0;
+    width: var(--ctl-h-sm);
+}
+
+/* --- Primary --------------------------------------------------------- */
+.ph-btn.primary {
+    background: var(--ph-teal);
+    color: #fff;
+    border-color: var(--ph-teal);
+    box-shadow: var(--ph-sh);
+}
+.ph-btn.primary:hover {
+    background: var(--ph-teal-deep);
+    border-color: var(--ph-teal-deep);
+    box-shadow: var(--sh-md);
+}
+
+/* --- Secondary / outline --------------------------------------------- */
+.ph-btn.outline {
+    background: var(--ph-paper);
+    color: var(--ph-teal-text);
+    border-color: var(--ph-line);
+}
+.ph-btn.outline:hover {
+    background: var(--ph-teal-mist);
+    border-color: var(--ph-teal);
+    color: var(--ph-teal-deep);
+}
+
+/* --- Ghost ----------------------------------------------------------- */
+.ph-btn.ghost {
+    background: transparent;
+    color: var(--ph-ink-soft);
+    border-color: transparent;
+}
+.ph-btn.ghost:hover {
+    background: var(--ph-teal-mist);
+    color: var(--ph-teal-text);
+}
+
+/* --- Destructive ------------------------------------------------------ */
+.ph-btn.danger {
+    background: var(--ph-red);
+    color: #fff;
+    border-color: var(--ph-red);
+}
+.ph-btn.danger:hover {
+    background: var(--danger-strong);
+    border-color: var(--danger-strong);
+}
+
+/* --- Shared interaction states --------------------------------------- */
+.ph-btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.ph-btn:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+}
+
+.ph-btn:disabled,
+.ph-btn[aria-disabled='true'] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Auth pages use their own submit/cancel classes — align them to the same
+   scale so login and the dashboard look like one product. */
+.btn-submit,
+.btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    min-height: var(--ctl-h-md);
+    padding: 0 var(--sp-5);
+    border-radius: var(--ph-r-md);
+    font-weight: 600;
+    transition: background-color var(--tr-fast), border-color var(--tr-fast),
+        box-shadow var(--tr-fast), transform var(--tr-fast);
+}
+.btn-submit:active:not(:disabled),
+.btn-cancel:active:not(:disabled) {
+    transform: translateY(1px);
+}
+.btn-submit:focus-visible,
+.btn-cancel:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+}
+.btn-submit:disabled,
+.btn-cancel:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ==========================================================
+   4. Cards — one radius, border, shadow, padding, hover
+   ========================================================== */
+.ph-card {
+    background: var(--ph-paper);
+    border: 1px solid var(--ph-line);
+    border-radius: var(--ph-r-lg);
+    box-shadow: var(--ph-sh);
+    transition: box-shadow var(--tr-base), border-color var(--tr-base);
+}
+
+/* Cards do not lift on hover. Only a card that is itself a link/button is
+   interactive, and no screen currently renders one — so no `:hover` rule is
+   shipped for a case that cannot occur (the `check:css` ratchet would flag it).
+   Add the rule together with the first clickable card. */
+.ph-card-head {
+    padding: var(--sp-5) var(--sp-6);
+    border-block-end: 1px solid var(--ph-line-soft);
+}
+
+.ph-card-head p {
+    margin: var(--sp-1) 0 0;
+    font-size: 0.85rem;
+    color: var(--ph-ink-faint);
+}
+
+.ph-card-body {
+    padding: var(--sp-5) var(--sp-6);
+}
+
+/* Consistent rhythm between stacked blocks on every page. */
+.ph-card + .ph-card {
+    margin-block-start: var(--sp-4);
+}
+
+/* ==========================================================
+   5. Inputs — one height, radius, border, focus, disabled, error
+   ----------------------------------------------------------
+   NOTE: `.ph-control` used `padding: 11px 14px` (≈40px tall) while the buttons
+   beside it were 42px, so a field and its button never quite lined up. Both now
+   use the shared control heights.
+   ========================================================== */
+.ph-control,
+.ph-select,
+.ph-textarea,
+.ph-input,
+input.ph-control,
+select.ph-control,
+textarea.ph-control {
+    width: 100%;
+    min-height: var(--ctl-h-md);
+    padding: var(--sp-2) var(--sp-3);
+    border: 1px solid var(--ph-line);
+    border-radius: var(--ph-r-md);
+    background: var(--field-bg);
+    color: var(--ph-ink);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    outline: none;
+    transition: border-color var(--tr-fast), box-shadow var(--tr-fast),
+        background-color var(--tr-fast);
+}
+
+.ph-textarea,
+textarea.ph-control {
+    min-height: 96px;
+    padding-block: var(--sp-3);
+    resize: vertical;
+}
+
+/* Placeholder — readable, clearly not a value. */
+.ph-control::placeholder,
+.ph-input::placeholder,
+.ph-textarea::placeholder,
+.ph-select::placeholder {
+    color: var(--ph-ink-faint);
+    opacity: 0.75;
+}
+
+/* Hover — a quiet affordance, not a colour change. */
+.ph-control:hover:not(:disabled):not([readonly]),
+.ph-select:hover:not(:disabled) {
+    border-color: var(--ph-line-strong);
+}
+
+/* Focus — one ring, shared with buttons. */
+.ph-control:focus,
+.ph-select:focus,
+.ph-textarea:focus,
+.ph-input:focus {
+    border-color: var(--focus-ring);
+    box-shadow: var(--ring);
+}
+
+/* Disabled / read-only. */
+.ph-control:disabled,
+.ph-select:disabled,
+.ph-textarea:disabled,
+.ph-control[readonly],
+.ph-textarea[readonly] {
+    background: var(--ph-canvas);
+    color: var(--ph-ink-faint);
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Error — driven by `aria-invalid`, which the auth pages already set (5 call
+   sites). Deliberately NOT keyed on an invented `.is-invalid` class: no screen
+   uses one, and shipping CSS for a state nothing can produce is dead weight
+   (the `check:css` ratchet flags exactly that). */
+.ph-control[aria-invalid='true'],
+.ph-select[aria-invalid='true'],
+.ph-textarea[aria-invalid='true'],
+.ph-input[aria-invalid='true'] {
+    border-color: var(--ph-red);
+}
+.ph-control[aria-invalid='true']:focus,
+.ph-select[aria-invalid='true']:focus,
+.ph-textarea[aria-invalid='true']:focus,
+.ph-input[aria-invalid='true']:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.22);
+}
+
+/* ==========================================================
+   6. Tables — one header treatment, one row hover
+   ========================================================== */
+.ph-table th {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--ph-ink-soft);
+    background: var(--ph-canvas);
+}
+
+.ph-table tbody tr {
+    transition: background-color var(--tr-fast);
+}
+
+.ph-table tbody tr:hover {
+    background: var(--ph-teal-mist);
+}
+
+/* Numeric columns read as a column, not as ragged text. */
+.ph-table td.ac-num,
+.ph-table th.ac-num {
+    text-align: end;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================
+   7. Badges, empty states, icons
+   ========================================================== */
+
+/* `.ac-inline-msg` shipped with success/error/warning variants but no `info`,
+   so an informational notice had no styling to fall back on. Built from the
+   existing info tokens — no new colour. */
+.ac-inline-msg.info {
+    background: var(--info-bg);
+    color: var(--info-text);
+}
+
+/* The inline notice is the app's action-feedback primitive (see `Notice` in
+   components/ui). The base rule sets the icon gap but never made the text take
+   the remaining width, so a long server message wrapped under the icon. */
+.ac-inline-msg > span {
+    flex: 1;
+    min-width: 0;
+}
+
+.ph-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    padding: 3px var(--sp-2);
+    border-radius: var(--ph-r-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.ph-empty {
+    text-align: center;
+    padding: var(--sp-8) var(--sp-5);
+    color: var(--ph-ink-faint);
+}
+.ph-empty i {
+    font-size: 2rem;
+    color: var(--ph-line-strong);
+    display: block;
+    margin-block-end: var(--sp-3);
+}
+.ph-empty h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ph-ink-soft);
+}
+.ph-empty p {
+    margin: var(--sp-1) 0 0;
+    font-size: 0.85rem;
+}
+
+/* A failure-flavoured empty state (data could not be produced, not merely
+   absent) tints its icon so the two read differently at a glance. */
+.ph-empty.is-danger i {
+    color: var(--ph-red);
+}
+
+/* Call-to-action row for an empty state. Wraps on narrow screens so a primary
+   and a secondary button stack instead of overflowing. */
+.ph-empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    justify-content: center;
+    margin-block-start: var(--sp-5);
+}
+
+/* An icon inside a page title keeps the title's optical alignment. */
+.ph-page-title h1 i,
+.ph-head h1 i {
+    color: var(--ph-teal-text);
+    font-size: 0.9em;
+    margin-inline-end: var(--sp-2);
+}
+
+/* One icon size inside controls, so glyphs do not jump between screens. */
+.ph-btn i,
+.ph-card-head h2 i {
+    font-size: 0.95em;
+    line-height: 1;
+}
+
+/* ==========================================================
+   9. Setup checklist — first-run onboarding
+   ----------------------------------------------------------
+   Deliberately an inline card, never a modal or overlay: the brief says the
+   onboarding must not be annoying or cover the content. It is hidden entirely
+   by the component once every step is done.
+   ========================================================== */
+.ph-setup {
+    background: var(--ph-paper);
+    border: 1px solid var(--ph-line);
+    border-inline-start: 3px solid var(--ph-teal);
+    border-radius: var(--ph-r-lg);
+    box-shadow: var(--ph-sh);
+    padding: var(--sp-5) var(--sp-6);
+    margin-block-end: var(--sp-5);
+}
+
+.ph-setup-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    margin-block-end: var(--sp-3);
+}
+
+.ph-setup-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ph-ink);
+}
+
+.ph-setup-count {
+    margin: var(--sp-1) 0 0;
+    font-size: 0.85rem;
+    color: var(--ph-ink-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+.ph-setup-dismiss {
+    border: none;
+    background: none;
+    color: var(--ph-ink-faint);
+    font-size: 1.25rem;
+    line-height: 1;
+    padding: 0 var(--sp-1);
+    cursor: pointer;
+    transition: color var(--tr-fast);
+}
+.ph-setup-dismiss:hover {
+    color: var(--ph-ink);
+}
+
+.ph-setup-bar {
+    height: 6px;
+    border-radius: var(--ph-r-full);
+    background: var(--ph-canvas);
+    overflow: hidden;
+    margin-block-end: var(--sp-4);
+}
+
+.ph-setup-bar-fill {
+    display: block;
+    block-size: 100%;
+    background: var(--ph-teal);
+    border-radius: inherit;
+    transition: inline-size var(--tr-slow);
+}
+
+.ph-setup-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ph-setup-steps li {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-2) 0;
+}
+
+.ph-setup-steps li > i {
+    flex-shrink: 0;
+    font-size: 1rem;
+}
+
+.ph-setup-steps .is-done > i {
+    color: var(--ph-green);
+}
+.ph-setup-steps .is-done .ph-setup-step-label {
+    color: var(--ph-ink-faint);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+}
+
+.ph-setup-steps .is-todo > i {
+    color: var(--ph-line-strong);
+}
+
+.ph-setup-step-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.ph-setup-step-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ph-ink);
+}
+
+.ph-setup-step-hint {
+    font-size: 0.8rem;
+    color: var(--ph-ink-faint);
+}
+
+.ph-setup-step-go {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ph-teal-text);
+    transition: gap var(--tr-fast);
+}
+.ph-setup-step-go:hover {
+    gap: var(--sp-2);
+    text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+    .ph-setup {
+        padding: var(--sp-4);
+    }
+    .ph-setup-steps li {
+        flex-wrap: wrap;
+    }
+}
+
+/* ==========================================================
+   8. Modal + motion
+   ----------------------------------------------------------
+   Micro-interactions only: a short fade/rise on the dialog and overlay.
+   Everything is disabled under `prefers-reduced-motion` (base.css already
+   collapses transitions globally; these keyframes need the same courtesy).
+   ========================================================== */
+@keyframes ph-overlay-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes ph-dialog-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ph-modal-overlay.active {
+    animation: ph-overlay-in var(--dur) var(--ease);
+}
+
+.ph-modal-overlay.active .ph-modal {
+    animation: ph-dialog-in var(--dur-slow) var(--ease);
+}
+
+/* Page transition — a single short fade on route change. Applied to the page
+   wrapper, not to every element, so it stays cheap. */
+@keyframes ph-page-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.ph-page {
+    animation: ph-page-in var(--dur-slow) var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ph-modal-overlay.active,
+    .ph-modal-overlay.active .ph-modal,
+    .ph-page {
+        animation: none;
+    }
+    .ph-btn:active:not(:disabled),
+    .btn-submit:active:not(:disabled),
+    .btn-cancel:active:not(:disabled) {
+        transform: none;
+    }
+}

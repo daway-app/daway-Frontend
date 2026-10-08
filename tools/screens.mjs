@@ -77,6 +77,14 @@ const PATHS = parsePaths(
 const PHARMACY_ID = process.env.PHARMACY_ID || 'PH-1234';
 const PASSWORD = process.env.PHARMACY_PASSWORD || 'password';
 
+/**
+ * Theme to capture in. `THEME=dark` sets `localStorage.theme` before the first
+ * paint of every screen, which is what the app's pre-paint snippet reads.
+ * Needed because a UI change has to be checked in BOTH themes — a rule that
+ * looks fine on white can be invisible on a dark surface.
+ */
+const THEME = process.env.THEME === 'dark' ? 'dark' : 'light';
+
 mkdirSync(OUT_DIR, { recursive: true });
 
 const userDataDir = mkdtempSync(join(tmpdir(), 'daway-screens-'));
@@ -314,6 +322,12 @@ if (!loggedIn) {
 }
 console.log('✓ logged in\n');
 
+// Pin the theme BEFORE any screen renders, so the pre-paint snippet applies it.
+await evaluate(
+  `localStorage.setItem('theme', ${JSON.stringify(THEME)}); true`,
+);
+console.log(`· theme = ${THEME}\n`);
+
 // ── Warm the API before measuring ─────────────────────────────────────
 //
 // The backend talks to a REMOTE managed MySQL (Aiven). The first requests
@@ -406,6 +420,14 @@ for (const path of PATHS) {
       empty: document.querySelectorAll('.ph-empty').length,
       emptyTitle: txt(document.querySelector('.ph-empty h3')),
       bodyLen: document.body.innerText.length,
+      /**
+       * Shell integrity. A screen that renders without the sidebar (or with the
+       * page scrolled horizontally) is a layout regression that a screenshot
+       * alone does not make obvious, so it is asserted here explicitly.
+       */
+      sidebarW: Math.round(document.querySelector('.sidebar-pro')?.getBoundingClientRect().width ?? 0),
+      topbarH: Math.round(document.querySelector('.topbar')?.getBoundingClientRect().height ?? 0),
+      overflowX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
     };
   })()`);
 

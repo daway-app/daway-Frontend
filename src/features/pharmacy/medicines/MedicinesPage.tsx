@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AR } from '@/lib/i18n';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
-import { AsyncBoundary } from '@/components/ui';
+import { AsyncBoundary, Btn, EmptyState } from '@/components/ui';
 import { countStock, stockStatus, LOW_STOCK_THRESHOLD } from '@/lib/stock';
 import { money, thumbUrl } from '@/lib/format';
 import type { ApiInventoryItem } from '@/api/pharmacyTypes';
@@ -256,11 +256,24 @@ export function MedicinesPage() {
                             >
                               <i className="fas fa-pen" />
                             </Link>
+                            {/*
+                              🔴 This button used to call `window.confirm("…delete
+                              this medicine?")` and then DO NOTHING — there is no
+                              delete endpoint (`routes/api.php` only exposes GET
+                              for medicines). Confirming a destructive action and
+                              having nothing happen is worse than not offering it.
+
+                              The button is kept (removing it would drop a piece
+                              of the UI the Blade page has) but disabled, with a
+                              title that states the truth instead of a fake
+                              confirmation.
+                            */}
                             <button
                               type="button"
                               className="ph-btn icon danger"
-                              title={M.delete_tooltip}
-                              onClick={() => window.confirm(M.delete_confirm)}
+                              title={M.delete_unavailable}
+                              aria-label={M.delete_unavailable}
+                              disabled
                             >
                               <i className="fas fa-trash" />
                             </button>
@@ -272,11 +285,30 @@ export function MedicinesPage() {
                 ) : (
                   <tr>
                     <td colSpan={6}>
-                      <div className="ph-empty">
-                        <i className="fas fa-box-open" />
-                        <h3>{hasFilters ? AR.pharmacy.inventory.no_results : M.empty_title}</h3>
-                        {!hasFilters && <p>{M.empty_desc}</p>}
-                      </div>
+                      {/*
+                        First-use: a brand-new pharmacy sees an empty table with
+                        no way forward. The unfiltered case now carries the one
+                        action that resolves it. The FILTERED case must NOT — the
+                        user already knows how to add; they just searched for
+                        something that is not there. (Phase 2.)
+                      */}
+                      {hasFilters ? (
+                        <div className="ph-empty">
+                          <i className="fas fa-magnifying-glass" />
+                          <h3>{AR.pharmacy.inventory.no_results}</h3>
+                        </div>
+                      ) : (
+                        <EmptyState
+                          icon="fas fa-box-open"
+                          title={M.empty_title}
+                          description={M.empty_desc}
+                          action={
+                            <Btn variant="primary" to="/medicines/request">
+                              <i className="fas fa-plus" /> {M.add_medicine}
+                            </Btn>
+                          }
+                        />
+                      )}
                     </td>
                   </tr>
                 )}

@@ -68,6 +68,8 @@ export function ProfilePage() {
   const [logo, setLogo] = useState('');
   const [hours, setHours] = useState<HoursState>(() => initHours(null));
   const [modal, setModal] = useState<null | 'password' | 'logo' | 'location' | 'hours'>(null);
+  /** True once the password changed — the session is over and needs a re-login. */
+  const [pwDone, setPwDone] = useState(false);
   const [saved, setSaved] = useState(false);
   const [pw, setPw] = useState({ password: '', confirmation: '' });
   const [pwError, setPwError] = useState<string | null>(null);
@@ -189,10 +191,19 @@ export function ProfilePage() {
       });
       setPw({ password: '', confirmation: '' });
       setModal(null);
-      // The backend deletes ALL tokens on a password change, so the session is
-      // over by design — a re-login is required.
-      window.alert('تم تغيير كلمة المرور. يرجى تسجيل الدخول مرة أخرى.');
-      window.location.href = '/login';
+      /*
+       * 🔴 WAS `window.alert(…)` FOLLOWED IMMEDIATELY BY A REDIRECT.
+       *
+       * That combination was actively broken: the browser dialog blocks the
+       * page, and the instant it is dismissed the navigation fires — so the
+       * user never gets to read anything, and a native dialog is not
+       * styleable, not translated by the app, and not announced consistently.
+       *
+       * The session really is over (the backend deletes ALL tokens on a
+       * password change), so the correct shape is a BLOCKING modal that
+       * explains it and carries the single action — re-login.
+       */
+      setPwDone(true);
     } catch {
       setPwError(changePassword.error?.message ?? 'تعذّر تغيير كلمة المرور');
     }
@@ -719,6 +730,31 @@ export function ProfilePage() {
               </div>
             );
           })}
+        </div>
+      </Modal>
+
+      {/*
+        Session-ended notice. Replaces a `window.alert` that fired and was
+        immediately destroyed by a redirect, so its text could never be read.
+        No close button: the session is genuinely over, so re-login is the only
+        way forward — offering "dismiss" would strand the user on a dead page.
+      */}
+      <Modal
+        open={pwDone}
+        title={P.password_change.title}
+        onClose={() => {
+          /* intentionally not dismissible */
+        }}
+        footer={
+          <a href="/login" className="ph-btn primary">
+            {P.password_change.relogin}
+          </a>
+        }
+      >
+        <div className="ph-empty">
+          <i className="fas fa-circle-check" />
+          <h3>{P.password_change.changed_title}</h3>
+          <p>{P.password_change.changed_body}</p>
         </div>
       </Modal>
     </div>

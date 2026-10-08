@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AsyncBoundary } from '@/components/ui';
+import { AsyncBoundary, Notice } from '@/components/ui';
 import { AR } from '@/lib/i18n';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
@@ -42,6 +42,16 @@ export function InquiriesPage() {
   const [q, setQ] = useState('');
   /** Statuses changed in this session, applied over the fetched rows. */
   const [overrides, setOverrides] = useState<Record<number, ApiInquiryStatus>>({});
+  /**
+   * A status change that the server rejected.
+   *
+   * The update is optimistic, so on failure the badge silently flips back to
+   * its old value. Without this, the user sees a control that "did nothing"
+   * and reads it as a broken button — the revert needs an explanation.
+   */
+  const [statusError, setStatusError] = useState<string | null>(null);
+  /** Confirmation of the last successful status change. */
+  const [notice, setNotice] = useState<string | null>(null);
 
   const query = useApiQuery<{ data: ApiInquiry[]; counts: ApiInquiryCounts }>(
     (signal) => api.inquiries({ per_page: 50 }, signal),
@@ -82,8 +92,12 @@ export function InquiriesPage() {
   async function setRowStatus(id: number, next: ApiInquiryStatus) {
     // Optimistic: the row flips immediately, then the server confirms.
     setOverrides((prev) => ({ ...prev, [id]: next }));
+    setNotice(null);
+    setStatusError(null);
     try {
       await update.run(id, next);
+      // Confirm the write — this screen used to change a status silently.
+      setNotice(I.status_saved.replace(':status', STATUS_TEXT[next]));
     } catch {
       // Revert on failure so the UI never claims a change that did not happen.
       setOverrides((prev) => {
@@ -91,6 +105,10 @@ export function InquiriesPage() {
         delete next2[id];
         return next2;
       });
+      // …and SAY so. Without this the badge silently flips back and the user
+      // reads the control as a broken button. (This state existed but was never
+      // wired — the comment above it described an intent nothing implemented.)
+      setStatusError(I.status_failed);
     }
   }
 
@@ -176,6 +194,18 @@ export function InquiriesPage() {
             </button>
           )}
         </form>
+
+        {notice && (
+          <div style={{ marginBlockEnd: 16 }}>
+            <Notice tone="success">{notice}</Notice>
+          </div>
+        )}
+
+        {statusError && (
+          <div style={{ marginBlockEnd: 16 }}>
+            <Notice tone="warning">{statusError}</Notice>
+          </div>
+        )}
 
         {update.error && (
           <div className="ph-error" style={{ marginBlockEnd: 16 }} role="alert">

@@ -159,7 +159,24 @@ const evaluate = async (expression) => {
 // ── login ────────────────────────────────────────────────────────────
 console.log(`→ login ${BASE}/login`);
 await send('Page.navigate', { url: `${BASE}/login` }, sessionId);
-await sleep(3500);
+
+// POLL for the form — the app shows a session-check loader first, so a fixed
+// sleep produces a false "form missing" abort on a slow backend.
+let formReady = false;
+for (let i = 0; i < 180; i++) {
+  await sleep(500);
+  try {
+    formReady = await evaluate(`!!document.querySelector('#loginForm')`);
+  } catch {
+    formReady = false;
+  }
+  if (formReady) break;
+}
+if (!formReady) {
+  console.error('✗ login form never rendered');
+  process.exit(1);
+}
+
 await evaluate(`(() => {
   const setVal = (el, v) => {
     const s = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value').set;
@@ -171,7 +188,7 @@ await evaluate(`(() => {
 })()`);
 await sleep(400);
 await evaluate(`document.querySelector('#submitBtn').click(); true`);
-for (let i = 0; i < 25; i++) {
+for (let i = 0; i < 30; i++) {
   await sleep(900);
   const p = await evaluate('location.pathname');
   if (p && !p.startsWith('/login')) break;

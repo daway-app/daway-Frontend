@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AR } from '@/lib/i18n';
-import { AsyncBoundary, Modal } from '@/components/ui';
+import { AsyncBoundary, Btn, EmptyState, Modal, Notice } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import type { ApiAlternativeBlock, ApiAlternativeRef } from '@/api/pharmacyTypes';
@@ -44,6 +44,8 @@ export function AlternativesPage() {
   const [results, setResults] = useState<Record<number, ApiAlternativeRef[]>>({});
   const [searching, setSearching] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  /** Confirmation of the last successful link / unlink. */
+  const [notice, setNotice] = useState<string | null>(null);
 
   const query = useApiQuery<ApiAlternativeBlock[]>(
     (signal) => api.alternatives(signal),
@@ -93,12 +95,15 @@ export function AlternativesPage() {
 
   async function doLink(baseId: number, alternativeId: number) {
     setActionError(null);
+    setNotice(null);
     try {
       await link.run(baseId, alternativeId);
       // Clear the search, then refetch so the linked row comes from the server.
       setSearch((prev) => ({ ...prev, [baseId]: '' }));
       setResults((prev) => ({ ...prev, [baseId]: [] }));
       query.refetch();
+      // Linking used to be completely silent.
+      setNotice(A.linked_ok);
     } catch (e) {
       // The API returns Arabic messages for the duplicate / reversed-pair cases.
       setActionError(e instanceof Error ? e.message : 'تعذّر ربط البديل');
@@ -108,9 +113,12 @@ export function AlternativesPage() {
   async function confirmUnlink() {
     if (!pending) return;
     setActionError(null);
+    setNotice(null);
     try {
       await unlink.run(pending.baseId, pending.cand.id);
       query.refetch();
+      // Unlinking used to be completely silent too.
+      setNotice(A.unlinked_ok);
     } catch (e) {
       setActionError(e instanceof Error ? e.message : 'تعذّر حذف البديل');
     } finally {
@@ -155,6 +163,12 @@ export function AlternativesPage() {
             </div>
           </div>
         </div>
+
+        {notice && (
+          <div style={{ marginBlockEnd: 16 }}>
+            <Notice tone="success">{notice}</Notice>
+          </div>
+        )}
 
         {actionError && (
           <div className="ph-error" style={{ marginBlockEnd: 16 }}>
@@ -369,10 +383,20 @@ export function AlternativesPage() {
             );
           })
         ) : (
-          <div className="ph-empty">
-            <i className="fas fa-box-open" />
-            <h3>{A.empty_medicines}</h3>
-          </div>
+          /*
+            First-use: with no medicines in stock there is nothing to pair, so
+            the page is a dead end. It now points at the step that unblocks it.
+            (Phase 2.)
+          */
+          <EmptyState
+            icon="fas fa-box-open"
+            title={A.empty_medicines}
+            action={
+              <Btn variant="primary" to="/medicines/request">
+                <i className="fas fa-plus" /> {AR.pharmacy.medicines.index.add_medicine}
+              </Btn>
+            }
+          />
         )}
 
         <Modal

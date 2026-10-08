@@ -81,6 +81,21 @@ export const AR = {
       title: 'لوحة تحكم الصيدلية',
       heading: 'لوحة الصيدلية',
       subtitle: 'نظرة عامة على أداء صيدلية :pharmacy',
+      /**
+       * ADDED (Phase 2): first-run checklist. Only shown to a pharmacy that has
+       * not finished setting up, and only while it has unfinished steps — it
+       * disappears on its own, and can be dismissed permanently.
+       */
+      setup: {
+        title: 'إعداد الصيدلية',
+        account: 'إنشاء الحساب',
+        profile: 'إكمال بيانات الصيدلية',
+        profile_hint: 'الاسم والهاتف والموقع — ما يراه المريض عند البحث',
+        medicine: 'إضافة أول دواء',
+        medicine_hint: 'ابدأ بالخطوة التي تجعل صيدليتك تظهر في نتائج البحث',
+        invoice: 'إنشاء أول فاتورة',
+        invoice_hint: 'سجّل أول عملية بيع من شاشة نقطة البيع',
+      },
       update_inventory: 'تحديث المخزون',
       stat_out: 'نافد',
       stat_low: 'مخزون منخفض',
@@ -163,6 +178,12 @@ export const AR = {
         delete_confirm: 'هل أنت متأكد من حذف هذا الدواء؟',
         edit_tooltip: 'تعديل',
         delete_tooltip: 'حذف',
+        /**
+         * ADDED. The delete button called `window.confirm()` and then did
+         * nothing — there is no delete endpoint. This replaces a fake
+         * confirmation with the truth, and the button is disabled.
+         */
+        delete_unavailable: 'حذف الدواء غير متاح بعد',
       },
       request: {
         title: 'طلب دواء جديد',
@@ -213,6 +234,13 @@ export const AR = {
       answer_button: 'تم الرد',
       close_button: 'إغلاق',
       empty: 'لا توجد استفسارات',
+      /**
+       * ADDED: this screen changed an inquiry's status with no confirmation at
+       * all. `:status` is filled with the label the user just picked.
+       */
+      status_saved: 'تم تحديث حالة الاستفسار إلى «:status»',
+      /** Shown when the optimistic update is reverted, so the revert is explained. */
+      status_failed: 'تعذّر تحديث الحالة — أُعيدت القيمة السابقة.',
       open_chat: 'المحادثة',
       chat_title: 'المحادثة',
       chat_subtitle: 'عرض الرسائل والرد على المريض',
@@ -263,6 +291,12 @@ export const AR = {
         no_candidates: 'لا توجد بدائل بنفس المادة الفعالة',
         footer_note: 'جميع البدائل المعروضة تتشارك نفس المادة الفعالة.',
         empty: 'لا توجد أدوية في صيدليتك لإدارة بدائلها.',
+        /**
+         * ADDED: linking and unlinking an alternative were both completely
+         * silent — the row appeared or vanished with no confirmation.
+         */
+        linked_ok: 'تم ربط الدواء البديل بنجاح',
+        unlinked_ok: 'تم فك ربط الدواء البديل',
         empty_medicines: 'لا توجد أدوية',
         no_access: 'ليس لديك صلاحية الوصول لهذه الصفحة.',
         confirm_delete: 'هل تريد حذف البديل؟',
@@ -344,6 +378,13 @@ export const AR = {
         confirm_password: 'تأكيد كلمة المرور الجديدة',
         password_hint: '8 أحرف على الأقل',
         wrong_current: 'كلمة المرور الحالية غير صحيحة.',
+        /**
+         * ADDED: the success path used `window.alert` + an immediate redirect,
+         * so the user could never read the message. It is a blocking modal now.
+         */
+        changed_title: 'تم تغيير كلمة المرور',
+        changed_body: 'لأسباب أمنية أُنهيت جميع الجلسات. يرجى تسجيل الدخول من جديد.',
+        relogin: 'تسجيل الدخول مرة أخرى',
       },
       hours_quick: {
         unified: 'دوام موحد 9-5',

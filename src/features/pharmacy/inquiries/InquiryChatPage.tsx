@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { AR } from '@/lib/i18n';
-import { AsyncBoundary } from '@/components/ui';
+import { AsyncBoundary, Notice } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { formatDateTime, formatTime } from '@/lib/format';
@@ -281,9 +281,7 @@ export function InquiryChatPage() {
           </div>
 
           {sendMessage.error && (
-            <div className="ac-inline-msg is-err" role="alert" style={{ marginBlockStart: 10 }}>
-              {sendMessage.error.message}
-            </div>
+            <Notice tone="error">{sendMessage.error.message}</Notice>
           )}
         </form>
       </AsyncBoundary>

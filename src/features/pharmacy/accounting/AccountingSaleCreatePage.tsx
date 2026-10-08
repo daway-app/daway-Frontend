@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AR } from '@/lib/i18n';
-import { AsyncBoundary, Modal } from '@/components/ui';
+import { AsyncBoundary, Modal, Notice } from '@/components/ui';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -35,12 +35,20 @@ import { buildSalePayload, type CartLine, type SalePayload } from './salePayload
  *  - **customers** → `GET /api/pharmacy/accounting/customers`.
  *  - **save** → `POST /api/pharmacy/accounting/sales`.
  *
- * ⚠️ Known scope limit: the catalogue is loaded one page deep (`per_page: 200`).
- * Name search filters that loaded set, so a pharmacy with more than 200 stock
- * lines would need paging/search server-side. Reported, not hidden.
+ * ⚠️ Known scope limit: the catalogue is loaded one page deep
+ * (`INVENTORY_PAGE_SIZE`, the backend's maximum). Name search filters that
+ * loaded set, so a pharmacy with more stock lines would need paging/search
+ * server-side. Reported, not hidden.
  */
 
 const A = AR.accounting;
+
+/**
+ * The backend validates `per_page` with `max:100`, so this is the largest page
+ * that can be requested in ONE call. Exceeding it is a 422, not a bigger page —
+ * which is exactly how this screen was broken before.
+ */
+const INVENTORY_PAGE_SIZE = 100;
 
 /** Backend `payment_method` enum: `cash,card,bank_transfer,credit`. */
 const PAYMENT_METHODS: ReadonlyArray<{ key: PaymentMethod; label: string }> = [
@@ -79,7 +87,11 @@ export function AccountingSaleCreatePage() {
   const searchRef = useRef<HTMLInputElement>(null);
 
   const inventory = useApiQuery<{ data: ApiInventoryItem[] }>(
-    (signal) => api.inventory({ per_page: 200 }, signal),
+    // 🔴 `per_page` is CAPPED AT 100 by the backend (`max:100`). Sending 200
+    // returns HTTP 422 "يجب ألا تكون قيمة الحقل per page أكبر من 100" and the
+    // till loads no catalogue at all. Caught by the expanded smoke QA — a
+    // 3-screen check never touched this page.
+    (signal) => api.inventory({ per_page: INVENTORY_PAGE_SIZE }, signal),
     [],
   );
 
@@ -643,9 +655,7 @@ export function AccountingSaleCreatePage() {
                 </div>
 
                 {createSale.error && (
-                  <div className="ac-inline-msg is-err" role="alert">
-                    {createSale.error.message}
-                  </div>
+                  <Notice tone="error">{createSale.error.message}</Notice>
                 )}
 
                 {msg ? (

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Chart } from '@/components/ui/Chart';
-import { AsyncBoundary, Card, Btn } from '@/components/ui';
+import { AsyncBoundary, Card, Btn, EmptyState } from '@/components/ui';
 import { AR } from '@/lib/i18n';
+import { ROUTES } from '@/routes/paths';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { countStock, stockStatus, LOW_STOCK_THRESHOLD } from '@/lib/stock';
@@ -30,6 +31,8 @@ import type { ApiInventoryItem, ApiInventoryStats } from '@/api/pharmacyTypes';
  * API has no inventory-trend endpoint, so it is omitted rather than faked.
  */
 const I = AR.pharmacy.inventory;
+/** Only for the empty-state CTA label — reuses an existing string. */
+const M = AR.pharmacy.medicines.index;
 const D = AR.pharmacy.dashboard;
 const S = AR.pharmacy.status;
 
@@ -336,10 +339,23 @@ export function InventoryPage() {
                   ) : (
                     <tr>
                       <td colSpan={4}>
-                        <div className="ph-empty">
-                          <i className="fas fa-box-open" />
-                          <h3>{I.empty}</h3>
-                        </div>
+                        {/*
+                          Empty inventory = the pharmacy has added no medicines
+                          yet. A bare "لا توجد أدوية في المخزون" tells the user
+                          nothing about what to do next, so it carries the one
+                          action that actually resolves it: add a medicine.
+                          (Phase 2 — item A. No new copy: reuses the existing
+                          `medicines.index.add_medicine` label.)
+                        */}
+                        <EmptyState
+                          icon="fas fa-box-open"
+                          title={I.empty}
+                          action={
+                            <Btn variant="primary" to={ROUTES.medicineRequests}>
+                              <i className="fas fa-plus" /> {M.add_medicine}
+                            </Btn>
+                          }
+                        />
                       </td>
                     </tr>
                   )}

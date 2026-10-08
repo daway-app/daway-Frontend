@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 
 /**
  * Shared pharmacy UI primitives — thin wrappers over the Blade `ph-*` classes.
@@ -14,15 +15,20 @@ export function PageHeader({
   title,
   subtitle,
   actions,
+  icon,
 }: {
   title: string;
   subtitle?: ReactNode;
   actions?: ReactNode;
+  /** Optional Font Awesome class rendered before the title. */
+  icon?: string;
 }) {
   return (
     <div className="ph-head">
       <div className="ph-page-title">
-        <h1>{title}</h1>
+        <h1>
+          {icon && <i className={icon} />} {title}
+        </h1>
         {subtitle != null && <p>{subtitle}</p>}
       </div>
       {actions != null && <div className="ph-actions">{actions}</div>}
@@ -100,7 +106,34 @@ export function Card({
 /* ------------------------------------------------------------------ */
 /* Badge — `.ph-badge` + status variant                                */
 /* ------------------------------------------------------------------ */
-export type BadgeVariant = 'ok' | 'low' | 'out' | 'new' | 'ans' | 'closed';
+
+/**
+ * Every variant the stylesheet actually defines.
+ *
+ * This union previously stopped at the six pharmacy-hub variants
+ * (`ok/low/out/new/ans/closed`), which is WHY the component went unused: the
+ * accounting screens render `paid/partial/unpaid/cancelled/credit/refunded`
+ * (all defined in `pharmacy-accounting.css`) through `statusBadgeClass()`, and
+ * TypeScript rejected them. A component that cannot express half the real
+ * variants is not a component anyone can adopt.
+ *
+ * `(string & {})` keeps autocomplete for the known names while still accepting
+ * a runtime value from a helper like `statusBadgeClass()`.
+ */
+export type BadgeVariant =
+  | 'ok'
+  | 'low'
+  | 'out'
+  | 'new'
+  | 'ans'
+  | 'closed'
+  | 'paid'
+  | 'partial'
+  | 'unpaid'
+  | 'cancelled'
+  | 'credit'
+  | 'refunded'
+  | (string & {});
 
 export function Badge({ variant, children }: { variant: BadgeVariant; children: ReactNode }) {
   return <span className={`ph-badge ${variant}`}>{children}</span>;
@@ -112,22 +145,67 @@ export function Badge({ variant, children }: { variant: BadgeVariant; children: 
 export type BtnVariant = 'primary' | 'outline' | 'ghost' | 'danger';
 export type BtnSize = 'sm' | 'xs' | 'icon';
 
+/**
+ * Renders a `<button>`, or a router `<Link>` / plain `<a>` when `to` / `href`
+ * is given — all with the identical `.ph-btn` classes.
+ *
+ * WHY IT GREW LINK SUPPORT
+ * ------------------------
+ * The component only ever emitted `<button>`, but 14 real call sites put
+ * `.ph-btn` on a `<Link>` or `<a>` (navigation, not action). Those screens
+ * could not use it, which is a large part of why `Btn` had a single call site
+ * while 77 raw `.ph-btn` elements existed. Same component, wider surface —
+ * no second button component.
+ */
+type BtnCommon = {
+  variant?: BtnVariant;
+  size?: BtnSize;
+  icon?: string;
+  children?: ReactNode;
+};
+
 export function Btn({
   variant,
   size,
   icon,
   children,
+  to,
+  href,
   ...rest
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: BtnVariant;
-  size?: BtnSize;
-  icon?: string;
-}) {
+}: BtnCommon &
+  Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
+    /** Router navigation — renders a `<Link>`. */
+    to?: string;
+    /** External / non-router link — renders an `<a>`. */
+    href?: string;
+  }) {
   const cls = ['ph-btn', variant, size].filter(Boolean).join(' ');
-  return (
-    <button className={cls} {...rest}>
+  const inner = (
+    <>
       {icon && <i className={icon} />}
       {children}
+    </>
+  );
+
+  if (to) {
+    return (
+      <Link to={to} className={cls}>
+        {inner}
+      </Link>
+    );
+  }
+
+  if (href) {
+    return (
+      <a href={href} className={cls}>
+        {inner}
+      </a>
+    );
+  }
+
+  return (
+    <button className={cls} {...rest}>
+      {inner}
     </button>
   );
 }
@@ -135,20 +213,50 @@ export function Btn({
 /* ------------------------------------------------------------------ */
 /* Empty state — `.ph-empty`                                           */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Context-aware empty state.
+ *
+ * WHY IT GREW ACTION SLOTS
+ * ------------------------
+ * The component had `icon/title/description` only, and was used **once** —
+ * because 4 real empty states in the app also render a call to action
+ * ("add the first medicine", "create the first invoice"). With no slot for it,
+ * those screens had to hand-write the block, so they never adopted the
+ * component.
+ *
+ * `action` and `secondaryAction` take any node (a `<Btn>`, a `<Link>`, a form
+ * button) so the caller keeps control of behaviour. Nothing here navigates.
+ */
 export function EmptyState({
   icon,
   title,
   description,
+  action,
+  secondaryAction,
+  tone = 'neutral',
 }: {
   icon: string;
   title: string;
   description?: string;
+  /** Primary call to action, e.g. "add the first medicine". */
+  action?: ReactNode;
+  /** Optional quieter second path, e.g. "import a file instead". */
+  secondaryAction?: ReactNode;
+  /** `danger` tints the icon for a failure-flavoured empty state. */
+  tone?: 'neutral' | 'danger';
 }) {
   return (
-    <div className="ph-empty">
+    <div className={tone === 'danger' ? 'ph-empty is-danger' : 'ph-empty'}>
       <i className={icon} />
       <h3>{title}</h3>
       {description && <p>{description}</p>}
+      {(action || secondaryAction) && (
+        <div className="ph-empty-actions">
+          {action}
+          {secondaryAction}
+        </div>
+      )}
     </div>
   );
 }
@@ -156,22 +264,60 @@ export function EmptyState({
 /* ------------------------------------------------------------------ */
 /* Table — `.ph-table` (+ optional `.ph-table-wrap` scroll container)  */
 /* ------------------------------------------------------------------ */
+
+/** A column header. The bare-`ReactNode` form is still accepted. */
+export interface ColumnDef {
+  label: ReactNode;
+  /** e.g. `ac-num` for an end-aligned numeric column. */
+  className?: string;
+  /** `col` by default — set `row` for a header that labels the row. */
+  scope?: 'col' | 'row';
+}
+
+/**
+ * WHY THIS GREW A `caption` AND A `ColumnDef` FORM
+ * ------------------------------------------------
+ * The component was unused (0 call sites) while the screens wrote raw
+ * `<table>` markup. The reason was capability, not taste — the screens need:
+ *
+ *   · `scope="col"` on headers  — 53 occurrences
+ *   · a `<caption>`             —  8 occurrences
+ *   · per-column classes (`ac-num`, `ac-actions`) — 18 occurrences
+ *
+ * None of those were expressible, so every screen that needed them had to drop
+ * to raw markup. The extras below close that gap instead of adding a second
+ * table component.
+ */
 export function DataTable({
   columns,
   children,
   wrap = true,
+  caption,
+  className,
 }: {
-  columns: ReactNode[];
+  columns: Array<ReactNode | ColumnDef>;
   children: ReactNode;
   wrap?: boolean;
+  /** Visually hidden by default via `ac-hidden`, matching the Blade tables. */
+  caption?: string;
+  /** Extra class on the `<table>` itself, e.g. `pi-recent`. */
+  className?: string;
 }) {
   const table = (
-    <table className="ph-table">
+    <table className={className ? `ph-table ${className}` : 'ph-table'}>
+      {caption && <caption className="ac-hidden">{caption}</caption>}
       <thead>
         <tr>
-          {columns.map((c, i) => (
-            <th key={i}>{c}</th>
-          ))}
+          {columns.map((c, i) => {
+            const isDef =
+              typeof c === 'object' && c !== null && !('$$typeof' in (c as object));
+            const def = isDef ? (c as ColumnDef) : null;
+            return (
+              <th key={i} scope={def?.scope ?? 'col'} className={def?.className}>
+                {def ? def.label : (c as ReactNode)}
+              </th>
+            );
+          })}
         </tr>
       </thead>
       <tbody>{children}</tbody>
@@ -219,6 +365,52 @@ export function Modal({
 /* ------------------------------------------------------------------ */
 /* Async states — loading / error / empty, reused by every live screen  */
 /* ------------------------------------------------------------------ */
+
+export type NoticeTone = 'success' | 'error' | 'warning' | 'info';
+
+const NOTICE_ICON: Record<NoticeTone, string> = {
+  success: 'fas fa-circle-check',
+  error: 'fas fa-circle-exclamation',
+  warning: 'fas fa-triangle-exclamation',
+  info: 'fas fa-circle-info',
+};
+
+/**
+ * Inline feedback for a completed action (save / send / delete).
+ *
+ * WHY IT EXISTS
+ * -------------
+ * The app already had the styling for this — `.ac-inline-msg` with
+ * `success / error / warning` variants — but no component, so call sites were
+ * written by hand and got it wrong. Both existing call sites used
+ * `className="ac-inline-msg is-err"`, where:
+ *
+ *   · `is-err` is defined NOWHERE (the real variant is `error`), and
+ *   · `.ac-inline-msg` is `display: none` until it also has `.show`.
+ *
+ * Net effect: the POS sale-failure message and the chat send-failure message
+ * were **invisible**. The user saw nothing when an action failed.
+ *
+ * This wraps the EXISTING classes so the variants cannot be mistyped, and
+ * `.show` is always applied. No new visual language.
+ */
+export function Notice({
+  tone,
+  children,
+}: {
+  tone: NoticeTone;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={`ac-inline-msg show ${tone}`}
+      role={tone === 'error' ? 'alert' : 'status'}
+    >
+      <i className={NOTICE_ICON[tone]} />
+      <span>{children}</span>
+    </div>
+  );
+}
 
 /**
  * Loading skeleton.
@@ -270,6 +462,105 @@ export function ErrorState({
         </button>
       )}
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Setup checklist — first-run onboarding                              */
+/* ------------------------------------------------------------------ */
+
+export interface SetupStep {
+  key: string;
+  label: string;
+  done: boolean;
+  /** Where to send the user to complete this step. */
+  to: string;
+  /** Optional short hint under the label. */
+  hint?: string;
+}
+
+/**
+ * A quiet progress checklist for a new pharmacy.
+ *
+ * DESIGN CONSTRAINTS (from the brief)
+ * -----------------------------------
+ * · NOT annoying, and it must NOT cover content — it is an inline card in the
+ *   normal page flow, never a modal or an overlay.
+ * · It disappears on its own once every step is done, so an established
+ *   pharmacy never sees it.
+ * · It can be dismissed, and the dismissal is remembered, so a user who does
+ *   not want it is not asked twice.
+ *
+ * Completion is passed in by the caller, derived from REAL data — the component
+ * never guesses and never invents a step that cannot be verified.
+ */
+export function SetupChecklist({
+  steps,
+  title,
+  onDismiss,
+}: {
+  steps: SetupStep[];
+  title: string;
+  onDismiss?: () => void;
+}) {
+  const done = steps.filter((s) => s.done).length;
+  if (done === steps.length) return null;
+
+  const pct = Math.round((done / steps.length) * 100);
+
+  return (
+    <section className="ph-setup" aria-label={title}>
+      <div className="ph-setup-head">
+        <div>
+          <h2 className="ph-setup-title">{title}</h2>
+          <p className="ph-setup-count">
+            {done} / {steps.length}
+          </p>
+        </div>
+        {onDismiss && (
+          <button
+            type="button"
+            className="ph-setup-dismiss"
+            onClick={onDismiss}
+            aria-label="إخفاء"
+          >
+            ×
+          </button>
+        )}
+      </div>
+
+      {/* Progress is a real progressbar so it is announced, not just drawn. */}
+      <div
+        className="ph-setup-bar"
+        role="progressbar"
+        aria-valuenow={done}
+        aria-valuemin={0}
+        aria-valuemax={steps.length}
+      >
+        <span className="ph-setup-bar-fill" style={{ inlineSize: `${pct}%` }} />
+      </div>
+
+      <ol className="ph-setup-steps">
+        {steps.map((s) => (
+          <li key={s.key} className={s.done ? 'is-done' : 'is-todo'}>
+            <i
+              className={s.done ? 'fas fa-circle-check' : 'far fa-circle'}
+              aria-hidden="true"
+            />
+            <span className="ph-setup-step-text">
+              <span className="ph-setup-step-label">{s.label}</span>
+              {s.hint && <span className="ph-setup-step-hint">{s.hint}</span>}
+            </span>
+            {!s.done && (
+              <Link to={s.to} className="ph-setup-step-go">
+                ابدأ
+                <i className="fas fa-arrow-left" aria-hidden="true" />
+              </Link>
+            )}
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 

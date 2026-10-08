@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
 import { AR, labelOf } from '@/lib/i18n';
-import { AsyncBoundary } from '@/components/ui';
+import { AsyncBoundary, Btn, EmptyState } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { money } from '@/lib/format';
+import { ROUTES } from '@/routes/paths';
 import type { ApiCashMovement, ApiCashStats } from '@/api/pharmacyTypes';
 
 /**
@@ -175,11 +176,21 @@ export function AccountingCashPage() {
         </div>
 
         {rows.length === 0 ? (
-          <div className="ph-empty">
-            <i className="fas fa-wallet" aria-hidden="true" />
-            <h3>{A.cash_registers.empty}</h3>
-            <p>{A.cash_registers.empty_desc}</p>
-          </div>
+          /*
+            An empty cash register is filled by sales, so the one action that
+            resolves it is "new sale" — a real next step, not decoration.
+            (Phase 2 — item A. Reuses the existing `new_sale` label.)
+          */
+          <EmptyState
+            icon="fas fa-wallet"
+            title={A.cash_registers.empty}
+            description={A.cash_registers.empty_desc}
+            action={
+              <Btn variant="primary" to={ROUTES.accountingSalesCreate}>
+                <i className="fas fa-plus" /> {A.sales.new_sale}
+              </Btn>
+            }
+          />
         ) : (
           <>
             {/* 🔴 إصلاح React: غلاف تمرير أفقي (Blade يرسم الجدول عاريًا). */}

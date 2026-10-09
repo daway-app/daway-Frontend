@@ -1,9 +1,21 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AR } from '@/lib/i18n';
-import { AsyncBoundary, Modal } from '@/components/ui';
+import { AsyncBoundary, FormField, Modal } from '@/components/ui';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
+import {
+  focusFirstInvalid,
+  latitude as ruleLatitude,
+  longitude as ruleLongitude,
+  matches,
+  optionalUrl,
+  password as rulePassword,
+  phone as rulePhone,
+  requiredText,
+  useTouched,
+  validate,
+} from '@/lib/forms';
 import type { ApiDayKey, ApiPharmacyProfile } from '@/api/pharmacyTypes';
 import {
   API_DAYS,
@@ -47,6 +59,18 @@ import {
 const P = AR.pharmacy.profile;
 const HQ = P.hours_quick;
 
+/** The fields this screen validates, in DOM order (used for focus-on-error). */
+type Field = 'pharmacy_name' | 'phone_number' | 'address' | 'region' | 'latitude' | 'longitude' | 'logo';
+const FIELDS: readonly Field[] = [
+  'pharmacy_name',
+  'phone_number',
+  'address',
+  'region',
+  'latitude',
+  'longitude',
+  'logo',
+];
+
 export function ProfilePage() {
   const api = usePharmacyApi();
   const { user } = useAuth();
@@ -73,6 +97,40 @@ export function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [pw, setPw] = useState({ password: '', confirmation: '' });
   const [pwError, setPwError] = useState<string | null>(null);
+
+  /**
+   * Inline validation state.
+   *
+   * `touched` is what makes the difference between helpful and hostile: a field
+   * shows nothing until the user has either left it or pressed Save. Errors are
+   * recomputed on every render from the CURRENT values, so they clear the moment
+   * the input becomes valid — no stale red border.
+   */
+  const { touched, markTouched, markAllTouched } = useTouched<Field>({
+    // The name is the one field a pharmacy has almost always already filled in,
+    // so it starts touched: if the server returned it blank, say so immediately.
+    pharmacy_name: false,
+  });
+
+  const pwTouched = useTouched<'password' | 'confirmation'>({});
+
+  const { errors: fieldErrors } = validate<Field>({
+    pharmacy_name: () => requiredText(form.pharmacy_name, P.name_label),
+    phone_number: () => rulePhone(form.phone_number, P.phone_label),
+    address: () => requiredText(form.address, P.address_label),
+    region: () => requiredText(form.region, P.complete.region_label),
+    latitude: () => ruleLatitude(lat),
+    longitude: () => ruleLongitude(lng),
+    logo: () => optionalUrl(logo, P.logo_label),
+  });
+
+  const pwErrors = {
+    password: rulePassword(pw.password, 'كلمة المرور الجديدة'),
+    confirmation: matches(pw.confirmation, pw.password, 'كلمتا المرور'),
+  };
+
+  /** The scroll target for `focusFirstInvalid` — the whole profile card. */
+  const formRef = useRef<HTMLDivElement>(null);
 
   // Hydrate the form once the profile lands. Keyed on the fetched object so a
   // refetch (after a save) re-syncs the form with the server's values.
@@ -143,6 +201,39 @@ export function ProfilePage() {
 
   async function handleSave() {
     setSaved(false);
+
+    /*
+     * Validate BEFORE the request. `markAllTouched` first so every error is
+     * visible at once (not just the ones the user happened to blur), then scroll
+     * to the first one — on a long form the offending field is often off-screen,
+     * and a Save that appears to do nothing is the classic double-submit.
+     *
+     * The check is repeated against the live values rather than trusting
+     * `fieldErrors`, because a modal's Save button can be pressed with the
+     * modal's own field still untouched.
+     */
+    const { errors, ok } = validate<Field>({
+      pharmacy_name: () => requiredText(form.pharmacy_name, P.name_label),
+      phone_number: () => rulePhone(form.phone_number, P.phone_label),
+      address: () => requiredText(form.address, P.address_label),
+      region: () => requiredText(form.region, P.complete.region_label),
+      latitude: () => ruleLatitude(lat),
+      longitude: () => ruleLongitude(lng),
+      logo: () => optionalUrl(logo, P.logo_label),
+    });
+
+    if (!ok) {
+      markAllTouched(FIELDS);
+      // The field lives inside whichever modal or card holds it; scroll the
+      // document so it is centred, then focus it.
+      requestAnimationFrame(() => focusFirstInvalid());
+      return;
+    }
+
+    // Belt and braces: `errors` is only read here to satisfy the linter that
+    // the variable is meaningful. The behaviour is driven by `ok`.
+    void errors;
+
     try {
       await save.run({
         /**
@@ -180,10 +271,26 @@ export function ProfilePage() {
 
   async function handlePassword() {
     setPwError(null);
-    if (pw.password !== pw.confirmation) {
-      setPwError('كلمتا المرور غير متطابقتين');
+
+    /*
+     * The mismatch check used to be the ONLY check here, and the two fields
+     * rendered nothing while typing. `markAllTouched` + the shared rules make
+     * the failure land on the field that caused it, and the focus call puts the
+     * cursor where the fix is.
+     */
+    pwTouched.markAllTouched(['password', 'confirmation']);
+
+    const { errors, ok } = validate<'password' | 'confirmation'>({
+      password: () => rulePassword(pw.password, 'كلمة المرور الجديدة'),
+      confirmation: () => matches(pw.confirmation, pw.password, 'كلمتا المرور'),
+    });
+
+    if (!ok) {
+      setPwError(errors.password ?? errors.confirmation ?? null);
+      requestAnimationFrame(() => focusFirstInvalid());
       return;
     }
+
     try {
       await changePassword.run({
         password: pw.password,
@@ -241,7 +348,7 @@ export function ProfilePage() {
           </div>
         )}
 
-        <div className="ph-profile-form">
+        <div className="ph-profile-form" ref={formRef}>
           <div className="ph-profile-grid">
             <div className="ph-profile-main">
               <div className="ph-card">
@@ -281,17 +388,23 @@ export function ProfilePage() {
 
                 <div className="ph-card-body">
                   <div className="ph-group" style={{ marginBlockEnd: 18 }}>
-                    <label className="ph-form-label" htmlFor="pharmacy_name">
-                      {P.name_label}
-                    </label>
-                    <input
-                      type="text"
-                      name="pharmacy_name"
+                    <FormField
+                      label={P.name_label}
                       id="pharmacy_name"
-                      className="ph-control"
-                      value={form.pharmacy_name}
-                      onChange={(e) => setForm((f) => ({ ...f, pharmacy_name: e.target.value }))}
-                    />
+                      required
+                      error={fieldErrors.pharmacy_name}
+                      touched={touched.pharmacy_name}
+                    >
+                      <input
+                        type="text"
+                        name="pharmacy_name"
+                        id="pharmacy_name"
+                        className="ph-control"
+                        value={form.pharmacy_name}
+                        onChange={(e) => setForm((f) => ({ ...f, pharmacy_name: e.target.value }))}
+                        onBlur={() => markTouched('pharmacy_name')}
+                      />
+                    </FormField>
                   </div>
 
                   {/* GAP-9: the API neither returns nor writes `email`. */}
@@ -312,48 +425,64 @@ export function ProfilePage() {
                   </div>
 
                   <div className="ph-group" style={{ marginBlockEnd: 18 }}>
-                    <label className="ph-form-label" htmlFor="phone_number">
-                      {P.phone_label}
-                    </label>
-                    <input
-                      type="text"
-                      name="phone_number"
+                    <FormField
+                      label={P.phone_label}
                       id="phone_number"
-                      className="ph-control"
-                      value={form.phone_number}
-                      onChange={(e) => setForm((f) => ({ ...f, phone_number: e.target.value }))}
-                    />
+                      required
+                      error={fieldErrors.phone_number}
+                      touched={touched.phone_number}
+                    >
+                      <input
+                        type="tel"
+                        name="phone_number"
+                        id="phone_number"
+                        className="ph-control"
+                        value={form.phone_number}
+                        onChange={(e) => setForm((f) => ({ ...f, phone_number: e.target.value }))}
+                        onBlur={() => markTouched('phone_number')}
+                      />
+                    </FormField>
                   </div>
 
                   <div className="ph-group" style={{ marginBlockEnd: 18 }}>
-                    <label className="ph-form-label" htmlFor="address">
-                      {P.address_label}
-                    </label>
-                    <textarea
-                      name="address"
+                    <FormField
+                      label={P.address_label}
                       id="address"
-                      className="ph-textarea"
-                      style={{ width: '100%' }}
-                      value={form.address}
-                      onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-                    />
+                      required
+                      error={fieldErrors.address}
+                      touched={touched.address}
+                    >
+                      <textarea
+                        name="address"
+                        id="address"
+                        className="ph-textarea"
+                        style={{ width: '100%' }}
+                        value={form.address}
+                        onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                        onBlur={() => markTouched('address')}
+                      />
+                    </FormField>
                   </div>
 
                   <div className="ph-group" style={{ marginBlockEnd: 18 }}>
-                    <label className="ph-form-label" htmlFor="region">
-                      {P.complete.region_label}
-                    </label>
-                    <input
-                      type="text"
-                      name="region"
+                    <FormField
+                      label={P.complete.region_label}
                       id="region"
-                      className="ph-control"
-                      value={form.region}
-                      onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
-                    />
-                    <p className="ph-hint">
-                      تُحفظ المنطقة، لكن الواجهة البرمجية لا تعيدها بعد إعادة التحميل.
-                    </p>
+                      required
+                      error={fieldErrors.region}
+                      touched={touched.region}
+                      hint="تُحفظ المنطقة، لكن الواجهة البرمجية لا تعيدها بعد إعادة التحميل."
+                    >
+                      <input
+                        type="text"
+                        name="region"
+                        id="region"
+                        className="ph-control"
+                        value={form.region}
+                        onChange={(e) => setForm((f) => ({ ...f, region: e.target.value }))}
+                        onBlur={() => markTouched('region')}
+                      />
+                    </FormField>
                   </div>
 
                   <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', marginBlockStart: 10 }}>
@@ -484,31 +613,45 @@ export function ProfilePage() {
           </div>
         )}
         <div className="ph-group" style={{ marginBlockEnd: 18 }}>
-          <label className="ph-form-label" htmlFor="new_password">
-            {P.password_change.new_password}
-          </label>
-          <input
-            type="password"
-            name="password"
+          <FormField
+            label={P.password_change.new_password}
             id="new_password"
-            className="ph-control"
-            value={pw.password}
-            onChange={(e) => setPw((p) => ({ ...p, password: e.target.value }))}
-          />
-          <p className="ph-hint">{P.password_change.password_hint}</p>
+            required
+            error={pwErrors.password}
+            touched={pwTouched.touched.password}
+            hint={P.password_change.password_hint}
+          >
+            <input
+              type="password"
+              name="password"
+              id="new_password"
+              className="ph-control"
+              autoComplete="new-password"
+              value={pw.password}
+              onChange={(e) => setPw((p) => ({ ...p, password: e.target.value }))}
+              onBlur={() => pwTouched.markTouched('password')}
+            />
+          </FormField>
         </div>
         <div className="ph-group">
-          <label className="ph-form-label" htmlFor="password_confirmation">
-            {P.password_change.confirm_password}
-          </label>
-          <input
-            type="password"
-            name="password_confirmation"
+          <FormField
+            label={P.password_change.confirm_password}
             id="password_confirmation"
-            className="ph-control"
-            value={pw.confirmation}
-            onChange={(e) => setPw((p) => ({ ...p, confirmation: e.target.value }))}
-          />
+            required
+            error={pwErrors.confirmation}
+            touched={pwTouched.touched.confirmation}
+          >
+            <input
+              type="password"
+              name="password_confirmation"
+              id="password_confirmation"
+              className="ph-control"
+              autoComplete="new-password"
+              value={pw.confirmation}
+              onChange={(e) => setPw((p) => ({ ...p, confirmation: e.target.value }))}
+              onBlur={() => pwTouched.markTouched('confirmation')}
+            />
+          </FormField>
         </div>
       </Modal>
 
@@ -559,15 +702,23 @@ export function ProfilePage() {
           <p className="ph-hint" style={{ marginBlock: '12px 8px' }}>
             الواجهة البرمجية تستقبل رابط صورة، لا ملفاً مرفوعاً.
           </p>
-          <input
-            type="url"
-            name="logo"
+          <FormField
+            label={P.logo_label}
             id="logoInput"
-            className="ph-control"
-            placeholder="https://..."
-            value={logo}
-            onChange={(e) => setLogo(e.target.value)}
-          />
+            error={fieldErrors.logo}
+            touched={touched.logo}
+          >
+            <input
+              type="url"
+              name="logo"
+              id="logoInput"
+              className="ph-control"
+              placeholder="https://..."
+              value={logo}
+              onChange={(e) => setLogo(e.target.value)}
+              onBlur={() => markTouched('logo')}
+            />
+          </FormField>
         </div>
       </Modal>
 
@@ -609,30 +760,44 @@ export function ProfilePage() {
           {P.map_hint}
         </p>
         <div className="ph-group" style={{ marginBlockStart: 10 }}>
-          <label className="ph-form-label" htmlFor="latitude">
-            {P.latitude_label}
-          </label>
-          <input
-            type="text"
-            name="latitude"
+          <FormField
+            label={P.latitude_label}
             id="latitude"
-            className="ph-control"
-            value={lat}
-            onChange={(e) => setLat(e.target.value)}
-          />
+            error={fieldErrors.latitude}
+            touched={touched.latitude}
+            hint="مثال: 31.5017"
+          >
+            <input
+              type="text"
+              name="latitude"
+              id="latitude"
+              className="ph-control"
+              inputMode="decimal"
+              value={lat}
+              onChange={(e) => setLat(e.target.value)}
+              onBlur={() => markTouched('latitude')}
+            />
+          </FormField>
         </div>
         <div className="ph-group" style={{ marginBlockStart: 10 }}>
-          <label className="ph-form-label" htmlFor="longitude">
-            {P.longitude_label}
-          </label>
-          <input
-            type="text"
-            name="longitude"
+          <FormField
+            label={P.longitude_label}
             id="longitude"
-            className="ph-control"
-            value={lng}
-            onChange={(e) => setLng(e.target.value)}
-          />
+            error={fieldErrors.longitude}
+            touched={touched.longitude}
+            hint="مثال: 34.4668"
+          >
+            <input
+              type="text"
+              name="longitude"
+              id="longitude"
+              className="ph-control"
+              inputMode="decimal"
+              value={lng}
+              onChange={(e) => setLng(e.target.value)}
+              onBlur={() => markTouched('longitude')}
+            />
+          </FormField>
         </div>
       </Modal>
 

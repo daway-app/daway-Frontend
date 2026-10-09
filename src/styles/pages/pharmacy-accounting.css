@@ -560,6 +560,31 @@ html[dir='rtl'] .ac-barcode-input { padding: 14px 44px 14px 14px; }
     .ac-pos { grid-template-columns: minmax(0, 1fr) 340px; }
 }
 
+/*
+  اللوح (768–1024px) — الشاشة التي يُستعمل فيها الصندوق فعلًا.
+  ----------------------------------------------------------
+  كان الكسر عند 900px يُسقط شاشة البيع إلى عمود واحد مكدّس: لوحة الفاتورة
+  وزر «إتمام البيع» تهبطان أسفل قائمة المنتجات، فيضطر الصيدلي إلى التمرير
+  عبر القائمة كلها للوصول إلى الدفع — وهو أسوأ ما يمكن في نقطة بيع. عنصر
+  #69.
+
+  الاختيار: أبقِ **عمودين** في كل عرض ≥768px، مع تضييق لوحة الفاتورة إلى
+  300px. القياس: 768 − الحشو ≈ 736px متاحة؛ عمود الفاتورة 300 ⇒ 436px
+  للمنتج/السلة، وهو كافٍ لجدول السلة (الأعمدة الدنيا مجموعها ~430px).
+  أما على الجوال الحقيقي (<768px) فيبقى التكديس هو الصواب.
+*/
+@media (min-width: 768px) and (max-width: 1024px) {
+    .ac-pos { grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; }
+    .ac-pos-right { position: sticky; top: calc(var(--ac-topbar) + 12px); }
+    /* لوحة الفاتورة ملفوفة بإحكام أكثر على اللوح */
+    .ac-invoice-body { padding: 14px; gap: 10px; }
+    .ac-invoice-foot { padding: 14px; }
+    /* جدول السلة: حشو أقل للوصول إلى العرض المتاح دون تمرير أفقي */
+    .ac-cart-table th,
+    .ac-cart-table td { padding: 8px 9px; font-size: .82rem; }
+    .ac-cart-table input.ac-line-input { min-width: 58px; }
+}
+
 @media (max-width: 900px) {
     .ac-pos { grid-template-columns: 1fr; }
     .ac-pos-right { position: static; }
@@ -1564,3 +1589,151 @@ body.dark-mode .ph-card > .ph-card-title { color: var(--ink); }
     padding: 6px 8px;
     text-align: center;
 }
+
+/* ==========================================================
+   جدول المخزون — التحديد المتعدّد والإجراء الجماعي (عنصر #69)
+
+   ⚠️ المساحة الفعلية للخيارات: الأصل في `input[type=checkbox]` أن يكون
+   ~13px وهو أصغر بكثير من الحد الموصى به للمس (44×44). لذلك نعطي الخلية
+   والـcheckbox حشوًا/حجمًا يصل بـ«منطقة اللمس» إلى 44px داخل الجدول.
+   القيم مأخوذة من توكنات التصميم (لا ألوان جديدة).
+   ========================================================== */
+
+/* خلية التحديد — عرض ثابت حتى لا يتذبذب الجدول عند تغيّر عرض الحقول */
+.ph-select-cell {
+    width: 48px;
+    padding-inline: 12px;
+    text-align: center;
+}
+.ph-select-cell input[type='checkbox'],
+.ph-select-head input[type='checkbox'] {
+    width: 22px;
+    height: 22px;
+    accent-color: var(--ph-teal);
+    cursor: pointer;
+    /* 44px target from a 22px box: 11px of padding on every side, applied via
+       the label-less cell so the hit area — not just the glyph — is tappable. */
+    margin: 11px;
+    vertical-align: middle;
+}
+.ph-select-cell input[type='checkbox']:focus-visible,
+.ph-select-head input[type='checkbox']:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+/* الصف المحدَّد — تلوين خفيف للسياق، بدون تغيير تخطيط الصف */
+.ph-table tr:has(.ph-select-cell input[type='checkbox']:checked) td {
+    background: var(--ph-teal-mist);
+}
+
+/* شريط الإجراء الجماعي — يظهر فقط عند وجود تحديد */
+.ph-bulk-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 22px;
+    background: var(--ph-teal-mist);
+    border-block-end: 1px solid var(--ph-line-soft);
+}
+body.dark-mode .ph-bulk-bar { background: var(--teal-mist); }
+.ph-bulk-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: .86rem;
+    color: var(--ph-teal-text);
+}
+.ph-bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.ph-bulk-qty {
+    width: 80px;
+    min-width: 0;
+    text-align: center;
+}
+
+/* على اللمس: كل ما يُنقر في شريط التحديد يبلغ 44px — نفس منطقة اللمس
+   المستخدمة في شاشة البيع (انظر قسم الـPOS اللمسي أعلاه). */
+@media (pointer: coarse) {
+    .ph-select-cell input[type='checkbox'],
+    .ph-select-head input[type='checkbox'] {
+        margin: 14px;
+    }
+    .ph-bulk-qty { min-height: 44px; }
+    .ph-bulk-actions .ph-btn { min-height: 44px; }
+}
+
+/* ==========================================================
+   نقطة البيع — أهداف اللمس ونتائج البحث (عنصر #69)
+
+   القياسات الفعلية قبل الإصلاح:
+     · .ac-icon-btn (زر حذف السطر)        = 32×32px  ← دون 44
+     · .ph-stepper button (‎+/− الكمية)    = 28×28px  ← دون 44
+     · .ph-btn.sm (بحث/مسح/الدفع)         = --ctl-h-sm = 34px  ← دون 44
+     · .ac-cart-qty input                 = ارتفاع ~31px  ← دون 44
+     · .ac-search-result ونتائجه = **بلا أي قاعدة CSS** (صنف ميت)
+
+   الأخير هو الأخطر: صفوف نتائج البحث في الـPOS تُصدر `<button>` بلا نمط،
+   فترجع لحجم المتصفح الافتراضي (~21px) وتتكدّس كأزرار سطرية — غير قابلة
+   للاستعمال بالإصبع. أضفنا لها نمطًا كاملًا من توكنات التصميم نفسها.
+   ========================================================== */
+
+/* صفوف نتائج البحث (الدواء + العميل) — كانت بلا نمط */
+.ac-search-result {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 14px;
+    border: none;
+    border-block-end: 1px solid var(--ac-line-soft);
+    background: transparent;
+    color: var(--ac-ink);
+    font-family: inherit;
+    font-size: .88rem;
+    text-align: start;
+    cursor: pointer;
+    transition: var(--ac-tr);
+}
+.ac-search-result:hover { background: var(--ac-teal-mist); }
+.ac-search-result:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.ac-search-result .ac-result-name { font-weight: 700; }
+.ac-search-result .ac-result-meta { font-size: .76rem; color: var(--ac-ink-faint); }
+.ac-customer-matches { border-block-start: 1px solid var(--ac-line-soft); }
+
+/*
+  اللمس — `pointer: coarse` يصيب اللوح بغضّ النظر عن العرض، وهو الصواب لأن
+  المشكلة «الإصبع» لا «العرض». لا يتضاعف مع استعلامات العرض أعلاه: هي تخصّ
+  التخطيط (الشبكة/الحشو)، وهذه تخصّ الأحجام، ولا تُلغي إحداهما الأخرى.
+*/
+@media (pointer: coarse) {
+    /* أزرار الكمية ‎+/− : 28 → 44 */
+    .ph-stepper button { width: 44px; height: 44px; }
+    /* زر حذف السطر: 32 → 44 */
+    .ac-icon-btn { width: 44px; height: 44px; }
+    /* حقل الكمية/الخصم داخل السلة: ~31 → 44 */
+    .ac-cart-qty,
+    .ac-cart-disc { min-height: 44px; }
+    /* الأزرار الصغيرة (بحث بالاسم / مسح الباركود / إضافة) → 44 */
+    .ph-btn.sm,
+    .ph-btn.icon { min-height: 44px; }
+    /* زر إتمام البيع: أصلاً ≥42، نرفعه صراحةً إلى 48 للوضوح على اللوح */
+    .ac-invoice-foot .ph-btn { min-height: 48px; }
+}
+
+/*
+  اللوح اللمسي في الوضع الأفقي — العرض ≥900px مع مؤشر خشن: نبقي العمودين
+  (تخطيط سطح المكتب) لكن بأهداف لمس كاملة. هذا هو ما يجعل شاشة البيع
+  «تعمل باللمس» فعلًا دون كسر التخطيط.
+*/
+@media (pointer: coarse) and (min-width: 900px) {
+    .ph-stepper input { height: 44px; }
+}
+

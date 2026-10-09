@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>دواك — الصيدلية</title>
     <!--
+      PWA manifest — item #70. Arabic-first (dir/lang Arabic, RTL).
+      `theme-color` matches the manifest's `theme_color`, which is the real
+      token `--teal-primary` (#1C72A6) from styles/tokens.css, not an invented
+      hex. Icons point only at files that actually exist in public/images/.
+    -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#1C72A6" />
+    <!--
       Font Awesome 6.7.2 — decision B8.
       Blade loads FA from this exact CDN URL (layouts/app.blade.php); no local
       FA assets exist in the backend, so the same CDN stylesheet is reused

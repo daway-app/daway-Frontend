@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Chart } from '@/components/ui/Chart';
-import { AsyncBoundary, Card, Btn, DataTable, EmptyState } from '@/components/ui';
+import { AsyncBoundary, Card, Btn, DataTable, EmptyState, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { AR } from '@/lib/i18n';
 import { ROUTES } from '@/routes/paths';
@@ -9,6 +9,13 @@ import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { countStock, stockStatus, LOW_STOCK_THRESHOLD } from '@/lib/stock';
 import { money } from '@/lib/format';
 import { ariaSort, useSort, type SortValue } from '@/lib/sort';
+import {
+  isIndeterminate,
+  selectedIds,
+  selectionState,
+  toggleAll,
+  toggleOne,
+} from '@/lib/selection';
 import type { ApiInventoryItem, ApiInventoryStats } from '@/api/pharmacyTypes';
 
 /**
@@ -143,6 +150,87 @@ export function InventoryPage() {
 
   const setQty = (row: ApiInventoryItem, value: number) =>
     setDrafts((prev) => ({ ...prev, [row.id]: Math.max(0, value) }));
+
+  /* ------------------------------------------------------------------ */
+  /* Bulk row selection (item #69)                                       */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Selected pharmacy-medicine ids. A `Set<number>` because selection is
+   * membership, not order — the tri-state header derivation lives in
+   * `@/lib/selection` and is unit-tested there.
+   */
+  const [selected, setSelected] = useState<Set<number>>(() => new Set());
+  /** Quantity the bulk action will apply to every selected row. */
+  const [bulkQty, setBulkQty] = useState('');
+  /** The confirm-dialog gate. Non-null while the destructive-ish action waits. */
+  const [confirmBulk, setConfirmBulk] = useState(false);
+
+  const headerCheckRef = useRef<HTMLInputElement>(null);
+
+  /** The ids of the rows currently rendered (post filter + sort), in order. */
+  const visibleIds = useMemo(() => sortedItems.map((r) => r.id), [sortedItems]);
+  const selState = selectionState(selected, visibleIds);
+  const selCount = selectedIds(selected, visibleIds).length;
+
+  /**
+   * `indeterminate` is a DOM PROPERTY, not an attribute — there is no React
+   * prop for it. Without this effect the header checkbox can only be on or
+   * off, so a partial selection renders identically to "none selected" and the
+   * user cannot tell what will happen when they click it.
+   */
+  useEffect(() => {
+    if (headerCheckRef.current) {
+      headerCheckRef.current.indeterminate = isIndeterminate(selState);
+    }
+  }, [selState]);
+
+  /**
+   * A refetch (or a filter change) can remove selected rows. Drop ids that are
+   * gone so a bulk action can never act on a row the user can no longer see.
+   */
+  useEffect(() => {
+    setSelected((prev) => {
+      if (prev.size === 0) return prev;
+      const live = new Set(visibleIds);
+      const next = new Set([...prev].filter((id) => live.has(id)));
+      // Preserve identity when nothing was dropped, so this cannot loop.
+      return next.size === prev.size ? prev : next;
+    });
+  }, [visibleIds]);
+
+  /**
+   * Apply one quantity to the whole selection.
+   *
+   * Uses the SAME endpoint as the stepper save — `POST /api/pharmacy/inventory/bulk`
+   * via `api.bulkUpdateInventory`. That endpoint takes `{ id, quantity }` per
+   * row, so "set N" is exactly what it stores; nothing is faked. Because this
+   * rewrites stock for many lines at once it is behind a confirmation, and on
+   * success the selection is cleared and the list refetched so the table cannot
+   * show stale quantities.
+   */
+  const bulkApply = useApiMutation(async (items: Array<{ id: number; quantity: number }>) =>
+    api.bulkUpdateInventory(items),
+  );
+
+  async function runBulkApply() {
+    const qty = Math.max(0, Math.floor(Number(bulkQty)));
+    if (!Number.isFinite(qty) || bulkQty.trim() === '') return;
+    const ids = selectedIds(selected, visibleIds);
+    if (ids.length === 0) return;
+    try {
+      const result = await bulkApply.run(ids.map((id) => ({ id, quantity: qty })));
+      toast.success(I.bulk_apply_done.replace(':count', String(result.updated_count)));
+      setSelected(new Set());
+      setBulkQty('');
+      setConfirmBulk(false);
+      query.refetch();
+    } catch (err) {
+      const serverMessage = bulkApply.error?.message;
+      const thrown = err instanceof Error ? err.message : undefined;
+      toast.error(serverMessage || thrown || I.toast_error);
+    }
+  }
 
   async function handleSave() {
     if (!hasChanges) return;
@@ -326,11 +414,68 @@ export function InventoryPage() {
                 <i className="fas fa-boxes-stacked" /> {I.update_title}
               </h2>
             </div>
+            {/*
+              Selection bar. `role="status"` announces the count politely as it
+              changes WITHOUT moving focus — a live region must never receive
+              focus, or every tick would yank the keyboard away from the row the
+              user is on. It is only rendered when something is selected, so it
+              does not add a permanent landmark.
+            */}
+            {selCount > 0 ? (
+              <div className="ph-bulk-bar" role="status" aria-live="polite">
+                <span className="ph-bulk-count">
+                  <i className="fas fa-check-square" aria-hidden="true" />{' '}
+                  {I.selected_count.replace(':count', String(selCount))}
+                </span>
+                <div className="ph-bulk-actions">
+                  <input
+                    type="number"
+                    className="ph-control ph-bulk-qty"
+                    min={0}
+                    inputMode="numeric"
+                    value={bulkQty}
+                    onChange={(e) => setBulkQty(e.target.value)}
+                    aria-label={I.bulk_quantity_label}
+                    placeholder="0"
+                  />
+                  <Btn
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    disabled={bulkQty.trim() === '' || bulkApply.isPending}
+                    onClick={() => setConfirmBulk(true)}
+                  >
+                    <i className="fas fa-layer-group" /> {I.bulk_apply}
+                  </Btn>
+                  <button
+                    type="button"
+                    className="ph-btn ghost sm"
+                    onClick={() => setSelected(new Set())}
+                  >
+                    <i className="fas fa-xmark" aria-hidden="true" /> {I.deselect_all}
+                  </button>
+                </div>
+              </div>
+            ) : null}
             <div className="ph-card-body ph-table-wrap" style={{ padding: 0 }}>
               <DataTable
                 sticky
                 onSort={(k) => toggleSort(k as 'medicine' | 'status' | 'qty')}
                 columns={[
+                  {
+                    label: (
+                      <span className="ph-select-head">
+                        <input
+                          type="checkbox"
+                          ref={headerCheckRef}
+                          checked={selState === 'all'}
+                          onChange={() => setSelected((prev) => toggleAll(prev, visibleIds))}
+                          aria-label={I.select_all}
+                        />
+                      </span>
+                    ),
+                    className: 'ph-select-cell',
+                  },
                   {
                     label: I.col_medicine,
                     sort: {
@@ -366,10 +511,26 @@ export function InventoryPage() {
                   sortedItems.map((row) => {
                     const effective = effectiveQty(row);
                     const s = stockStatus(effective);
+                    const rowName = row.medicine?.trade_name ?? '';
+                    const isSel = selected.has(row.id);
                     return (
                       <tr key={row.id} data-status={s} data-min={LOW_STOCK_THRESHOLD}>
+                        <td className="ph-select-cell">
+                          {/*
+                            Each row checkbox carries a REAL accessible name that
+                            identifies the row — a bare "تحديد" leaves a screen
+                            reader announcing a list of identical checkboxes with
+                            no way to tell which medicine is which.
+                          */}
+                          <input
+                            type="checkbox"
+                            checked={isSel}
+                            onChange={() => setSelected((prev) => toggleOne(prev, row.id))}
+                            aria-label={I.select_row.replace(':name', rowName)}
+                          />
+                        </td>
                         <td>
-                          <strong>{row.medicine?.trade_name}</strong>
+                          <strong>{rowName}</strong>
                           <br />
                           <small style={{ color: 'var(--ph-ink-faint)' }}>
                             {row.medicine?.active_ingredient}
@@ -403,7 +564,7 @@ export function InventoryPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={4}>
+                    <td colSpan={5}>
                       {/*
                         Empty inventory = the pharmacy has added no medicines
                         yet. A bare "لا توجد أدوية في المخزون" tells the user
@@ -456,6 +617,44 @@ export function InventoryPage() {
           </div>
         </form>
       </AsyncBoundary>
+
+      {/*
+        A bulk quantity set rewrites stock on many lines at once, so it confirms
+        first. The dialog names the quantity and the count it will affect, so
+        the user confirms the actual operation rather than a generic "are you
+        sure".
+      */}
+      <Modal
+        open={confirmBulk}
+        title={I.bulk_apply_confirm_title}
+        onClose={() => setConfirmBulk(false)}
+        footer={
+          <>
+            <button
+              type="button"
+              className="ph-btn ghost"
+              onClick={() => setConfirmBulk(false)}
+              disabled={bulkApply.isPending}
+            >
+              {AR.accounting.common.cancel}
+            </button>
+            <button
+              type="button"
+              className="ph-btn primary"
+              onClick={() => void runBulkApply()}
+              disabled={bulkApply.isPending}
+            >
+              <i className="fas fa-check" aria-hidden="true" /> {I.bulk_apply}
+            </button>
+          </>
+        }
+      >
+        <p>
+          {I.bulk_apply_confirm_body
+            .replace(':qty', bulkQty)
+            .replace(':count', String(selCount))}
+        </p>
+      </Modal>
     </div>
   );
 }

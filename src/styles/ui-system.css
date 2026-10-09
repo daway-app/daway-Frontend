@@ -1331,3 +1331,84 @@ body[data-theme='dark'] .cmdk {
     }
 }
 
+/* ==========================================================
+   10. Push-permission banner (item #70)
+   ----------------------------------------------------------
+   A quiet, in-flow strip at the top of the authenticated content — NOT a modal,
+   NOT fixed, so it never covers content and never traps focus. Colors come
+   entirely from existing tokens (teal mist surface, teal accent) so the light
+   theme is untouched and dark mode inherits for free.
+   ========================================================== */
+.push-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-3);
+    margin-block-end: var(--sp-4);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--ph-teal-mist);
+    border: 1px solid var(--ph-line);
+    border-inline-start: 3px solid var(--ph-teal);
+    border-radius: var(--ph-r-md);
+    animation: push-banner-in var(--dur) var(--ease);
+}
+
+.push-banner__icon {
+    color: var(--ph-teal-text);
+    font-size: 1.1rem;
+    line-height: 1.7;
+    flex: 0 0 auto;
+}
+
+.push-banner__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.push-banner__title {
+    margin: 0;
+    font-weight: 700;
+    color: var(--ph-ink);
+    font-size: 0.95rem;
+}
+
+.push-banner__body {
+    margin: 0;
+    color: var(--ph-ink-soft);
+    font-size: 0.9rem;
+}
+
+.push-banner__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    flex: 0 0 auto;
+}
+
+@keyframes push-banner-in {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Narrow screens: stack the actions under the text so nothing is squeezed. */
+@media (max-width: 640px) {
+    .push-banner {
+        flex-wrap: wrap;
+    }
+    .push-banner__actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .push-banner {
+        animation: none;
+    }
+}
+

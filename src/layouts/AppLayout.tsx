@@ -3,6 +3,7 @@ import { CommandPalette } from '@/components/layout/CommandPalette';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import { Toaster } from '@/components/ui';
+import { PushPermissionBanner } from '@/components/pharmacy/PushPermissionBanner';
 
 /**
  * Authenticated pharmacy shell.
@@ -46,6 +47,11 @@ export function AppLayout() {
         <div className="main-wrapper">
           <Topbar />
           <main id="main-content" className="main-content" tabIndex={-1}>
+            {/* Push-permission gate lives INSIDE main so it is part of the
+                focus order and never a fixed overlay covering content. It
+                renders null until its usage signal is met (see the component
+                and lib/pushPermission.ts). */}
+            <PushPermissionBanner />
             <Outlet />
           </main>
         </div>

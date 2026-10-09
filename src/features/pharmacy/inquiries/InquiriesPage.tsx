@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AsyncBoundary, Notice } from '@/components/ui';
 import { AR } from '@/lib/i18n';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { formatDate, formatTime } from '@/lib/format';
+import { markInquiriesSeen } from '@/lib/pushPermission';
 import type { ApiInquiry, ApiInquiryCounts, ApiInquiryStatus } from '@/api/pharmacyTypes';
 
 /**
@@ -52,6 +53,12 @@ export function InquiriesPage() {
   const [statusError, setStatusError] = useState<string | null>(null);
   /** Confirmation of the last successful status change. */
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Visiting the inquiries screen is the push-banner usage signal — a new
+  // inquiry is exactly what a push would announce (see lib/pushPermission.ts).
+  useEffect(() => {
+    markInquiriesSeen();
+  }, []);
 
   const query = useApiQuery<{ data: ApiInquiry[]; counts: ApiInquiryCounts }>(
     (signal) => api.inquiries({ per_page: 50 }, signal),

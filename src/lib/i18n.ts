@@ -182,6 +182,25 @@ export const AR = {
        */
       toast_saved: 'تم حفظ التحديثات — :count',
       toast_error: 'تعذّر حفظ كميات المخزون',
+      /**
+       * Bulk row selection (item #69).
+       *
+       * The bulk action is backed by the SAME endpoint as the stepper save —
+       * `POST /api/pharmacy/inventory/bulk` (`bulkUpdateInventory`) — so every
+       * string here describes applying one quantity to the selection. Nothing
+       * is invented: `bulk_apply` writes a quantity the user typed, which is
+       * exactly what the endpoint stores.
+       */
+      select_all: 'تحديد كل الأصناف في الصفحة',
+      select_row: 'تحديد :name',
+      selected_count: ':count محدد',
+      deselect_all: 'إلغاء التحديد',
+      bulk_quantity_label: 'الكمية المطلوبة',
+      bulk_apply: 'تعيين الكمية للمحدد',
+      bulk_apply_confirm_title: 'تأكيد تعيين الكميات',
+      bulk_apply_confirm_body:
+        'سيتم تعيين الكمية «:qty» لعدد :count من الأصناف. هل تريد المتابعة؟',
+      bulk_apply_done: 'تم تحديث :count صنفًا',
     },
     /**
      * `pharmacy.toast.*` — shared, action-outcome toast copy.
@@ -1055,6 +1074,21 @@ export const AR = {
     role_admin: 'مدير',
     role_pharmacy: 'صيدلية',
     role_patient: 'مريض',
+  },
+
+  /**
+   * PWA push-permission banner — ADDED (item #70). The Blade app has no
+   * equivalent component, so these strings have no backend counterpart. They
+   * explain WHY before the browser prompt appears — never a bare "allow
+   * notifications".
+   */
+  push_banner: {
+    title: 'تفعيل التنبيهات',
+    body: 'فعّل التنبيهات لتصلك إشعارات فورية عند وصول استفسار جديد من مريض، أو عندما يصبح دواء ناقص متوفراً.',
+    allow: 'تفعيل التنبيهات',
+    dismiss: 'لاحقاً',
+    /** Shown after the user grants permission (the subscription step is pending). */
+    granted: 'تم تفعيل التنبيهات على هذا الجهاز.',
   },
 } as const;
 

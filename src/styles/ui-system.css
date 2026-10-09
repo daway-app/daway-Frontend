@@ -681,6 +681,84 @@ textarea.ph-control {
 }
 
 /* ==========================================================
+   11. Tables — sticky headers + sortable columns
+   ----------------------------------------------------------
+   The list screens paginate at 50 rows, so the header is routinely scrolled
+   out of view and the columns lose their meaning. Opt-in via `.is-sticky`,
+   because a table inside a short card has nothing to stick to.
+
+   `position: sticky` on a `<th>` needs `border-collapse: separate` to paint
+   its bottom border (already set on `.ph-table`), otherwise the border is
+   dropped when the cell detaches from the table box.
+   ========================================================== */
+.ph-table.is-sticky thead th {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+}
+
+/* The sticky header must be opaque. `.ph-table th` uses a token background
+   already, but a translucent one would let rows show through while scrolling. */
+.ph-table.is-sticky thead th {
+    background: var(--ph-canvas);
+    box-shadow: inset 0 -1px 0 var(--ph-line);
+}
+
+body.dark-mode .ph-table.is-sticky thead th {
+    background: var(--teal-mist);
+    box-shadow: inset 0 -1px 0 var(--line);
+}
+
+/* Sort control. It is a real <button> so it is reachable by keyboard — a bare
+   <th> with an onClick is invisible to Tab and announced as a plain cell. */
+.ph-sort-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    font-weight: inherit;
+    cursor: pointer;
+    text-align: start;
+    /* Negative margins cancel the <th> padding so the entire header cell is a
+       click target, not just the text run inside it. */
+    margin: -14px -18px;
+    padding: 14px 18px;
+    transition: color 0.15s var(--ease);
+}
+
+.ph-sort-btn:hover {
+    color: var(--ph-teal-text);
+}
+
+.ph-sort-btn:focus-visible {
+    outline: 2px solid var(--ph-teal);
+    outline-offset: -2px;
+    border-radius: var(--ph-r-sm);
+}
+
+/* The inactive indicator is quiet; the active one is the accent colour, so the
+   sorted column is obvious at a glance without a heavy treatment. */
+.ph-sort-ic {
+    font-size: 0.75rem;
+    opacity: 0.35;
+    transition: opacity 0.15s var(--ease);
+}
+
+.ph-sort-ic.is-active {
+    opacity: 1;
+    color: var(--ph-teal-text);
+}
+
+.ph-th-sortable[aria-sort='ascending'],
+.ph-th-sortable[aria-sort='descending'] {
+    color: var(--ph-teal-text);
+}
+
+/* ==========================================================
    10. Form fields — inline validation
    ----------------------------------------------------------
    Three states, and the neutral one is the default on purpose: a field the user

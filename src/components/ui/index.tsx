@@ -273,6 +273,23 @@ export interface ColumnDef {
   className?: string;
   /** `col` by default — set `row` for a header that labels the row. */
   scope?: 'col' | 'row';
+  /**
+   * Makes the header a real sort control: it becomes a `<button>` inside the
+   * `<th>` with `aria-sort` on the `<th>` itself and a direction indicator.
+   *
+   * Passing `sort` is what makes it sortable — there is no separate boolean, so
+   * a header cannot claim to be sortable while having nothing to sort by.
+   */
+  sort?: {
+    /** The key handed back to `onSort`. */
+    key: string;
+    active: boolean;
+    /** `aria-sort` value for the `<th>`. */
+    ariaSort: 'ascending' | 'descending' | 'none';
+    direction: 'asc' | 'desc' | null;
+  };
+  /** Rowspan/colspan passthrough for grouped headers. */
+  colSpan?: number;
 }
 
 /**
@@ -288,6 +305,13 @@ export interface ColumnDef {
  * None of those were expressible, so every screen that needed them had to drop
  * to raw markup. The extras below close that gap instead of adding a second
  * table component.
+ *
+ * STICKY HEADERS
+ * --------------
+ * `sticky` pins the `<thead>` while the body scrolls. The list screens here
+ * paginate at 50 rows, so the header is routinely scrolled out of view and the
+ * user loses the column meanings. It is opt-in because a table inside a modal
+ * or a short card has nothing to stick to.
  */
 export function DataTable({
   columns,
@@ -295,6 +319,8 @@ export function DataTable({
   wrap = true,
   caption,
   className,
+  sticky = false,
+  onSort,
 }: {
   columns: Array<ReactNode | ColumnDef>;
   children: ReactNode;
@@ -303,9 +329,15 @@ export function DataTable({
   caption?: string;
   /** Extra class on the `<table>` itself, e.g. `pi-recent`. */
   className?: string;
+  /** Pin the header row while the body scrolls. */
+  sticky?: boolean;
+  /** Called with a column's `sort.key` when its header button is pressed. */
+  onSort?: (key: string) => void;
 }) {
+  const cls = ['ph-table', sticky ? 'is-sticky' : '', className].filter(Boolean).join(' ');
+
   const table = (
-    <table className={className ? `ph-table ${className}` : 'ph-table'}>
+    <table className={cls}>
       {caption && <caption className="ac-hidden">{caption}</caption>}
       <thead>
         <tr>
@@ -313,9 +345,63 @@ export function DataTable({
             const isDef =
               typeof c === 'object' && c !== null && !('$$typeof' in (c as object));
             const def = isDef ? (c as ColumnDef) : null;
+
+            if (!def?.sort) {
+              return (
+                <th
+                  key={i}
+                  scope={def?.scope ?? 'col'}
+                  className={def?.className}
+                  colSpan={def?.colSpan}
+                >
+                  {def ? def.label : (c as ReactNode)}
+                </th>
+              );
+            }
+
+            /*
+             * A sortable header is a BUTTON, not a bare `<th>` with an onClick.
+             * A click handler on a `<th>` is unreachable by keyboard and
+             * announced as a plain cell by a screen reader — the sort would
+             * simply not exist for those users.
+             *
+             * `aria-sort` goes on the `<th>` (that is where the spec puts it),
+             * while the button carries the pressed state via `aria-pressed` and
+             * the label explains what will happen next.
+             */
+            const { key, ariaSort, direction } = def.sort;
             return (
-              <th key={i} scope={def?.scope ?? 'col'} className={def?.className}>
-                {def ? def.label : (c as ReactNode)}
+              <th
+                key={i}
+                scope="col"
+                className={[def.className, 'ph-th-sortable'].filter(Boolean).join(' ')}
+                colSpan={def.colSpan}
+                aria-sort={ariaSort}
+              >
+                <button
+                  type="button"
+                  className="ph-sort-btn"
+                  onClick={() => onSort?.(key)}
+                  aria-label={
+                    direction === null
+                      ? `ترتيب تصاعدي حسب ${typeof def.label === 'string' ? def.label : ''}`
+                      : direction === 'asc'
+                        ? 'ترتيب تنازلي'
+                        : 'إلغاء الترتيب'
+                  }
+                >
+                  {def.label}
+                  <i
+                    className={
+                      direction === null
+                        ? 'fas fa-sort ph-sort-ic'
+                        : direction === 'asc'
+                          ? 'fas fa-sort-up ph-sort-ic is-active'
+                          : 'fas fa-sort-down ph-sort-ic is-active'
+                    }
+                    aria-hidden="true"
+                  />
+                </button>
               </th>
             );
           })}

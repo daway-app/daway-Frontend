@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Chart } from '@/components/ui/Chart';
-import { AsyncBoundary, Card, Btn, EmptyState } from '@/components/ui';
+import { AsyncBoundary, Card, Btn, DataTable, EmptyState } from '@/components/ui';
 import { AR } from '@/lib/i18n';
 import { ROUTES } from '@/routes/paths';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { countStock, stockStatus, LOW_STOCK_THRESHOLD } from '@/lib/stock';
 import { money } from '@/lib/format';
+import { ariaSort, useSort, type SortValue } from '@/lib/sort';
 import type { ApiInventoryItem, ApiInventoryStats } from '@/api/pharmacyTypes';
 
 /**
@@ -102,6 +103,29 @@ export function InventoryPage() {
       );
     });
   }, [rows, q, status]);
+
+  /**
+   * Sortable columns for the inventory table.
+   *
+   * Abstracted as a `get` function so the comparator never sees the row shape:
+   * sorting by status has to compare the DERIVED status, and sorting by name has
+   * to reach into `row.medicine` — which may be absent. Centralising that here
+   * means a missing `medicine` cannot throw during a sort.
+   */
+  const sortOf = useMemo(
+    () =>
+      (row: ApiInventoryItem, key: 'medicine' | 'status' | 'qty'): SortValue => {
+        if (key === 'medicine') return row.medicine?.trade_name ?? null;
+        if (key === 'qty') return row.quantity;
+        // Status sorts by its internal code (`ok`/`low`/`out`), not the Arabic
+        // label: the codes are ordered by severity, and alphabetising the
+        // Arabic would put "متوفر" before "نفد" for no useful reason.
+        return stockStatus(row.quantity);
+      },
+    [],
+  );
+
+  const { sort, sorted: sortedItems, toggle: toggleSort } = useSort(items, sortOf);
 
   /** The effective quantity for a row: the draft if edited, otherwise the server value. */
   const effectiveQty = (row: ApiInventoryItem) => drafts[row.id] ?? row.quantity;
@@ -287,80 +311,104 @@ export function InventoryPage() {
               </h2>
             </div>
             <div className="ph-card-body ph-table-wrap" style={{ padding: 0 }}>
-              <table className="ph-table">
-                <thead>
+              <DataTable
+                sticky
+                onSort={(k) => toggleSort(k as 'medicine' | 'status' | 'qty')}
+                columns={[
+                  {
+                    label: I.col_medicine,
+                    sort: {
+                      key: 'medicine',
+                      active: sort.key === 'medicine',
+                      ariaSort: ariaSort(sort, 'medicine'),
+                      direction: sort.key === 'medicine' ? sort.direction : null,
+                    },
+                  },
+                  {
+                    label: I.col_status,
+                    sort: {
+                      key: 'status',
+                      active: sort.key === 'status',
+                      ariaSort: ariaSort(sort, 'status'),
+                      direction: sort.key === 'status' ? sort.direction : null,
+                    },
+                  },
+                  {
+                    label: I.col_current,
+                    className: 'ac-num',
+                    sort: {
+                      key: 'qty',
+                      active: sort.key === 'qty',
+                      ariaSort: ariaSort(sort, 'qty'),
+                      direction: sort.key === 'qty' ? sort.direction : null,
+                    },
+                  },
+                  { label: I.col_edit },
+                ]}
+              >
+                {items.length > 0 ? (
+                  sortedItems.map((row) => {
+                    const effective = effectiveQty(row);
+                    const s = stockStatus(effective);
+                    return (
+                      <tr key={row.id} data-status={s} data-min={LOW_STOCK_THRESHOLD}>
+                        <td>
+                          <strong>{row.medicine?.trade_name}</strong>
+                          <br />
+                          <small style={{ color: 'var(--ph-ink-faint)' }}>
+                            {row.medicine?.active_ingredient}
+                          </small>
+                          <br />
+                          <small style={{ color: 'var(--ph-ink-faint)' }}>{money(row.price)}</small>
+                        </td>
+                        <td>
+                          <span className={`ph-badge ${s}`}>{STATUS_TEXT[s]}</span>
+                        </td>
+                        <td>{effective}</td>
+                        <td>
+                          <div className="ph-stepper">
+                            <button type="button" className="dec" onClick={() => step(row, -1)}>
+                              <i className="fas fa-minus" />
+                            </button>
+                            <input
+                              type="number"
+                              name={`quantities[${row.id}]`}
+                              value={effective}
+                              min={0}
+                              onChange={(e) => setQty(row, Number(e.target.value))}
+                            />
+                            <button type="button" className="inc" onClick={() => step(row, 1)}>
+                              <i className="fas fa-plus" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
                   <tr>
-                    <th>{I.col_medicine}</th>
-                    <th>{I.col_status}</th>
-                    <th>{I.col_current}</th>
-                    <th>{I.col_edit}</th>
+                    <td colSpan={4}>
+                      {/*
+                        Empty inventory = the pharmacy has added no medicines
+                        yet. A bare "لا توجد أدوية في المخزون" tells the user
+                        nothing about what to do next, so it carries the one
+                        action that actually resolves it: add a medicine.
+                        (Phase 2 — item A. No new copy: reuses the existing
+                        `medicines.index.add_medicine` label.)
+                      */}
+                      <EmptyState
+                        icon="fas fa-box-open"
+                        title={I.empty}
+                        action={
+                          <Btn variant="primary" to={ROUTES.medicineRequests}>
+                            <i className="fas fa-plus" /> {M.add_medicine}
+                          </Btn>
+                        }
+                      />
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {items.length > 0 ? (
-                    items.map((row) => {
-                      const effective = effectiveQty(row);
-                      const s = stockStatus(effective);
-                      return (
-                        <tr key={row.id} data-status={s} data-min={LOW_STOCK_THRESHOLD}>
-                          <td>
-                            <strong>{row.medicine?.trade_name}</strong>
-                            <br />
-                            <small style={{ color: 'var(--ph-ink-faint)' }}>
-                              {row.medicine?.active_ingredient}
-                            </small>
-                            <br />
-                            <small style={{ color: 'var(--ph-ink-faint)' }}>{money(row.price)}</small>
-                          </td>
-                          <td>
-                            <span className={`ph-badge ${s}`}>{STATUS_TEXT[s]}</span>
-                          </td>
-                          <td>{effective}</td>
-                          <td>
-                            <div className="ph-stepper">
-                              <button type="button" className="dec" onClick={() => step(row, -1)}>
-                                <i className="fas fa-minus" />
-                              </button>
-                              <input
-                                type="number"
-                                name={`quantities[${row.id}]`}
-                                value={effective}
-                                min={0}
-                                onChange={(e) => setQty(row, Number(e.target.value))}
-                              />
-                              <button type="button" className="inc" onClick={() => step(row, 1)}>
-                                <i className="fas fa-plus" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={4}>
-                        {/*
-                          Empty inventory = the pharmacy has added no medicines
-                          yet. A bare "لا توجد أدوية في المخزون" tells the user
-                          nothing about what to do next, so it carries the one
-                          action that actually resolves it: add a medicine.
-                          (Phase 2 — item A. No new copy: reuses the existing
-                          `medicines.index.add_medicine` label.)
-                        */}
-                        <EmptyState
-                          icon="fas fa-box-open"
-                          title={I.empty}
-                          action={
-                            <Btn variant="primary" to={ROUTES.medicineRequests}>
-                              <i className="fas fa-plus" /> {M.add_medicine}
-                            </Btn>
-                          }
-                        />
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                )}
+              </DataTable>
             </div>
 
             {items.length === 0 && hasFilters && (

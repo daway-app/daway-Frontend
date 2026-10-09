@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary, Card, Btn, DataTable, EmptyState } from '@/components/ui';
+import { toast } from '@/lib/toast';
 import { AR } from '@/lib/i18n';
 import { ROUTES } from '@/routes/paths';
 import { usePharmacyApi } from '@/auth/authHooks';
@@ -52,7 +53,6 @@ export function InventoryPage() {
   const [q, setQ] = useState('');
   /** Local edits, keyed by pharmacy_medicine id. Cleared after a successful save. */
   const [drafts, setDrafts] = useState<Record<number, number>>({});
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   const query = useApiQuery<{ data: ApiInventoryItem[]; stats: ApiInventoryStats }>(
     (signal) => api.inventory({ per_page: 100 }, signal),
@@ -146,13 +146,29 @@ export function InventoryPage() {
 
   async function handleSave() {
     if (!hasChanges) return;
-    setSaveMessage(null);
+    /*
+     * The outcome is reported as a TOAST, not an inline span.
+     *
+     * Why transient is genuinely better here: the Save button lives in the card
+     * footer and the edited rows can be scrolled far above it, so an inline
+     * message beside the button is easy to miss — and it silently persisted
+     * until the next save. A toast is anchored to the viewport, so the result is
+     * seen wherever the user is, and it clears itself.
+     *
+     * Field-level validation is unaffected: this screen has none (quantities are
+     * always valid non-negative numbers), so there is no inline error to keep.
+     */
     try {
       const result = await save.run(dirtyChanges);
-      setSaveMessage(`${I.save_button} — ${result.updated_count}`);
+      toast.success(I.toast_saved.replace(':count', String(result.updated_count)));
       query.refetch();
-    } catch {
-      // `save.error` carries the message; it is rendered below.
+    } catch (err) {
+      // Prefer the server's own localised message (Laravel localises errors);
+      // fall back to the screen's wording so a failure is NEVER blank. (`??`
+      // alone would pass an empty string through, so "" is treated as absent.)
+      const serverMessage = save.error?.message;
+      const thrown = err instanceof Error ? err.message : undefined;
+      toast.error(serverMessage || thrown || I.toast_error);
     }
   }
 
@@ -432,12 +448,9 @@ export function InventoryPage() {
                   <i className="fas fa-save" /> {I.save_button}
                 </Btn>
                 {save.isPending && <span style={{ color: 'var(--ph-ink-faint)' }}>…</span>}
-                {saveMessage && !save.isPending && (
-                  <span style={{ color: 'var(--ph-success)' }}>{saveMessage}</span>
-                )}
-                {save.error && (
-                  <span style={{ color: 'var(--ph-red)' }}>{save.error.message}</span>
-                )}
+                {/* The success/error text used to live here inline. It is a toast
+                    now (see handleSave) — still pending-state only, because a
+                    disabled button with no feedback reads as "broken". */}
               </div>
             )}
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AR } from '@/lib/i18n';
 import { AsyncBoundary, FormField, Modal } from '@/components/ui';
+import { toast } from '@/lib/toast';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
@@ -94,7 +95,6 @@ export function ProfilePage() {
   const [modal, setModal] = useState<null | 'password' | 'logo' | 'location' | 'hours'>(null);
   /** True once the password changed — the session is over and needs a re-login. */
   const [pwDone, setPwDone] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [pw, setPw] = useState({ password: '', confirmation: '' });
   const [pwError, setPwError] = useState<string | null>(null);
 
@@ -200,13 +200,16 @@ export function ProfilePage() {
   }
 
   async function handleSave() {
-    setSaved(false);
-
     /*
      * Validate BEFORE the request. `markAllTouched` first so every error is
      * visible at once (not just the ones the user happened to blur), then scroll
      * to the first one — on a long form the offending field is often off-screen,
      * and a Save that appears to do nothing is the classic double-submit.
+     *
+     * NOTE: these are FIELD errors and they STAY INLINE (via `FormField`). A
+     * toast is for the outcome of the action, not for "this field is wrong" —
+     * a message that does not point at the field that caused it is worse than
+     * useless.
      *
      * The check is repeated against the live values rather than trusting
      * `fieldErrors`, because a modal's Save button can be pressed with the
@@ -261,11 +264,19 @@ export function ProfilePage() {
         logo_url: logo || null,
         working_hours: buildPayload(),
       });
-      setSaved(true);
+      /*
+       * Outcome as a TOAST. The save can be triggered from four different
+       * modals (logo / location / hours) as well as the main card, and each one
+       * closes on success — so a message rendered into the PAGE would be behind
+       * a just-closed overlay and, for the modal case, never seen at all.
+       */
+      toast.success(P.success);
       setModal(null);
       query.refetch();
     } catch {
-      // `save.error` renders below.
+      // Server message wins (Laravel localises); the generic line is the fallback
+      // so a failure can never render as nothing — the bug `Notice` fixed.
+      toast.error(save.error?.message || AR.pharmacy.toast.save_failed);
     }
   }
 
@@ -335,18 +346,10 @@ export function ProfilePage() {
         onRetry={query.refetch}
         loadingRows={6}
       >
-        {saved && (
-          <div className="ph-alt-notice" style={{ marginBlockEnd: 14 }}>
-            <i className="fas fa-circle-check" /> {P.save_button} — تم الحفظ بنجاح
-          </div>
-        )}
-
-        {save.error && (
-          <div className="ph-error" style={{ marginBlockEnd: 14 }}>
-            <i className="fas fa-circle-exclamation" />
-            <p>{save.error.message}</p>
-          </div>
-        )}
+        {/* Action outcome (save success / failure) is a TOAST now — see
+            handleSave. It was an inline `.ph-alt-notice` / `.ph-error` here,
+            which the user could scroll away from and which never cleared. The
+            PER-FIELD errors below are untouched and remain inline. */}
 
         <div className="ph-profile-form" ref={formRef}>
           <div className="ph-profile-grid">

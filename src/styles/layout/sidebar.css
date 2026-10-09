@@ -200,6 +200,14 @@ body.dark-mode .section-label { color: var(--ink-faint); }
     font-weight: 700;
     padding: 2px 8px;
     border-radius: 12px;
+    /* The count must not be squeezed by a long label and must not wrap:
+       `flex: none` stops the label from shrinking it, and `min-inline-size`
+       holds a single digit to a legible pill. */
+    flex: none;
+    min-inline-size: 20px;
+    text-align: center;
+    line-height: 1.6;
+    font-variant-numeric: tabular-nums;
 }
 
 .nav-item::before {

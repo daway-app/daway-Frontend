@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/auth/authHooks';
 import { AR, roleLabel } from '@/lib/i18n';
 import { ROUTES } from '@/routes/paths';
+import { useSidebarCounts } from './useSidebarCounts';
 import {
   IconAlertTriangle,
   IconBox,
@@ -36,22 +37,65 @@ interface NavItem {
   icon: React.ReactNode;
   /** Match nested routes as active (e.g. medicines/* ). */
   activePrefix?: boolean;
+  /**
+   * Which sidebar count, if any, this item shows as a badge.
+   *
+   * The badge is the item's OWN count, not a global "notifications" number —
+   * an unread-inquiry badge on the inventory link would be meaningless. An item
+   * with no count simply has no badge, which is why this is optional rather
+   * than defaulting to zero.
+   */
+  badge?: 'newInquiries' | 'lowStock';
 }
 
 const PHARMACY_NAV: NavItem[] = [
   { to: ROUTES.dashboard, label: AR.pharmacy.sidebar.dashboard, icon: <IconDashboard /> },
   { to: ROUTES.medicines, label: AR.pharmacy.sidebar.manage_medicines, icon: <IconCapsule /> },
-  { to: ROUTES.inventory, label: AR.pharmacy.sidebar.inventory, icon: <IconBox /> },
+  {
+    to: ROUTES.inventory,
+    label: AR.pharmacy.sidebar.inventory,
+    icon: <IconBox />,
+    badge: 'lowStock',
+  },
   { to: `${ROUTES.medicines}/create`, label: AR.pharmacy.sidebar.add_medicine, icon: <IconPlus /> },
-  { to: ROUTES.inquiries, label: AR.pharmacy.sidebar.inquiries, icon: <IconChat /> },
+  {
+    to: ROUTES.inquiries,
+    label: AR.pharmacy.sidebar.inquiries,
+    icon: <IconChat />,
+    badge: 'newInquiries',
+  },
   { to: ROUTES.alternatives, label: AR.pharmacy.sidebar.manage_alternatives, icon: <IconAlertTriangle /> },
   { to: ROUTES.profile, label: AR.pharmacy.sidebar.pharmacy_profile, icon: <IconUser /> },
   { to: ROUTES.ratings, label: AR.pharmacy.sidebar.ratings, icon: <IconStar /> },
 ];
 
+/**
+ * A count pill for a nav item.
+ *
+ * Rendered as a `<span>` with `aria-hidden` PLUS visually-hidden text, rather
+ * than a bare number: a screen reader announcing "الاستفسارات 3" reads the 3 as
+ * part of the link name, which is close to useless ("الاستفسارات ثلاثة" tells
+ * the user nothing without a noun). The hidden text supplies the noun.
+ *
+ * Caps at `99+` so a large number cannot stretch the sidebar and break the
+ * layout — the exact value stops mattering at that point.
+ */
+function NavBadge({ count, label }: { count: number; label: string }) {
+  if (!count || count <= 0) return null;
+  return (
+    <>
+      <span className="nav-badge" aria-hidden="true">
+        {count > 99 ? '99+' : count}
+      </span>
+      <span className="sr-only">{`${label}: ${count}`}</span>
+    </>
+  );
+}
+
 export function Sidebar() {
   const { user, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const counts = useSidebarCounts();
 
   const initial = user?.name ? user.name.trim().charAt(0) : '؟';
 
@@ -90,6 +134,9 @@ export function Sidebar() {
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-text">{item.label}</span>
+                {item.badge && (
+                  <NavBadge count={counts[item.badge]} label={item.label} />
+                )}
               </NavLink>
             ))}
           </div>

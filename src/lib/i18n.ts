@@ -54,6 +54,33 @@ export const AR = {
     dashboard_subtitle: 'نظرة عامة على أداء المنصة',
   },
 
+  /**
+   * Command palette (Ctrl+K) — ADDED (not in the Laravel lang files): the Blade
+   * app has no command palette, so these strings have no backend counterpart.
+   * Kept in the same nesting style as the rest of this object.
+   */
+  commandPalette: {
+    /** Accessible name of the dialog. */
+    title: 'لوحة الأوامر',
+    /** Tooltip/label for the quiet Topbar trigger. */
+    open_tooltip: 'فتح لوحة الأوامر',
+    placeholder: 'ابحث عن صفحة أو إجراء…',
+    /** Grouping labels shown as secondary text on each option. */
+    group_destinations: 'الانتقال',
+    group_accounting: 'المحاسبة',
+    group_actions: 'إجراءات',
+    /** The one action that ships here — a real toggle, no new behaviour. */
+    action_toggle_theme: 'تبديل الوضع الداكن',
+    search_label: 'بحث في الأوامر',
+    empty_title: 'لا توجد نتائج مطابقة',
+    empty_hint: 'جرّب كلمة أخرى أو ابحث باسم الصفحة.',
+    hint_navigate: 'تنقّل',
+    hint_select: 'فتح',
+    hint_close: 'إغلاق',
+    hint_theme: 'تبديل الوضع',
+    results_count: ':count نتيجة',
+  },
+
   pharmacy: {
     sidebar: {
       section_title: 'لوحة تحكم الصيدلية',
@@ -147,6 +174,33 @@ export const AR = {
       search_placeholder: 'ابحث بالاسم أو المادة الفعالة...',
       clear_filters: 'مسح',
       save_button: 'حفظ التحديثات',
+      /**
+       * Toast copy for the bulk-save outcome. The success line carries the same
+       * `:count` the old inline message rendered (`save_button — updated_count`)
+       * — this is the SAME information, moved from an inline span into the
+       * transient stack, not new copy.
+       */
+      toast_saved: 'تم حفظ التحديثات — :count',
+      toast_error: 'تعذّر حفظ كميات المخزون',
+    },
+    /**
+     * `pharmacy.toast.*` — shared, action-outcome toast copy.
+     *
+     * WHY THESE EXIST
+     * ---------------
+     * A toast announces the RESULT of an action ("saved", "could not save"),
+     * which is a different thing from the per-screen labels above it. Kept in
+     * one place so two screens reporting the same outcome say the same words,
+     * and so a failure can never be silently blank (the invisible-error bug the
+     * `Notice` component was created to fix).
+     */
+    toast: {
+      saved: 'تم الحفظ بنجاح',
+      save_failed: 'تعذّر الحفظ',
+      deleted: 'تم الحذف بنجاح',
+      delete_failed: 'تعذّر الحذف',
+      /** Prefix used when the server supplied its own localised error message. */
+      error_prefix: 'تعذّر إتمام العملية',
     },
     /** `pharmacy.medicines.index.*` — medicines/index.blade.php */
     medicines: {

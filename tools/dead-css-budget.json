@@ -1,6 +1,6 @@
 {
   "_comment": "Dead-CSS ratchet. `unused` may only DECREASE. Raise only with an explicit justification in the commit message. See tools/dead-css-budget.mjs.",
-  "unused": 133,
-  "total": 629,
+  "unused": 125,
+  "total": 656,
   "updatedAt": "2026-10-09"
 }

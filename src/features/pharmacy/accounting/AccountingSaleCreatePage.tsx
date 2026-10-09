@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AR } from '@/lib/i18n';
-import { AsyncBoundary, Modal, Notice } from '@/components/ui';
+import { AsyncBoundary, Modal } from '@/components/ui';
+import { toast } from '@/lib/toast';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -254,6 +255,17 @@ export function AccountingSaleCreatePage() {
       const sale = await createSale.run(
         buildSalePayload({ cart, paid: totals.paid, method, customerId }),
       );
+      /*
+       * The sale result is a TOAST, not the inline `msg` block.
+       *
+       * The till RESETS on success — cart cleared, fields emptied, a
+       * confirmation modal opened — so an inline message attached to the (now
+       * empty) invoice panel is exactly what the user is NOT looking at. A toast
+       * follows them, and on failure it is STICKY (errors default to no
+       * auto-dismiss), which is the case that must not be missed: a till that
+       * appears to accept a sale it never recorded is a money bug.
+       */
+      toast.success(A.pos.sale_saved);
       setSavedNumber(sale.number);
       // Reset the till for the next sale.
       setCart([]);
@@ -265,7 +277,7 @@ export function AccountingSaleCreatePage() {
       setScanFound(null);
       setSearch('');
     } catch {
-      // `createSale.error` renders below.
+      toast.error(createSale.error?.message || A.pos.sale_failed);
     }
   }
 
@@ -654,14 +666,17 @@ export function AccountingSaleCreatePage() {
                   </select>
                 </div>
 
-                {createSale.error && (
-                  <Notice tone="error">{createSale.error.message}</Notice>
-                )}
-
+                {/*
+                  The sale SUCCESS/FAILURE outcome is a toast now — see
+                  completeSale. `msg` remains for the PRE-SUBMIT validation
+                  complaints (empty cart, paid over total): those are about the
+                  form in front of the user and belong inline, next to the button
+                  that produced them.
+                */}
                 {msg ? (
                   <div
-                    className={`ac-inline-msg ${msg.tone === 'ok' ? 'is-ok' : 'is-err'}`}
-                    role="alert"
+                    className={`ac-inline-msg show ${msg.tone === 'err' ? 'error' : 'success'}`}
+                    role={msg.tone === 'err' ? 'alert' : 'status'}
                   >
                     {msg.text}
                   </div>

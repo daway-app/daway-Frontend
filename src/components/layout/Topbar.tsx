@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/auth/authHooks';
+import { CommandPaletteTrigger } from './CommandPalette';
 import { AR, roleLabel } from '@/lib/i18n';
 import { initTheme, toggleTheme } from '@/lib/theme';
 import { IconBell, IconMoon, IconSun } from './icons';
@@ -50,6 +51,10 @@ export function Topbar() {
       </div>
 
       <div className="topbar-actions">
+        {/* Command palette trigger — a quiet, keyboard-first affordance so the
+            Ctrl+K shortcut is discoverable rather than secret. */}
+        <CommandPaletteTrigger />
+
         {/* Language switch — static label "EN" (Blade shows the other locale) */}
         <a
           href="#"

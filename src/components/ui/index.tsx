@@ -872,3 +872,20 @@ export function AsyncBoundary({
   if (isEmpty) return <EmptyState icon={emptyIcon} title={emptyTitle} description={emptyDescription} />;
   return <>{children}</>;
 }
+
+/* ------------------------------------------------------------------ */
+/* Toaster — transient notifications                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The toast stack lives in its own file (`./Toaster.tsx`) rather than here,
+ * because it imports the module-level store in `src/lib/toast.ts` and this file
+ * is a component-only module. Re-exported so screens have ONE import path for
+ * the RENDERER: `import { Toaster } from '@/components/ui'`.
+ *
+ * The IMPERATIVE store (`toast.success(...)`) is deliberately NOT re-exported
+ * here — re-exporting a non-component value from a component module trips
+ * `react-refresh/only-export-components`. Import it from `@/lib/toast` instead,
+ * which is also where non-React callers (e.g. the API client) can reach it.
+ */
+export { Toaster } from './Toaster';

@@ -535,7 +535,7 @@ textarea.ph-control {
 }
 
 /* ==========================================================
-   9. Setup checklist — first-run onboarding
+   8. Setup checklist — first-run onboarding
    ----------------------------------------------------------
    Deliberately an inline card, never a modal or overlay: the brief says the
    onboarding must not be annoying or cover the content. It is hidden entirely
@@ -679,7 +679,114 @@ textarea.ph-control {
         flex-wrap: wrap;
     }
 }
+/* ==========================================================
+   9. Modal + motion
+   ----------------------------------------------------------
+   Micro-interactions only: a short fade/rise on the dialog and overlay.
+   Everything is disabled under `prefers-reduced-motion` (base.css already
+   collapses transitions globally; these keyframes need the same courtesy).
+   ========================================================== */
+@keyframes ph-overlay-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
 
+@keyframes ph-dialog-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.ph-modal-overlay.active {
+    animation: ph-overlay-in var(--dur) var(--ease);
+}
+
+.ph-modal-overlay.active .ph-modal {
+    animation: ph-dialog-in var(--dur-slow) var(--ease);
+}
+
+/* Page transition — a single short fade on route change. Applied to the page
+   wrapper, not to every element, so it stays cheap. */
+@keyframes ph-page-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.ph-page {
+    animation: ph-page-in var(--dur-slow) var(--ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ph-modal-overlay.active,
+    .ph-modal-overlay.active .ph-modal,
+    .ph-page {
+        animation: none;
+    }
+    .ph-btn:active:not(:disabled),
+    .btn-submit:active:not(:disabled),
+    .btn-cancel:active:not(:disabled) {
+        transform: none;
+    }
+}
+/* ==========================================================
+   10. Form fields — inline validation
+   ----------------------------------------------------------
+   Three states, and the neutral one is the default on purpose: a field the user
+   has not reached yet must never look wrong.
+   ========================================================== */
+.ph-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+}
+
+.ph-field-msg {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--ph-ink-faint);
+}
+
+/* Touched + valid — a quiet confirmation, not a celebration. */
+.ph-field.is-valid .ph-control,
+.ph-field.is-valid .ph-select,
+.ph-field.is-valid .ph-textarea {
+    border-color: var(--ph-green);
+}
+
+/* Touched + invalid. The border is the signal; the message is the explanation. */
+.ph-field.is-invalid .ph-control,
+.ph-field.is-invalid .ph-select,
+.ph-field.is-invalid .ph-textarea {
+    border-color: var(--ph-red);
+}
+
+.ph-field.is-invalid .ph-field-msg {
+    color: var(--ph-red-text);
+}
+
+.ph-field.is-valid .ph-field-msg {
+    color: var(--ph-green-text);
+}
+
+/* Keep the ring in the state's colour rather than the default teal, so focus
+   and validity do not contradict each other. */
+.ph-field.is-invalid .ph-control:focus,
+.ph-field.is-invalid .ph-select:focus,
+.ph-field.is-invalid .ph-textarea:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.22);
+}
+
+.ph-field.is-valid .ph-control:focus,
+.ph-field.is-valid .ph-select:focus,
+.ph-field.is-valid .ph-textarea:focus {
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.20);
+}
+
+/* A required marker must not be the only signal — it is `aria-hidden` in the
+   markup and the control carries `required`/`aria-required` where it matters. */
+.ph-form-label span[aria-hidden='true'] {
+    color: var(--ph-red);
+}
 /* ==========================================================
    11. Tables — sticky headers + sortable columns
    ----------------------------------------------------------
@@ -757,113 +864,470 @@ body.dark-mode .ph-table.is-sticky thead th {
 .ph-th-sortable[aria-sort='descending'] {
     color: var(--ph-teal-text);
 }
+/* ==========================================================
+   12. Skip link
+   ----------------------------------------------------------
+   Keyboard-only affordance. The sidebar renders 12+ links ahead of the content
+   in DOM order, so without this a keyboard user tabs through the whole nav on
+   every page. Visible on focus only — permanently on-screen it is clutter for
+   everyone using a mouse.
+
+   It is positioned off-screen with a transform rather than `display: none`,
+   because a `display: none` element cannot receive focus and the link would be
+   unreachable by the very users it exists for.
+   ========================================================== */
+.skip-to-content {
+    position: fixed;
+    inset-block-start: 8px;
+    inset-inline-start: 8px;
+    z-index: 4000;
+    padding: 12px 22px;
+    border-radius: var(--ph-r-md, 10px);
+    background: var(--ph-teal-text, #1C72A6);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(4, 20, 26, 0.28);
+    transform: translateY(-200%);
+    transition: transform 0.18s var(--ease, ease);
+}
+
+.skip-to-content:focus-visible,
+.skip-to-content:focus {
+    transform: translateY(0);
+    outline: 3px solid var(--ph-teal, #12B4D6);
+    outline-offset: 2px;
+}
+
+/* The skip target must not draw a focus ring of its own when it receives
+   programmatic focus — the user did not "select" the whole page. */
+.main-content:focus {
+    outline: none;
+}
+/* ==========================================================
+   13. Command palette (Ctrl+K)
+   ----------------------------------------------------------
+   Shell chrome, mounted once in AppLayout. It shares the visual language of
+   `.ph-modal-overlay` (dim backdrop, centred card, same radii/shadows) but is
+   its own component — see the comment in CommandPalette.tsx for WHY it does not
+   reuse the shared `Modal` (the Modal's focus trap conflicts with the combobox
+   pattern, where focus must stay in the input).
+
+   Everything is built from `--ph-*` tokens. The Light Mode look is deliberately
+   quiet: a plain paper card and hairline borders, no new accent.
+
+   `z-index` sits ABOVE the modal overlay (2000) so that, if a stacked state is
+   ever reached, the palette is not trapped under a dialog it cannot dismiss.
+   ========================================================== */
+.cmdk-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2100;
+    display: flex;
+    /* Anchored toward the top rather than centred: a command palette should not
+       move as the result list grows and shrinks under it. */
+    align-items: flex-start;
+    justify-content: center;
+    padding: 12vh var(--sp-4) var(--sp-4);
+    background: rgba(4, 20, 26, 0.42);
+    animation: ph-overlay-in var(--dur) var(--ease);
+}
+
+.cmdk {
+    width: 100%;
+    max-width: 560px;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--ph-paper);
+    border: 1px solid var(--ph-line-soft);
+    border-radius: var(--ph-r-lg);
+    box-shadow: var(--ph-sh-lg);
+    overflow: hidden;
+    animation: ph-dialog-in var(--dur-slow) var(--ease);
+}
+
+body.dark-mode .cmdk,
+body[data-theme='dark'] .cmdk {
+    border-color: var(--line);
+}
+
+/* --- Input row ---------------------------------------------------- */
+.cmdk-input-row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-4) var(--sp-5);
+    border-block-end: 1px solid var(--ph-line-soft);
+}
+
+.cmdk-input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 1rem;
+    color: var(--ph-ink);
+    outline: none;
+}
+
+.cmdk-input::placeholder {
+    color: var(--ph-ink-faint);
+}
+
+/* The input is the focus target for the whole dialog, so the ring is drawn on
+   the row rather than on the fieldless input itself. */
+.cmdk-input-row:focus-within {
+    box-shadow: inset 0 -2px 0 var(--ph-teal);
+}
+
+/* Esc hint. `kbd` is styled to read as a key, not as body text. */
+.cmdk-esc,
+.cmdk-foot kbd {
+    font-family: inherit;
+    font-size: 0.7rem;
+    line-height: 1;
+    padding: 3px 6px;
+    border: 1px solid var(--ph-line);
+    border-radius: var(--ph-r-sm);
+    background: var(--ph-canvas);
+    color: var(--ph-ink-faint);
+}
+
+/* --- Result list -------------------------------------------------- */
+.cmdk-list {
+    margin: 0;
+    padding: var(--sp-2);
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.cmdk-item {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-3);
+    border-radius: var(--ph-r-md);
+    cursor: pointer;
+    color: var(--ph-ink);
+}
+
+/* The active row is driven by aria-activedescendant, i.e. by keyboard OR by the
+   pointer — both funnel through the same `is-active` class, so there is exactly
+   one highlighted row at a time. */
+.cmdk-item.is-active {
+    background: var(--ph-teal-mist);
+}
+
+.cmdk-item-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--ph-r-sm);
+    background: var(--ph-canvas);
+    color: var(--ph-teal-text);
+}
+
+.cmdk-item-label {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.92rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cmdk-item-group {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    color: var(--ph-ink-faint);
+}
+
+/* --- Empty state -------------------------------------------------- */
+.cmdk-empty {
+    padding: var(--sp-8) var(--sp-5);
+    text-align: center;
+}
+
+.cmdk-empty-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ph-ink);
+}
+
+.cmdk-empty-hint {
+    margin: var(--sp-1) 0 0;
+    font-size: 0.82rem;
+    color: var(--ph-ink-faint);
+}
+
+/* --- Footer hints ------------------------------------------------- */
+.cmdk-foot {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    padding: var(--sp-2) var(--sp-4);
+    border-block-start: 1px solid var(--ph-line-soft);
+    background: var(--ph-canvas);
+    font-size: 0.72rem;
+    color: var(--ph-ink-faint);
+}
+
+.cmdk-foot-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.cmdk-foot-count {
+    margin-inline-start: auto;
+    font-variant-numeric: tabular-nums;
+}
+
+/* --- Topbar trigger ----------------------------------------------- */
+/* Deliberately quiet: a ghost pill that only firms up on hover, so the Light
+   Mode header is unchanged at rest. */
+.cmdk-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: var(--ctl-h-sm);
+    padding: 0 var(--sp-3);
+    border: 1px solid var(--ph-line);
+    border-radius: var(--ph-r-full);
+    background: transparent;
+    color: var(--ph-ink-faint);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
+}
+
+.cmdk-trigger:hover {
+    color: var(--ph-ink);
+    border-color: var(--ph-line-strong);
+}
+
+.cmdk-trigger:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
+}
+
+.cmdk-trigger-label {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+
+@media (max-width: 640px) {
+    /* On a phone the shortcut label would just crowd the header; the button
+       keeps working (it opens the palette) but drops the label. */
+    .cmdk-trigger-label {
+        display: none;
+    }
+    .cmdk-trigger {
+        padding: 0 var(--sp-2);
+    }
+    .cmdk-overlay {
+        padding: 8vh var(--sp-3) var(--sp-3);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    /* base.css already neutralises transitions globally; the two keyframe
+       animations above need the same courtesy. */
+    .cmdk-overlay,
+    .cmdk {
+        animation: none;
+    }
+}
 
 /* ==========================================================
-   10. Form fields — inline validation
+   14. Toasts — transient action feedback
    ----------------------------------------------------------
-   Three states, and the neutral one is the default on purpose: a field the user
-   has not reached yet must never look wrong.
+   The RENDERER is `components/ui/Toaster.tsx`; the STORE is `lib/toast.ts`.
+   These rules only paint what those two produce.
+
+   WHY NOT `.site-toast`
+   ---------------------
+   `layout/app-layout.css` already ships a `.toast-container` / `.site-toast`
+   block carried over from the Blade app. It is a DIFFERENT, legacy primitive
+   (top-centred pills, its own hardcoded colours) and — importantly — it had no
+   visible/dismiss/pause behaviour and no live-region contract. Rather than
+   restyle that from a second screen, this is a new `.ph-toast` family that uses
+   the SHARED tokens, so light/dark are handled for free and nothing the legacy
+   class does can leak in.
+
+   ANCHORING — deliberately bottom-inline-end on desktop
+   ----------------------------------------------------
+   · Bottom, not top, so the stack never covers the sidebar's top region or the
+     topbar, and does not collide with the legacy top-centred `.site-toast`.
+   · Inline-END (left in RTL), matching the reading direction, away from the
+     sidebar which is inline-start (right in RTL). `inset-inline-end` does the
+     mirroring; there is no `[dir]` override to forget.
+   · The stack is `pointer-events: none` with `pointer-events: auto` on each
+     toast, so the empty area around a short toast does not swallow clicks on
+     the page beneath it.
+
+   ACCESSIBILITY COUPLINGS
+   -----------------------
+   · `data-empty="true"` collapses an empty live region to nothing, so the two
+     always-present regions (role=status / role=alert — see Toaster.tsx) take no
+     layout space and are not reachable when they have nothing to say.
+   · `:focus-within` on a toast is a visible affordance for the dismiss button,
+     which is the only focusable thing here. Toasts never move focus themselves.
+   · Motion is opt-out under `prefers-reduced-motion` (the keyframes at the
+     bottom), matching section 8.
    ========================================================== */
-.ph-field {
+.ph-toaster {
+    position: fixed;
+    inset-block-end: var(--sp-5);
+    inset-inline-end: var(--sp-5);
+    z-index: 2500; /* above the modal overlay (2000); below nothing it must sit over */
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    width: min(380px, calc(100vw - 2 * var(--sp-5)));
+    /* Let clicks pass through the gaps / the empty region. */
+    pointer-events: none;
+}
+
+/* The two live regions. They ALWAYS exist in the DOM *and* in the
+   accessibility tree — that is the whole point (see the header). An empty flex
+   column has no height, so it needs NO hiding rule: adding `display:none` here
+   would remove the region from the a11y tree while empty and re-create the very
+   "announcement missed" bug this design avoids. Do not add one. */
+.ph-toast-region {
     display: flex;
     flex-direction: column;
     gap: var(--sp-2);
 }
 
-.ph-field-msg {
-    margin: 0;
-    font-size: 0.8rem;
+.ph-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border: 1px solid var(--ph-line);
+    /* The tone colour lives on the inline-start edge, like the Blade pill. */
+    border-inline-start: 4px solid var(--ph-teal);
+    border-radius: var(--ph-r-md);
+    background: var(--ph-paper);
+    color: var(--ph-ink);
+    box-shadow: var(--ph-sh-md);
+    font-size: 0.86rem;
+    font-weight: 600;
     line-height: 1.5;
+    pointer-events: auto;
+    animation: ph-toast-in var(--dur-slow) var(--ease);
+}
+
+/* A paused toast is being hovered or focused. A hair of emphasis signals "this
+   one is not going anywhere yet" without shouting. */
+.ph-toast.is-paused {
+    box-shadow: var(--ph-sh-lg);
+}
+
+.ph-toast > i {
+    flex-shrink: 0;
+    margin-block-start: 2px;
+    font-size: 0.95rem;
+}
+
+.ph-toast-text {
+    flex: 1;
+    min-width: 0;
+    /* Long server messages must wrap, not overflow the fixed width. */
+    overflow-wrap: anywhere;
+}
+
+.ph-toast-close {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    margin-block-start: -2px;
+    margin-inline-end: calc(-1 * var(--sp-2));
+    border: 0;
+    border-radius: var(--ph-r-sm);
+    background: transparent;
     color: var(--ph-ink-faint);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background var(--tr-fast), color var(--tr-fast);
 }
 
-/* Touched + valid — a quiet confirmation, not a celebration. */
-.ph-field.is-valid .ph-control,
-.ph-field.is-valid .ph-select,
-.ph-field.is-valid .ph-textarea {
-    border-color: var(--ph-green);
+.ph-toast-close:hover {
+    background: var(--ph-canvas);
+    color: var(--ph-ink);
 }
 
-/* Touched + invalid. The border is the signal; the message is the explanation. */
-.ph-field.is-invalid .ph-control,
-.ph-field.is-invalid .ph-select,
-.ph-field.is-invalid .ph-textarea {
-    border-color: var(--ph-red);
+.ph-toast-close:focus-visible {
+    outline: none;
+    box-shadow: var(--ring);
 }
 
-.ph-field.is-invalid .ph-field-msg {
-    color: var(--ph-red-text);
+/* --- Tone variants — colour the icon and the start edge only --------- */
+.ph-toast.is-success {
+    border-inline-start-color: var(--ph-green);
+}
+.ph-toast.is-success > i {
+    color: var(--ph-green);
 }
 
-.ph-field.is-valid .ph-field-msg {
-    color: var(--ph-green-text);
+.ph-toast.is-warning {
+    border-inline-start-color: var(--ph-orange);
+}
+.ph-toast.is-warning > i {
+    color: var(--ph-orange);
 }
 
-/* Keep the ring in the state's colour rather than the default teal, so focus
-   and validity do not contradict each other. */
-.ph-field.is-invalid .ph-control:focus,
-.ph-field.is-invalid .ph-select:focus,
-.ph-field.is-invalid .ph-textarea:focus {
-    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.22);
+.ph-toast.is-error {
+    border-inline-start-color: var(--ph-red);
 }
-
-.ph-field.is-valid .ph-control:focus,
-.ph-field.is-valid .ph-select:focus,
-.ph-field.is-valid .ph-textarea:focus {
-    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.20);
-}
-
-/* A required marker must not be the only signal — it is `aria-hidden` in the
-   markup and the control carries `required`/`aria-required` where it matters. */
-.ph-form-label span[aria-hidden='true'] {
+.ph-toast.is-error > i {
     color: var(--ph-red);
 }
 
-/* ==========================================================
-   8. Modal + motion
-   ----------------------------------------------------------
-   Micro-interactions only: a short fade/rise on the dialog and overlay.
-   Everything is disabled under `prefers-reduced-motion` (base.css already
-   collapses transitions globally; these keyframes need the same courtesy).
-   ========================================================== */
-@keyframes ph-overlay-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+.ph-toast.is-info {
+    border-inline-start-color: var(--ph-teal);
+}
+.ph-toast.is-info > i {
+    color: var(--ph-teal-text);
 }
 
-@keyframes ph-dialog-in {
-    from { opacity: 0; transform: translateY(8px) scale(0.98); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes ph-toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
-.ph-modal-overlay.active {
-    animation: ph-overlay-in var(--dur) var(--ease);
-}
-
-.ph-modal-overlay.active .ph-modal {
-    animation: ph-dialog-in var(--dur-slow) var(--ease);
-}
-
-/* Page transition — a single short fade on route change. Applied to the page
-   wrapper, not to every element, so it stays cheap. */
-@keyframes ph-page-in {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-.ph-page {
-    animation: ph-page-in var(--dur-slow) var(--ease);
+/* Narrow screens: the stack spans the width and sits a touch higher so it does
+   not crowd the bottom edge (or the on-screen keyboard). */
+@media (max-width: 640px) {
+    .ph-toaster {
+        inset-inline: var(--sp-3);
+        inset-block-end: var(--sp-3);
+        width: auto;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ph-modal-overlay.active,
-    .ph-modal-overlay.active .ph-modal,
-    .ph-page {
+    .ph-toast {
         animation: none;
     }
-    .ph-btn:active:not(:disabled),
-    .btn-submit:active:not(:disabled),
-    .btn-cancel:active:not(:disabled) {
-        transform: none;
-    }
 }
+

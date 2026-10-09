@@ -1,5 +1,5 @@
-import { useEffect, useId, useRef } from 'react';
-import type { ReactNode } from 'react';
+import { cloneElement, useEffect, useId, useRef } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
 /**
@@ -658,6 +658,97 @@ export function SetupChecklist({
         ))}
       </ol>
     </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Forms — inline validation with a touched state                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One form field: label, control, and a message slot that flips between an
+ * error and a success hint.
+ *
+ * WHY THIS EXISTS
+ * ---------------
+ * The forms only surfaced errors AFTER submit, as one message at the top of the
+ * form. A field could be wrong from the moment it was typed and said nothing
+ * until the user pressed the button, and then the message was not attached to
+ * the field that caused it.
+ *
+ * The three states, and why each matters:
+ *   · untouched → neutral. Never scold someone for a field they have not
+ *     reached yet; that is the most common validation-UX mistake.
+ *   · touched + invalid → red border, message below, `aria-invalid` set
+ *   · touched + valid   → green border, quiet confirmation
+ *
+ * The message is wired to the control with `aria-describedby` and
+ * `aria-invalid`, so a screen reader announces it with the field.
+ *
+ * `id` is generated when not supplied so the label always resolves.
+ */
+export function FormField({
+  label,
+  id,
+  error,
+  hint,
+  touched,
+  required,
+  children,
+}: {
+  label: ReactNode;
+  id?: string;
+  /** Shown only once the field has been touched. */
+  error?: string | null;
+  /** Always-visible guidance, replaced by the error when there is one. */
+  hint?: ReactNode;
+  touched?: boolean;
+  required?: boolean;
+  /** The control itself. It receives the generated id via `htmlFor` on the label. */
+  children: ReactNode;
+}) {
+  const autoId = useId();
+  const fieldId = id ?? autoId;
+  const messageId = `${fieldId}-msg`;
+  const showError = Boolean(touched && error);
+  const showOk = Boolean(touched && !error);
+
+  return (
+    <div
+      className={[
+        'ph-field',
+        showError ? 'is-invalid' : '',
+        showOk ? 'is-valid' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <label className="ph-form-label" htmlFor={fieldId}>
+        {label}
+        {required && <span aria-hidden="true"> *</span>}
+      </label>
+
+      {/* The control is cloned so every field gets the same wiring without each
+          screen remembering to add it. Cast through the element's own props type
+          because `cloneElement` cannot infer `id` on an opaque ReactElement. */}
+      {cloneElement(children as ReactElement<Record<string, unknown>>, {
+        id: fieldId,
+        'aria-invalid': showError || undefined,
+        'aria-describedby': showError || hint ? messageId : undefined,
+      })}
+
+      {(showError || hint) && (
+        <p className="ph-field-msg" id={messageId}>
+          {showError ? (
+            <>
+              <i className="fas fa-circle-exclamation" aria-hidden="true" /> {error}
+            </>
+          ) : (
+            hint
+          )}
+        </p>
+      )}
+    </div>
   );
 }
 

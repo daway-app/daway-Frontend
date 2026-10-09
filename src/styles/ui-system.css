@@ -681,6 +681,67 @@ textarea.ph-control {
 }
 
 /* ==========================================================
+   10. Form fields — inline validation
+   ----------------------------------------------------------
+   Three states, and the neutral one is the default on purpose: a field the user
+   has not reached yet must never look wrong.
+   ========================================================== */
+.ph-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+}
+
+.ph-field-msg {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--ph-ink-faint);
+}
+
+/* Touched + valid — a quiet confirmation, not a celebration. */
+.ph-field.is-valid .ph-control,
+.ph-field.is-valid .ph-select,
+.ph-field.is-valid .ph-textarea {
+    border-color: var(--ph-green);
+}
+
+/* Touched + invalid. The border is the signal; the message is the explanation. */
+.ph-field.is-invalid .ph-control,
+.ph-field.is-invalid .ph-select,
+.ph-field.is-invalid .ph-textarea {
+    border-color: var(--ph-red);
+}
+
+.ph-field.is-invalid .ph-field-msg {
+    color: var(--ph-red-text);
+}
+
+.ph-field.is-valid .ph-field-msg {
+    color: var(--ph-green-text);
+}
+
+/* Keep the ring in the state's colour rather than the default teal, so focus
+   and validity do not contradict each other. */
+.ph-field.is-invalid .ph-control:focus,
+.ph-field.is-invalid .ph-select:focus,
+.ph-field.is-invalid .ph-textarea:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.22);
+}
+
+.ph-field.is-valid .ph-control:focus,
+.ph-field.is-valid .ph-select:focus,
+.ph-field.is-valid .ph-textarea:focus {
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.20);
+}
+
+/* A required marker must not be the only signal — it is `aria-hidden` in the
+   markup and the control carries `required`/`aria-required` where it matters. */
+.ph-form-label span[aria-hidden='true'] {
+    color: var(--ph-red);
+}
+
+/* ==========================================================
    8. Modal + motion
    ----------------------------------------------------------
    Micro-interactions only: a short fade/rise on the dialog and overlay.

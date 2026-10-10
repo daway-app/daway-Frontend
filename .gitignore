@@ -1,5 +1,11 @@
 # Logs
-logs
+# 🔴 `/logs` (leading slash) is deliberate: a bare `logs` pattern matches a
+# directory of that name at ANY depth, so it silently swallowed
+# `src/features/admin/logs/` — the whole admin logs screen. `git status` showed
+# nothing, `git add src/features/admin/` skipped it without a word, and the
+# build only failed after deploy (TS2307: cannot find module). Anchoring it to
+# the repo root keeps real log directories ignored without touching source.
+/logs
 *.log
 npm-debug.log*
 yarn-debug.log*

@@ -1,8 +1,10 @@
 import { createApiClient, type ApiClient } from '@/api/client';
 import { createAuthApi, type AuthApi } from '@/api/authApi';
 import { createPharmacyApi, type PharmacyApi } from '@/api/pharmacyApi';
-import { createTokenManager, type TokenManager } from './tokenStorage';
+import { createAdminApi, type AdminApi } from '@/api/adminApi';
+import { browserAdminTokenStorage, createTokenManager, type TokenManager } from './tokenStorage';
 import type { AuthUser } from './authContract';
+import type { AdminUser } from '@/api/adminTypes';
 
 /**
  * Composition root for the API + auth stack, with no React dependency.
@@ -114,3 +116,118 @@ export function createApiStack(options?: {
 }
 
 export type ApiStack = ReturnType<typeof createApiStack>;
+
+// =============================================================================
+// Admin stack — a SEPARATE session from the pharmacy one
+// =============================================================================
+// The admin panel is not another pharmacy screen; it is a different product for
+// a different role. It therefore gets:
+//   · its own token storage key  (see tokenStorage.ADMIN_TOKEN_KEY)
+//   · its own client instance    (so a 401 refresh cannot cross the two roles)
+//   · its own listener set       (so a pharmacy logout does not re-render admin)
+//
+// Deliberately NOT sharing `createApiStack`: doing so would make the admin's
+// refreshed token overwrite the pharmacy's, and the two `user` values would
+// fight over one variable. Separate stacks make that class of bug impossible.
+//
+// Note on refresh: the admin API has NO refresh endpoint. The pharmacy
+// `/api/refresh-token` is scoped to `auth:sanctum` and would rotate whatever
+// token it is sent — but reusing it here would entangle the two sessions. So the
+// admin session does NOT auto-refresh; a 401 ends it and the guard sends the
+// admin back to the admin login. The token lives 7 days, which is ample.
+
+export interface AdminSessionSnapshot {
+  user: AdminUser | null;
+  isAuthenticated: boolean;
+}
+
+export function createAdminApiStack(options?: {
+  onSessionExpired?: () => void;
+  fetchImpl?: typeof fetch;
+  baseUrl?: string;
+}) {
+  const tokens: TokenManager = createTokenManager(browserAdminTokenStorage);
+  const listeners = new Set<(snapshot: AdminSessionSnapshot) => void>();
+
+  let user: AdminUser | null = null;
+
+  function notify(): void {
+    const snapshot: AdminSessionSnapshot = {
+      user,
+      isAuthenticated: tokens.get() !== null,
+    };
+    for (const listener of listeners) listener(snapshot);
+  }
+
+  const client: ApiClient = createApiClient({
+    getToken: () => tokens.get(),
+    setToken: (token) => {
+      tokens.set(token);
+      notify();
+    },
+    clearToken: () => {
+      tokens.clear();
+      user = null;
+      notify();
+    },
+    // No refresh for the admin session — see the note above. Returning `null`
+    // makes the client treat a 401 as terminal instead of trying to rotate.
+    refresh: async () => null,
+    onSessionExpired: () => {
+      user = null;
+      notify();
+      options?.onSessionExpired?.();
+    },
+    fetchImpl: options?.fetchImpl,
+    baseUrl: options?.baseUrl,
+  });
+
+  const admin: AdminApi = createAdminApi(client);
+
+  return {
+    client,
+    admin,
+    tokens,
+
+    getUser: (): AdminUser | null => user,
+    isAuthenticated: (): boolean => tokens.get() !== null,
+
+    async login(email: string, password: string): Promise<AdminUser> {
+      const response = await admin.login(email, password);
+      const payload = response.data;
+
+      if (!payload?.token || !payload?.user) {
+        throw new Error(
+          '[admin auth] Login response did not contain a token and user in the expected shape.',
+        );
+      }
+
+      tokens.set(payload.token);
+      user = payload.user;
+      notify();
+      return payload.user;
+    },
+
+    async logout(): Promise<void> {
+      try {
+        await client.post('/api/logout', undefined, { skipRefresh: true });
+      } catch {
+        // Best-effort server-side revocation; local clear always happens.
+      } finally {
+        tokens.clear();
+        user = null;
+        notify();
+      }
+    },
+
+    subscribe(listener: (snapshot: AdminSessionSnapshot) => void): () => void {
+      listeners.add(listener);
+      listener({ user, isAuthenticated: tokens.get() !== null });
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+  };
+}
+
+export type AdminApiStack = ReturnType<typeof createAdminApiStack>;

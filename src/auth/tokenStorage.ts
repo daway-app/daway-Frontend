@@ -15,6 +15,18 @@
 
 const TOKEN_KEY = 'daway.auth.token';
 
+/**
+ * Storage key for the ADMIN session.
+ *
+ * 🔴 Why a separate key and not the same one:
+ * an admin and a pharmacy are different people with different tokens. Sharing
+ * one key means signing into the admin panel silently destroys the pharmacy
+ * session (and vice versa), and the two roles have different landing pages —
+ * so the losing session would be redirected to a page it cannot use. Two keys
+ * let both exist independently, which is also what makes the guards meaningful.
+ */
+const ADMIN_TOKEN_KEY = 'daway.admin.token';
+
 /** Minimal storage contract so tests can inject a fake. */
 export interface TokenStorage {
   get(): string | null;
@@ -52,6 +64,13 @@ export const browserTokenStorage: TokenStorage = {
   get: () => safeGet(TOKEN_KEY),
   set: (token) => safeSet(TOKEN_KEY, token),
   clear: () => safeRemove(TOKEN_KEY),
+};
+
+/** Browser-backed token storage for the admin session (separate key). */
+export const browserAdminTokenStorage: TokenStorage = {
+  get: () => safeGet(ADMIN_TOKEN_KEY),
+  set: (token) => safeSet(ADMIN_TOKEN_KEY, token),
+  clear: () => safeRemove(ADMIN_TOKEN_KEY),
 };
 
 /**

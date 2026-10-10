@@ -167,7 +167,18 @@ export function ariaSort<K extends string>(
  * the comparator lives next to the state — a table that has a sort key but
  * forgets to sort is a bug that looks like broken data.
  *
- * `setSort` is the click handler: it advances the cycle for the clicked key.
+ * `toggle` accepts a plain `string` rather than `K`, because that is the
+ * contract `DataTable.onSort` has: the header can only tell its parent "this
+ * column's `sort.key` was pressed", and that key is a `string` by the time it
+ * crosses the component boundary. Narrowing `toggle` to `K` would make every
+ * call site fail to typecheck against `onSort` — the union is not assignable to
+ * `string` in a parameter position.
+ *
+ * A key the table does not declare is a no-op in practice: `get(row, key)`
+ * returns `undefined` for every row, every comparison ties, and the rows keep
+ * their original order. It is not rejected outright because doing so would need
+ * the key list at runtime, and the only way to obtain one is a `switch` in `get`
+ * that already handles exactly the declared keys.
  */
 export function useSort<T, K extends string>(
   rows: readonly T[],
@@ -177,12 +188,13 @@ export function useSort<T, K extends string>(
   sort: SortState<K>;
   sorted: T[];
   /** Advance the cycle for `key` — wire this to the header's onClick. */
-  toggle: (key: K) => void;
+  toggle: (key: string) => void;
   /** Escape hatch, e.g. to reset when the user clears a filter. */
   set: (next: SortState<K>) => void;
 } {
   const [sort, setSort] = useState<SortState<K>>(initial);
   const sorted = useMemo(() => sortRows(rows, sort, get), [rows, sort, get]);
-  const toggle = useCallback((key: K) => setSort((cur) => nextSortState(cur, key)), []);
+  const toggle = useCallback((key: string) => setSort((cur) => nextSortState(cur, key as K)), []);
+
   return { sort, sorted, toggle, set: setSort };
 }

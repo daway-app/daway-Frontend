@@ -44,3 +44,7 @@ outputs/qa/
 
 # Stray debug screenshots left at the repo root by an earlier session.
 restored-*.png
+
+# Temp headless-Chrome probe profiles (verification scripts)
+.chrome-probe*/
+.admin-verify/

@@ -601,3 +601,99 @@ html.dark-mode .auth-container {
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
 }
+
+/* ==========================================================
+   مُبدِّل نوع الحساب (Segmented switch) — صفحة الدخول الموحّدة
+   ==========================================================
+   لماذا segmented وليس <select>؟
+   الخياران اثنان فقط والفرق بينهما جوهري (من يدخل وبأي بيانات)، فإظهارهما
+   معاً يجعل الحالة مرئية بلا نقرة. <select> يُخفي الخيار الآخر.
+
+   المؤشّر عنصر منفصل `.role-switch__thumb` يتحرّك بـ transform، لا خلفية
+   على الزر نفسه — فتتحرّك بحركة واحدة سلسة بدل وميض لونين.
+
+   كل الألوان من التوكنات ⇒ الوضعان يعملان بلا كتلة إضافية، عدا موضع
+   المؤشّر الذي يحتاج انعكاساً في RTL (انظر أدناه).
+   ========================================================== */
+.role-switch {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 22px;
+    border-radius: var(--r-full);
+    background: var(--teal-mist-2);
+    border: 1.5px solid var(--line-strong);
+}
+
+/* المؤشّر المنزلق. `inset-inline-start` تجعله يبدأ من اليمين في RTL تلقائياً،
+   فيعمل الوضع العربي بلا قاعدة انعكاس منفصلة. */
+.role-switch__thumb {
+    position: absolute;
+    inset-block: 4px;
+    inset-inline-start: 4px;
+    width: calc(50% - 6px);
+    border-radius: var(--r-full);
+    background: var(--paper);
+    box-shadow: var(--sh-sm);
+    transition: transform .28s var(--ease);
+    pointer-events: none;
+}
+
+/* في RTL: الحالة الثانية (أدمن) تقع على اليسار ⇒ إزاحة سالبة. */
+[dir="rtl"] .role-switch__thumb { transform: translateX(0); }
+[dir="rtl"] .role-switch[data-role="admin"] .role-switch__thumb {
+    transform: translateX(calc(-100% - 4px));
+}
+[dir="ltr"] .role-switch__thumb { transform: translateX(0); }
+[dir="ltr"] .role-switch[data-role="admin"] .role-switch__thumb {
+    transform: translateX(calc(100% + 4px));
+}
+
+.role-switch__option {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 12px;
+    border: none;
+    background: transparent;
+    border-radius: var(--r-full);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: color .2s var(--ease);
+}
+
+.role-switch__option:hover { color: var(--ink); }
+
+/* المختار يحمل لون النص الكامل؛ غير المختار أفتح — القراءة تتبع المؤشّر. */
+.role-switch__option[aria-pressed="true"] { color: var(--teal-text); }
+
+.role-switch__option:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.role-switch__option i { font-size: 15px; }
+
+/* الداكن: `--teal-mist-2` شبه شفاف ⇒ لا سطح للمسار، و`--paper` يصير داكناً
+   فلا يبرز المؤشّر. نستخدم سطح الحقل المعتمد + ظلّاً أوضح. */
+html.dark-mode .role-switch {
+    background: var(--field-bg);
+}
+
+html.dark-mode .role-switch__thumb {
+    background: var(--teal-primary);
+    box-shadow: 0 2px 10px rgba(5, 12, 18, .5);
+}
+
+html.dark-mode .role-switch__option[aria-pressed="true"] {
+    color: var(--paper);
+}
+

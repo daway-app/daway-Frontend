@@ -1138,6 +1138,35 @@ export const AR = {
       back_to_pharmacy: 'الدخول كصيدلية',
     },
 
+    /** صفحة تسجيل الدخول الموحّدة (`/login`) — نصّ لكل دور */
+    unified: {
+      brand_tag: 'منصة دوائي',
+      hero_title: 'مرحباً بك مجدداً',
+      hero_pharmacy: 'إدارة الصيدلية، الأدوية، والطلبات ومتابعة كافة العمليات من مكان واحد.',
+      hero_admin: 'إدارة الصيدليات، الأدوية، الأقسام، والطلبات والمستخدمين من مكان واحد.',
+      switch_label: 'نوع الحساب',
+      switch_pharmacy: 'صيدلية',
+      switch_admin: 'أدمن',
+      title: 'تسجيل الدخول',
+      subtitle: 'اختر نوع الحساب ثم أدخل بياناتك.',
+      identity_pharmacy: 'معرّف الصيدلية (Pharmacy ID)',
+      identity_pharmacy_placeholder: 'أدخل Pharmacy ID الخاص بالصيدلية',
+      identity_pharmacy_hint: 'استخدم Pharmacy ID الذي منحه الأدمن.',
+      identity_admin: 'البريد الإلكتروني',
+      identity_admin_placeholder: 'admin@example.com',
+      identity_admin_hint: 'استخدم البريد الإلكتروني وكلمة المرور الخاصة بك.',
+      password_label: 'كلمة المرور',
+      remember: 'تذكرني',
+      forgot: 'نسيت كلمة المرور؟ تواصل مع إدارة النظام',
+      submit_pharmacy: 'الدخول كصيدلية',
+      submit_admin: 'الدخول كأدمن',
+      submitting: 'جارٍ التحقق والدخول…',
+      missing_pharmacy: 'يرجى إدخال معرّف الصيدلية وكلمة المرور',
+      missing_admin: 'يرجى إدخال البريد الإلكتروني وكلمة المرور',
+      no_account: 'ليس لديك حساب؟ تواصل مع إدارة النظام لإنشاء حساب.',
+      go_admin: 'الدخول كأدمن',
+    },
+
     /** لوحة التحكم */
     dashboard: {
       title: 'لوحة التحكم',

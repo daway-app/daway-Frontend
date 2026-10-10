@@ -54,3 +54,4 @@ restored-*.png
 # Temp headless-Chrome probe profiles (verification scripts)
 .chrome-probe*/
 .admin-verify/
+.login-verify/

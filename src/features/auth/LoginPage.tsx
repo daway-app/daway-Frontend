@@ -1,122 +1,235 @@
 import { useState, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/authHooks';
+import { useAdminAuth } from '@/auth/adminContext';
 import { ApiError } from '@/api/errors';
+import { AR } from '@/lib/i18n';
 import { ROUTES } from '@/routes/paths';
+import { ADMIN_ROUTES } from '@/routes/adminPaths';
 
 /**
- * Pharmacy login — port of `auth/login.blade.php`.
+ * Unified login — ONE screen for both principals, with a segmented role switch.
  *
- * Blade builds this screen from a SPLIT layout:
- *   .auth-container
- *     .auth-form-side   (form: account type, identity, password, submit)
- *     .auth-hero        (logo + radar graphic)
+ * ============================================================================
+ * WHY ONE SCREEN INSTEAD OF TWO
+ * ============================================================================
+ * The Blade app shipped a single login with an "account type" select. The React
+ * port dropped it and split the two roles into `/login` (pharmacy) and
+ * `/admin/login` (admin), because the two authenticate against different
+ * endpoints with different credential shapes:
  *
- * All styling comes from the ported `pages/auth-forms.css` (the same file
- * Blade loads via `@vite(['resources/css/auth/forms.css'])`), so the class
- * names here MUST match Blade's verbatim — swapping in ad-hoc names such as
- * `login__title` would render an unstyled page.
+ *   · pharmacy → `POST /api/login/pharmacy` { pharmacy_id, password } → daway.auth.token
+ *   · admin    → `POST /api/login/admin`    { email, password }       → daway.admin.token
  *
- * The previous revision of this file was an intentionally plain P0 stub
- * ("visual design is P1"); this is that P1 pass.
+ * Both endpoints and both stacks still exist and are unchanged. This screen
+ * merely puts the CHOICE back in one place, so a person who knows they are "an
+ * admin" does not have to know the URL `/admin/login` to find the door.
  *
- * Documented divergences from Blade (all deliberate):
- *   1. Blade posts to `route('login')` and relies on the server session +
- *      full-page redirect. React calls the Daway API through `useAuth()`,
- *      matching `POST /api/login/pharmacy` (pharmacy_id + password).
- *   2. Blade renders an admin option in the account-type select. The React
- *      app is pharmacy-scoped by definition, so only the pharmacy branch is
- *      offered — the admin concept does not exist in this client.
- *   3. Blade's `.loader-overlay` is driven by a 15s timeout script. Here the
- *      spinner is driven by the real in-flight request state, and a rejected
- *      request always restores the form (no silent hang).
- *   4. The "not a member yet?" footer link points at the Blade register
- *      route; this SPA has no register screen, so it is rendered as an inert
- *      hint rather than a dead link.
+ * ============================================================================
+ * 🔴 THE SWITCH CHANGES THE ENDPOINT, NOT JUST THE LABEL
+ * ============================================================================
+ * The single most important property of this screen: flipping the switch
+ * decides WHICH `login()` runs, and therefore which stack stores the token and
+ * which session the guards will see. A version that only swapped the label text
+ * would send an admin's email to the pharmacy endpoint and fail with a
+ * confusing error — the label and the behaviour must move together.
+ *
+ * `useAuth()` and `useAdminAuth()` are BOTH called unconditionally (rules of
+ * hooks: never call a hook inside a branch). Only which one is INVOKED depends
+ * on the role.
+ *
+ * ============================================================================
+ * WHY THE IDENTITY FIELD IS CLEARED ON A REAL SWITCH
+ * ============================================================================
+ * A Pharmacy ID ("PH-1234") is meaningless as an email and vice versa. Carrying
+ * the value across would submit a guaranteed-wrong credential. The value is
+ * cleared only when the role ACTUALLY changes, so re-clicking the current role
+ * never wipes what the user typed.
+ *
+ * Error messages are shown as the server sends them (they are already Arabic),
+ * which keeps the deliberately-generic "invalid credentials" wording intact on
+ * both paths — the backend uses one sentence for "unknown account" and "wrong
+ * password" so it cannot be used to enumerate accounts.
  */
+
+type Role = 'pharmacy' | 'admin';
+
+/**
+ * How long the spinner may run before the user is offered a way out.
+ *
+ * The API reads from a remote managed MySQL and a single request has been
+ * measured at 5–12 s, so this is deliberately generous — it is a dead-request
+ * escape hatch, not a request deadline. Blade used 15 s; the value is kept.
+ */
+const LOGIN_TIMEOUT_MS = 15_000;
+
 export function LoginPage() {
-  const { login } = useAuth();
+  const pharmacyAuth = useAuth();
+  const adminAuth = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [pharmacyId, setPharmacyId] = useState('');
+  const [role, setRole] = useState<Role>('pharmacy');
+  const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Safety net, ported from Blade: if the response never arrives the spinner
+  // would otherwise spin forever and strand the user. After LOGIN_TIMEOUT_MS
+  // the form is restored and an explicit retry is offered.
+  const [timedOut, setTimedOut] = useState(false);
+
+  const L = AR.admin.unified;
+  const isAdmin = role === 'admin';
 
   const redirectTo =
-    (location.state as { from?: string } | null)?.from ?? ROUTES.dashboard;
+    (location.state as { from?: string } | null)?.from ??
+    (isAdmin ? ADMIN_ROUTES.dashboard : ROUTES.dashboard);
+
+  function selectRole(next: Role) {
+    if (next === role) return;
+    setRole(next);
+    // The two credential shapes are not interchangeable — see the header note.
+    setIdentity('');
+    setError(null);
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setTimedOut(false);
 
-    if (!pharmacyId.trim() || !password) {
-      setError('يرجى إدخال معرّف الصيدلية وكلمة المرور');
+    if (!identity.trim() || !password) {
+      setError(isAdmin ? L.missing_admin : L.missing_pharmacy);
       return;
     }
 
     setIsSubmitting(true);
+    const timer = window.setTimeout(() => setTimedOut(true), LOGIN_TIMEOUT_MS);
+
     try {
-      await login(pharmacyId.trim(), password);
+      if (isAdmin) {
+        await adminAuth.login(identity.trim(), password);
+      } else {
+        await pharmacyAuth.login(identity.trim(), password);
+      }
       navigate(redirectTo, { replace: true });
     } catch (caught) {
-      // Server messages are Arabic — display as-is, never translate.
       if (caught instanceof ApiError) {
-        setError(caught.message);
+        // The admin response distinguishes "disabled" / "not an admin" via 403
+        // codes; the pharmacy response returns a ready-made Arabic message.
+        // Both are already user-facing, so they are shown as-is.
+        setError(caught.message || 'تعذّر تسجيل الدخول، حاول مرة أخرى.');
       } else {
-        setError('تعذّر تسجيل الدخول، يرجى المحاولة مرة أخرى');
+        setError('تعذّر تسجيل الدخول، حاول مرة أخرى.');
       }
     } finally {
+      window.clearTimeout(timer);
+      setTimedOut(false);
       setIsSubmitting(false);
     }
   }
 
   return (
     <div className="auth-container">
-      {/* Progress loader — driven by the real request state, not a timer
-          (see divergence #3). `active` is what auth-forms.css fades in. */}
       <div
-        className={`loader-overlay${isSubmitting ? ' active' : ''}`}
+        className={`loader-overlay${isSubmitting ? ' active' : ''}${timedOut ? ' show-timeout' : ''}`}
         role="status"
         aria-live="polite"
-        aria-busy={isSubmitting}
+        aria-busy={isSubmitting && !timedOut}
         aria-hidden={!isSubmitting}
       >
-        <div className="loader-spinner-box">
-          <div className="spinner" />
-          <span className="loader-icon" aria-hidden="true">
-            💊
-          </span>
-        </div>
-        <div className="loader-text">جاري التحقق والدخول...</div>
+        {timedOut ? (
+          /* The request outlived the grace period. The form is behind this
+             overlay, so the retry has to live here. */
+          <div className="loader-timeout">
+            <span className="loader-timeout-icon" aria-hidden="true">
+              ⏳
+            </span>
+            <p className="loader-timeout-msg">
+              تأخّر الخادم في الرد. قد يكون الاتصال بطيئاً.
+            </p>
+            <button
+              type="button"
+              className="loader-timeout-btn"
+              onClick={() => {
+                setTimedOut(false);
+                setIsSubmitting(false);
+              }}
+            >
+              إعادة المحاولة
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="loader-spinner-box">
+              <div className="spinner" />
+              <span className="loader-icon" aria-hidden="true">
+                {isAdmin ? '🛡️' : '💊'}
+              </span>
+            </div>
+            <div className="loader-text">{L.submitting}</div>
+          </>
+        )}
       </div>
 
       {/* الجانب الأول: النموذج */}
       <div className="auth-form-side">
-        <h1 className="form-title">تسجيل الدخول</h1>
-        <p className="form-subtitle">
-          أدخل بياناتك للوصول إلى لوحة الصيدلية.
-        </p>
+        <h1 className="form-title">{L.title}</h1>
+        <p className="form-subtitle">{L.subtitle}</p>
+
+        {/* مُبدِّل نوع الحساب — المؤشّر عنصر منفصل ينزلق بـ transform. */}
+        <div className="fg">
+          <span className="fl" id="roleSwitchLabel">
+            {L.switch_label}
+          </span>
+          <div
+            className="role-switch"
+            data-role={role}
+            role="group"
+            aria-labelledby="roleSwitchLabel"
+          >
+            <span className="role-switch__thumb" aria-hidden="true" />
+            <button
+              type="button"
+              className="role-switch__option"
+              aria-pressed={!isAdmin}
+              onClick={() => selectRole('pharmacy')}
+              disabled={isSubmitting}
+            >
+              <i className="fas fa-store" aria-hidden="true" />
+              {L.switch_pharmacy}
+            </button>
+            <button
+              type="button"
+              className="role-switch__option"
+              aria-pressed={isAdmin}
+              onClick={() => selectRole('admin')}
+              disabled={isSubmitting}
+            >
+              <i className="fas fa-user-shield" aria-hidden="true" />
+              {L.switch_admin}
+            </button>
+          </div>
+        </div>
 
         <form id="loginForm" onSubmit={handleSubmit} noValidate>
-          {/* معرف الصيدلية / البريد */}
           <div className="fg">
             <label className="fl" htmlFor="identityInput">
-              معرف الصيدلية (Pharmacy ID)
+              {isAdmin ? L.identity_admin : L.identity_pharmacy}
             </label>
             <div className="fc-wrapper">
               <input
                 className="fc"
-                type="text"
+                type={isAdmin ? 'email' : 'text'}
                 id="identityInput"
-                name="pharmacy_id"
-                value={pharmacyId}
-                onChange={(event) => setPharmacyId(event.target.value)}
-                placeholder="أدخل Pharmacy ID الخاص بالصيدلية"
+                name={isAdmin ? 'email' : 'pharmacy_id'}
+                value={identity}
+                onChange={(event) => setIdentity(event.target.value)}
+                placeholder={isAdmin ? L.identity_admin_placeholder : L.identity_pharmacy_placeholder}
                 autoComplete="username"
-                autoCapitalize="characters"
+                autoCapitalize={isAdmin ? 'none' : 'characters'}
                 spellCheck={false}
                 dir="ltr"
                 required
@@ -125,15 +238,14 @@ export function LoginPage() {
                 disabled={isSubmitting}
               />
             </div>
-            <div className="info-hint" id="infoHint" role="note">
-              💡 <strong>صيدلية:</strong> استخدم Pharmacy ID الذي منحه الأدمن.
+            <div className="info-hint" role="note">
+              💡 {isAdmin ? L.identity_admin_hint : L.identity_pharmacy_hint}
             </div>
           </div>
 
-          {/* كلمة المرور */}
           <div className="fg">
             <label className="fl" htmlFor="passwordInput">
-              كلمة المرور
+              {L.password_label}
             </label>
             <div className="fc-wrapper">
               <input
@@ -170,27 +282,25 @@ export function LoginPage() {
 
           <div className="form-footer-options">
             <label className="remember-label">
-              <span>تذكرني</span>
+              <span>{L.remember}</span>
               <input type="checkbox" name="remember" />
             </label>
-            {/* لا يوجد مسار استعادة كلمة مرور في هذا العميل — نص إرشادي
-                بدل رابط ميّت (نفس نهج Blade). */}
-            <span className="forgot-hint">
-              نسيت كلمة المرور؟ تواصل مع إدارة النظام
-            </span>
+            <span className="forgot-hint">{L.forgot}</span>
           </div>
 
           <button type="submit" className="btn-p" id="submitBtn" disabled={isSubmitting}>
-            {isSubmitting ? 'جارٍ تسجيل الدخول…' : 'تسجيل الدخول'}
+            {isSubmitting
+              ? L.submitting
+              : isAdmin
+                ? L.submit_admin
+                : L.submit_pharmacy}
           </button>
         </form>
 
-        <div className="auth-footer">
-          ليس لديك حساب؟ تواصل مع إدارة النظام لإنشاء حساب صيدلية.
-        </div>
+        <div className="auth-footer">{L.no_account}</div>
       </div>
 
-      {/* الجانب الآخر: الهوية البصرية ورادار الموقع */}
+      {/* الجانب الآخر: الهوية البصرية — النصّ يتبع الدور. */}
       <div className="auth-hero">
         <div className="hero-content">
           <div className="logo-wrapper">
@@ -207,15 +317,11 @@ export function LoginPage() {
             />
           </div>
 
-          <span className="hero-subtitle-tag">منصة دوائي</span>
-          <h2 className="hero-title">مرحباً بك مجدداً</h2>
-          <p className="hero-desc">
-            إدارة الصيدليات، الأدوية، والطلبات ومتابعة كافة العمليات من مكان
-            واحد بسهولة وأمان.
-          </p>
+          <span className="hero-subtitle-tag">{L.brand_tag}</span>
+          <h2 className="hero-title">{L.hero_title}</h2>
+          <p className="hero-desc">{isAdmin ? L.hero_admin : L.hero_pharmacy}</p>
         </div>
 
-        {/* جرافيك الرادار والدبوس */}
         <div className="graphic-wrapper">
           <div className="radar-circle">
             <div className="radar-ripple-1" />

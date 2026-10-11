@@ -26,6 +26,14 @@
 @import './pages/users-create.css';
 @import './pages/profile-complete.css';
 @import './pages/auth-forms.css';
+/* The Blade admin page shell (header bar, breadcrumb, stat cards, search card,
+   table card, row-action buttons). Ported from the backend's
+   `resources/css/pages/medicines.css`, which every Blade admin page loads.
+   Loaded AFTER the page families so the admin shell is not overwritten by a
+   pharmacy page rule, and BEFORE ui-system.css so the polish layer keeps the
+   last word on the shared primitives. Every rule is scoped under `.admin-page`
+   — see the header of that file. */
+@import './pages/admin-shell.css';
 
 /* ==========================================================
    UI System (Phase 1) — MUST be last.

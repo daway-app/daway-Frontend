@@ -836,46 +836,289 @@ body.dark-mode .ph-modal { border: 1px solid var(--line); }
 }
 
 /* --- Pharmacy card grid ------------------------------------------- */
-.admin-card-grid {
+/**
+ * Ported 1:1 from the Blade `pharmacies/index.blade.php` inline <style> block,
+ * so the React card is the same design as the Blade card rather than a
+ * lookalike. Blade's class names are kept — the difference is SCOPE.
+ *
+ * 🔴 WHY EVERY RULE IS SCOPED UNDER `.pharmacy-card-pro`
+ * ------------------------------------------------------
+ * Blade could use bare `.card-head`, `.card-foot`, `.info-tile`, `.act-btn`
+ * because that page's CSS was an inline <style> in the document, so nothing
+ * else competed with it. Here all CSS is bundled globally, and `.card-head` is
+ * ALREADY defined in `medicines-edit.css` with `padding: 17px 20px` and a
+ * gradient background — an unscoped port picked that up and rendered the card
+ * head 80px tall with a gradient bar instead of 59px and flat.
+ *
+ * That was measured in a browser, not guessed: the Blade card head is 59px and
+ * the first unscoped React attempt was 80px. Scoping makes the port immune to
+ * both that rule and any future one.
+ *
+ * Colours resolve through tokens.css via the --ph-* aliases above, so dark mode
+ * follows the theme without the long `body.dark-mode .x` override list Blade
+ * needed for its hard-coded hex values.
+ */
+.admin-card-grid,
+.pharmacies-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 20px;
 }
-.admin-pharmacy-card {
+
+.pharmacy-card-pro {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 18px;
+    justify-content: space-between;
+    padding: 20px;
     border: 1px solid var(--ph-line-soft);
-    border-radius: var(--ph-r-lg);
+    border-radius: 22px;
     background: var(--ph-paper);
-    box-shadow: var(--ph-sh);
-    transition: var(--ph-tr);
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, .04);
+    overflow: hidden;
+    transition: all .35s var(--ease);
 }
-.admin-pharmacy-card:hover { box-shadow: var(--ph-sh-md); }
-.admin-pharmacy-card header {
+.pharmacy-card-pro:hover {
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 20px 35px rgba(28, 114, 166, .35);
+}
+
+/* Head — brand block + status badge */
+.pharmacy-card-pro .card-head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
+    padding: 0;
+    padding-block-end: 14px;
+    border: 0;
+    border-block-end: 1px dashed var(--ph-line);
+    background: none;
 }
-.admin-pharmacy-card h3 { margin: 0; font-size: 1rem; color: var(--ph-ink); }
-.admin-pharmacy-card__meta {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin: 0;
-    padding: 12px 0;
-    border-block: 1px solid var(--ph-line-soft);
-}
-.admin-pharmacy-card__meta dt { font-size: .74rem; color: var(--ph-ink-faint); margin-block-end: 2px; }
-.admin-pharmacy-card__meta dd { margin: 0; font-size: .9rem; color: var(--ph-ink); font-weight: 600; }
-.admin-pharmacy-card__actions {
+.pharmacy-card-pro .pharmacy-brand {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-block-start: auto;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
 }
+.pharmacy-card-pro .avatar-glow-box {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #1C72A6, #14b8a6);
+    box-shadow: 0 6px 14px rgba(28, 114, 166, .35);
+}
+.pharmacy-card-pro .brand-text { min-width: 0; }
+.pharmacy-card-pro .pharmacy-title {
+    margin: 0 0 2px;
+    font-size: 15px;
+    /* Explicit: `base.css` sets a global `line-height:1.65`, which makes the
+       two-line brand block taller than the 44px avatar and pushes the card head
+       from 59px (Blade) to 63px. Blade had no such global, so pin it here. */
+    line-height: 1.25;
+    font-weight: 700;
+    color: var(--ph-ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.pharmacy-card-pro .pharmacy-phone-tag {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    line-height: 1.25;
+    color: var(--ph-ink-faint);
+}
+
+.pharmacy-card-pro .status-indicator-badge {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--ph-r-full);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.pharmacy-card-pro .status-indicator-badge.active   { background: var(--ph-green-bg);  color: var(--ph-green-text); }
+.pharmacy-card-pro .status-indicator-badge.disabled { background: var(--ph-red-bg);    color: var(--ph-red-text); }
+.pharmacy-card-pro .status-indicator-badge.pending  { background: var(--ph-orange-bg); color: var(--ph-orange-text); }
+.pharmacy-card-pro .status-pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: statusBlink 1.5s infinite;
+}
+@keyframes statusBlink { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) {
+    .pharmacy-card-pro .status-pulse { animation: none; }
+    .pharmacy-card-pro { transition: none; }
+    .pharmacy-card-pro:hover { transform: none; }
+}
+
+/* ID strip — label + monospace code + copy chip */
+.pharmacy-card-pro .id-copy-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 14px 0;
+    padding: 8px 12px;
+    border: 1px solid var(--ph-line);
+    border-radius: var(--ph-r-md);
+    background: var(--ph-canvas);
+}
+.pharmacy-card-pro .strip-label { font-size: 11px; font-weight: 600; color: var(--ph-ink-faint); }
+.pharmacy-card-pro .strip-code-group { display: flex; align-items: center; gap: 8px; }
+.pharmacy-card-pro .code-text {
+    padding: 2px 8px;
+    border: 1px solid var(--ph-line);
+    border-radius: 6px;
+    background: var(--ph-paper);
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ph-teal-text);
+}
+.pharmacy-card-pro .btn-copy-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 27px;
+    height: 27px;
+    border: 1px solid var(--ph-line);
+    border-radius: 6px;
+    background: var(--ph-paper);
+    color: var(--ph-ink-faint);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    transition: var(--ph-tr);
+}
+.pharmacy-card-pro .btn-copy-chip:hover { background: var(--ph-teal); color: #fff; }
+
+/* Info grid — location (+ map) and item count */
+.pharmacy-card-pro .card-info-grid {
+    display: grid;
+    grid-template-columns: 1.4fr .8fr;
+    gap: 10px;
+    margin-block-end: 14px;
+}
+.pharmacy-card-pro .info-tile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 8px 10px;
+    border: 1px solid var(--ph-line-soft);
+    border-radius: var(--ph-r-md);
+    background: var(--ph-paper);
+}
+.pharmacy-card-pro .tile-content { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.pharmacy-card-pro .tile-header { display: flex; align-items: center; gap: 4px; }
+.pharmacy-card-pro .tile-icon { font-size: 13px; color: var(--ph-ink-faint); }
+.pharmacy-card-pro .tile-label { font-size: 10px; font-weight: 600; color: var(--ph-ink-faint); }
+.pharmacy-card-pro .tile-address {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ph-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pharmacy-card-pro .tile-val { font-size: 12px; font-weight: 800; color: var(--ph-ink); }
+.pharmacy-card-pro .accent-teal { color: var(--ph-teal-text); }
+
+.pharmacy-card-pro .btn-show-map {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 8px;
+    border: 1px solid rgba(28, 114, 166, .25);
+    border-radius: 8px;
+    background: var(--ph-green-bg);
+    color: var(--ph-teal-text);
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--ph-tr);
+}
+.pharmacy-card-pro .btn-show-map:hover { background: var(--ph-teal); color: #fff; }
+
+/* Foot — relative time + icon actions */
+.pharmacy-card-pro .card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0;
+    padding-block-start: 12px;
+    border: 0;
+    border-block-start: 1px solid var(--ph-line-soft);
+    background: none;
+}
+.pharmacy-card-pro .time-meta {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--ph-ink-faint);
+}
+.pharmacy-card-pro .actions-flex { display: flex; align-items: center; gap: 6px; }
+
+.pharmacy-card-pro .act-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--ph-tr);
+}
+.pharmacy-card-pro .act-btn:hover:not(:disabled) { transform: translateY(-3px) scale(1.1); }
+.pharmacy-card-pro .act-btn:disabled { opacity: .45; cursor: not-allowed; }
+.pharmacy-card-pro .act-pause  { background: var(--ph-orange-bg); color: var(--ph-orange-text); }
+.pharmacy-card-pro .act-play   { background: var(--ph-green-bg);  color: var(--ph-green-text); }
+.pharmacy-card-pro .act-view   { background: var(--ph-blue-bg);   color: var(--ph-blue-text); }
+.pharmacy-card-pro .act-delete { background: var(--ph-red-bg);    color: var(--ph-red-text); }
+
+/* Map modal body */
+.admin-map-frame {
+    display: block;
+    width: 100%;
+    height: 320px;
+    border: 1px solid var(--ph-line);
+    border-radius: 14px;
+    background: var(--ph-canvas);
+}
+.btn-external-gmaps {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: var(--ph-canvas);
+    color: var(--ph-ink-soft);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: var(--ph-tr);
+}
+.btn-external-gmaps:hover { background: var(--ph-teal); color: #fff; }
 
 /* --- One-time credentials dialog ---------------------------------- */
 .admin-credentials__warning {

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   AsyncBoundary,
-  Badge,
   Btn,
   Card,
   EmptyState,
@@ -13,9 +12,33 @@ import { toast } from '@/lib/toast';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { AR } from '@/lib/i18n';
-import { formatDate, num, pageInfo } from '../shared';
+import { num, pageInfo, timeAgo } from '../shared';
 import { CredentialsModal } from './CredentialsModal';
 import type { AdminPharmaciesResponse, DeliveredCredentials } from '@/api/adminTypes';
+
+/** What the map modal needs to draw a pin. */
+interface MapTarget {
+  name: string;
+  latitude: number | string | null;
+  longitude: number | string | null;
+}
+
+/**
+ * Does this row carry a usable coordinate pair?
+ *
+ * The API returns `latitude`/`longitude` as `decimal:8` casts, so they arrive
+ * as STRINGS, and a never-placed pharmacy sends `null`. `Number(null)` is `0`,
+ * which is a *valid* coordinate (the Gulf of Guinea) — so a truthiness or
+ * `Number()` check would happily offer a map for a pharmacy with no location.
+ * Both bounds are therefore checked explicitly.
+ */
+function hasCoords(lat: number | string | null, lng: number | string | null): boolean {
+  if (lat === null || lng === null || lat === '' || lng === '') return false;
+  const a = Number(lat);
+  const b = Number(lng);
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+  return a >= -90 && a <= 90 && b >= -180 && b <= 180;
+}
 
 /**
  * Admin pharmacies — list, create, toggle, reset credentials, delete.
@@ -54,9 +77,40 @@ export function AdminPharmaciesPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
   const [credentials, setCredentials] = useState<DeliveredCredentials | null>(null);
+  const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
   const [confirmAction, setConfirmAction] = useState<
     { kind: 'delete' | 'toggle' | 'reset'; id: number; name: string } | null
   >(null);
+
+  /**
+   * Copy a pharmacy id to the clipboard.
+   *
+   * `navigator.clipboard` is unavailable on insecure origins (plain `http://`
+   * that is not localhost), so a naive `await copy()` throws and the button
+   * silently does nothing. Fall back to the legacy path, and report failure
+   * honestly rather than claiming a copy that did not happen.
+   */
+  async function copyId(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(C.copied);
+    } catch {
+      try {
+        const area = document.createElement('textarea');
+        area.value = value;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        document.execCommand('copy');
+        document.body.removeChild(area);
+        toast.success(C.copied);
+      } catch {
+        toast.error(C.copy_failed);
+      }
+    }
+  }
 
   const C = AR.admin.pharmacies;
 
@@ -236,76 +290,204 @@ export function AdminPharmaciesPage() {
                 />
               ) : (
                 <div className="admin-card-grid">
-                  {data.pharmacies.map((pharmacy) => (
-                    <article key={pharmacy.id} className="admin-pharmacy-card">
-                      <header>
-                        <h3>{pharmacy.pharmacy_name}</h3>
-                        <Badge variant={pharmacy.is_active ? 'ok' : 'out'}>
-                          {pharmacy.is_active ? C.status_active : C.status_disabled}
-                        </Badge>
-                      </header>
+                  {data.pharmacies.map((pharmacy) => {
+                    /*
+                     * Blade derives a THIRD state the API has no column for:
+                     * a pharmacy that is inactive *and* was never delivered has
+                     * not been rejected — it is still awaiting activation.
+                     * `pharmacies/index.blade.php` computes exactly this
+                     * (`$isPending = !$is_active && $delivered_at === null`)
+                     * and paints it a distinct badge colour, so the admin can
+                     * tell "not yet set up" apart from "switched off".
+                     */
+                    const isPending = !pharmacy.is_active && pharmacy.delivered_at === null;
+                    const state = isPending
+                      ? 'pending'
+                      : pharmacy.is_active
+                        ? 'active'
+                        : 'disabled';
 
-                      <dl className="admin-pharmacy-card__meta">
-                        <div>
-                          <dt>{C.col_id}</dt>
-                          <dd dir="ltr">{pharmacy.pharmacy_custom_id}</dd>
-                        </div>
-                        <div>
-                          <dt>{C.col_items}</dt>
-                          <dd>{num(pharmacy.pharmacy_medicines_count)}</dd>
-                        </div>
-                        <div>
-                          <dt>{AR.admin.requests.col_date}</dt>
-                          <dd>{formatDate(pharmacy.delivered_at)}</dd>
-                        </div>
-                      </dl>
+                    return (
+                      <article key={pharmacy.id} className="pharmacy-card-pro">
+                        {/* Head — brand avatar + name + phone, and the status badge */}
+                        <div className="card-head">
+                          <div className="pharmacy-brand">
+                            <div className="avatar-glow-box" aria-hidden="true">
+                              <span className="avatar-letter">
+                                {pharmacy.pharmacy_name.trim().charAt(0)}
+                              </span>
+                            </div>
+                            <div className="brand-text">
+                              <h4 className="pharmacy-title">{pharmacy.pharmacy_name}</h4>
+                              <span className="pharmacy-phone-tag">
+                                <i className="fas fa-phone" aria-hidden="true" />
+                                <span dir="ltr">
+                                  {pharmacy.phone_number ?? C.phone_missing}
+                                </span>
+                              </span>
+                            </div>
+                          </div>
 
-                      <div className="admin-pharmacy-card__actions">
-                        <Btn
-                          size="sm"
-                          variant="outline"
-                          disabled={isPending}
-                          onClick={() =>
-                            setConfirmAction({
-                              kind: 'toggle',
-                              id: pharmacy.id,
-                              name: pharmacy.pharmacy_name,
-                            })
-                          }
-                        >
-                          {pharmacy.is_active ? C.action_disable : C.action_activate}
-                        </Btn>
-                        <Btn
-                          size="sm"
-                          variant="ghost"
-                          disabled={isPending}
-                          onClick={() =>
-                            setConfirmAction({
-                              kind: 'reset',
-                              id: pharmacy.id,
-                              name: pharmacy.pharmacy_name,
-                            })
-                          }
-                        >
-                          {C.action_reset}
-                        </Btn>
-                        <Btn
-                          size="sm"
-                          variant="danger"
-                          disabled={isPending}
-                          onClick={() =>
-                            setConfirmAction({
-                              kind: 'delete',
-                              id: pharmacy.id,
-                              name: pharmacy.pharmacy_name,
-                            })
-                          }
-                        >
-                          {C.action_delete}
-                        </Btn>
-                      </div>
-                    </article>
-                  ))}
+                          <div className={`status-indicator-badge ${state}`}>
+                            <span className="status-pulse" aria-hidden="true" />
+                            <span>
+                              {isPending
+                                ? C.status_pending
+                                : pharmacy.is_active
+                                  ? C.status_active
+                                  : C.status_disabled}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* ID strip — code + copy, matching Blade's id-copy-strip */}
+                        <div className="id-copy-strip">
+                          <span className="strip-label">{C.col_id}</span>
+                          <div className="strip-code-group">
+                            <code className="code-text" dir="ltr">
+                              {pharmacy.pharmacy_custom_id}
+                            </code>
+                            <button
+                              type="button"
+                              className="btn-copy-chip"
+                              title={C.copy_tooltip}
+                              aria-label={`${C.copy_tooltip} ${pharmacy.pharmacy_custom_id}`}
+                              onClick={() => void copyId(pharmacy.pharmacy_custom_id)}
+                            >
+                              <i className="fas fa-copy" aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Info grid — location (+ map) and item count */}
+                        <div className="card-info-grid">
+                          <div className="info-tile tile-location">
+                            <div className="tile-content">
+                              <div className="tile-header">
+                                <span className="tile-icon">
+                                  <i className="fas fa-location-dot" aria-hidden="true" />
+                                </span>
+                                <span className="tile-label">{C.col_location}</span>
+                              </div>
+                              <div
+                                className="tile-address bidi-text"
+                                title={pharmacy.address ?? undefined}
+                              >
+                                {pharmacy.address ?? C.address_not_specified}
+                              </div>
+                            </div>
+
+                            {/*
+                             * Only offered when there is a real coordinate pair.
+                             * Blade renders the button unconditionally and hands
+                             * `null,null` to the map modal, which opens an empty
+                             * map — a control that looks broken. Hiding it when
+                             * there is nothing to show is the honest version.
+                             */}
+                            {hasCoords(pharmacy.latitude, pharmacy.longitude) && (
+                              <button
+                                type="button"
+                                className="btn-show-map"
+                                title={C.show_map}
+                                onClick={() =>
+                                  setMapTarget({
+                                    name: pharmacy.pharmacy_name,
+                                    latitude: pharmacy.latitude,
+                                    longitude: pharmacy.longitude,
+                                  })
+                                }
+                              >
+                                <i className="fas fa-map" aria-hidden="true" />
+                                <span>{C.map}</span>
+                              </button>
+                            )}
+                          </div>
+
+                          <div className="info-tile tile-medicines">
+                            <div className="tile-content">
+                              <div className="tile-header">
+                                <span className="tile-icon">
+                                  <i className="fas fa-pills" aria-hidden="true" />
+                                </span>
+                                <span className="tile-label">{C.col_items}</span>
+                              </div>
+                              <span className="tile-val accent-teal">
+                                {num(pharmacy.pharmacy_medicines_count)} {C.items_suffix}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Foot — relative time + icon actions */}
+                        <div className="card-foot">
+                          <span className="time-meta">
+                            <i className="far fa-clock" aria-hidden="true" />
+                            {timeAgo(pharmacy.delivered_at ?? undefined) || C.date_missing}
+                          </span>
+
+                          <div className="actions-flex">
+                            <button
+                              type="button"
+                              className={`act-btn ${pharmacy.is_active ? 'act-pause' : 'act-play'}`}
+                              title={pharmacy.is_active ? C.action_disable : C.action_activate}
+                              aria-label={
+                                pharmacy.is_active ? C.action_disable : C.action_activate
+                              }
+                              disabled={isPending}
+                              onClick={() =>
+                                setConfirmAction({
+                                  kind: 'toggle',
+                                  id: pharmacy.id,
+                                  name: pharmacy.pharmacy_name,
+                                })
+                              }
+                            >
+                              <i
+                                className={
+                                  pharmacy.is_active ? 'fas fa-pause' : 'fas fa-play'
+                                }
+                                aria-hidden="true"
+                              />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="act-btn act-view"
+                              title={C.action_reset}
+                              aria-label={`${C.action_reset} — ${pharmacy.pharmacy_name}`}
+                              disabled={isPending}
+                              onClick={() =>
+                                setConfirmAction({
+                                  kind: 'reset',
+                                  id: pharmacy.id,
+                                  name: pharmacy.pharmacy_name,
+                                })
+                              }
+                            >
+                              <i className="fas fa-key" aria-hidden="true" />
+                            </button>
+
+                            <button
+                              type="button"
+                              className="act-btn act-delete"
+                              title={C.action_delete}
+                              aria-label={`${C.action_delete} — ${pharmacy.pharmacy_name}`}
+                              disabled={isPending}
+                              onClick={() =>
+                                setConfirmAction({
+                                  kind: 'delete',
+                                  id: pharmacy.id,
+                                  name: pharmacy.pharmacy_name,
+                                })
+                              }
+                            >
+                              <i className="fas fa-trash" aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               )}
 
@@ -402,6 +584,60 @@ export function AdminPharmaciesPage() {
               : C.confirm_toggle}
         </p>
         {confirmAction && <strong>{confirmAction.name}</strong>}
+      </Modal>
+
+      {/* Location map — mirrors Blade's `openMapModal` */}
+      <Modal
+        open={mapTarget !== null}
+        title={`${C.map_title}${mapTarget ? ` — ${mapTarget.name}` : ''}`}
+        onClose={() => setMapTarget(null)}
+        footer={
+          <>
+            <Btn variant="outline" onClick={() => setMapTarget(null)}>
+              {AR.admin.common.close}
+            </Btn>
+            {mapTarget && (
+              <a
+                className="btn-external-gmaps"
+                href={`https://www.google.com/maps?q=${encodeURIComponent(
+                  `${mapTarget.latitude},${mapTarget.longitude}`,
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <i className="fas fa-arrow-up-right-from-square" aria-hidden="true" />
+                {C.open_in_maps}
+              </a>
+            )}
+          </>
+        }
+      >
+        {mapTarget && hasCoords(mapTarget.latitude, mapTarget.longitude) ? (
+          /*
+           * An OpenStreetMap embed rather than Google Maps: it needs no API key,
+           * so this works in every environment (dev, preview, prod) with no
+           * configuration. The "open in Google Maps" link in the footer covers
+           * the case where the admin wants directions.
+           */
+          <iframe
+            className="admin-map-frame"
+            title={`${C.map_title} — ${mapTarget.name}`}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(
+              [
+                Number(mapTarget.longitude) - 0.008,
+                Number(mapTarget.latitude) - 0.005,
+                Number(mapTarget.longitude) + 0.008,
+                Number(mapTarget.latitude) + 0.005,
+              ].join(','),
+            )}&layer=mapnik&marker=${encodeURIComponent(
+              `${mapTarget.latitude},${mapTarget.longitude}`,
+            )}`}
+          />
+        ) : (
+          <p className="admin-muted">{C.map_no_coords}</p>
+        )}
       </Modal>
 
       {/* One-time credentials */}

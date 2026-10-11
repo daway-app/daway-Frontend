@@ -4,6 +4,7 @@ import {
   Badge,
   Btn,
   Card,
+  EmptyState,
   Modal,
   PageHeader,
   StatCard,
@@ -76,6 +77,15 @@ export function AdminPharmaciesPage() {
   const data = query.data;
   const pagination = data?.pagination;
   const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
+
+  /** See AdminMedicineRequestsPage — the recovery action only appears when a
+   *  filter is actually responsible for the empty list. */
+  const isFiltered = q.trim() !== '' || status !== 'all';
+  function clearFilters() {
+    setQ('');
+    setStatus('all');
+    setPage(1);
+  }
 
   const createMutation = useApiMutation(async (name: string) =>
     api.admin.createPharmacy(name),
@@ -211,10 +221,19 @@ export function AdminPharmaciesPage() {
               }
             >
               {data.pharmacies.length === 0 ? (
-                <div className="admin-empty">
-                  <p>{C.empty}</p>
-                  <span>{C.empty_hint}</span>
-                </div>
+                <EmptyState
+                  icon="fas fa-store"
+                  title={C.empty}
+                  description={isFiltered ? AR.admin.common.empty_filtered_hint : C.empty_hint}
+                  action={
+                    isFiltered ? (
+                      <Btn size="sm" variant="outline" onClick={clearFilters}>
+                        <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
+                        {AR.admin.common.clear_filters}
+                      </Btn>
+                    ) : undefined
+                  }
+                />
               ) : (
                 <div className="admin-card-grid">
                   {data.pharmacies.map((pharmacy) => (

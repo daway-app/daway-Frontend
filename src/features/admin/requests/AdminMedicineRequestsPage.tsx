@@ -5,6 +5,7 @@ import {
   Btn,
   Card,
   DataTable,
+  EmptyState,
   Modal,
   PageHeader,
   StatCard,
@@ -72,6 +73,19 @@ export function AdminMedicineRequestsPage() {
   const pagination = query.data?.pagination;
   const stats = query.data?.stats;
   const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
+
+  /**
+   * An empty list has a different fix depending on what emptied it. The search
+   * box is only worth clearing when it actually holds text, and a non-default
+   * status filter is only worth resetting on its own tab — otherwise the button
+   * would look like a no-op that re-renders the same empty table.
+   */
+  const isFiltered = q.trim() !== '' || status !== 'pending';
+  function clearFilters() {
+    setQ('');
+    setStatus('pending');
+    setPage(1);
+  }
 
   const approveMutation = useApiMutation(
     async (payload: { id: number; body: Record<string, unknown> }) =>
@@ -191,9 +205,21 @@ export function AdminMedicineRequestsPage() {
               }
             >
               {rows.length === 0 ? (
-                <div className="admin-empty">
-                  <p>{R.empty}</p>
-                </div>
+                <EmptyState
+                  icon="fas fa-clipboard-check"
+                  title={R.empty}
+                  description={
+                    isFiltered ? AR.admin.common.empty_filtered_hint : R.empty_hint
+                  }
+                  action={
+                    isFiltered ? (
+                      <Btn size="sm" variant="outline" onClick={clearFilters}>
+                        <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
+                        {AR.admin.common.clear_filters}
+                      </Btn>
+                    ) : undefined
+                  }
+                />
               ) : (
                 <DataTable
                   sticky

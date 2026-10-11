@@ -5,6 +5,7 @@ import {
   Btn,
   Card,
   DataTable,
+  EmptyState,
   PageHeader,
 } from '@/components/ui';
 import { useAdminApi } from '@/auth/adminContext';
@@ -81,6 +82,16 @@ export function AdminLogsPage() {
   const rows = useMemo(() => query.data?.logs ?? [], [query.data]);
   const pagination = query.data?.pagination;
   const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
+
+  /** See AdminMedicineRequestsPage — the recovery action only appears when a
+   *  filter is actually responsible for the empty list. */
+  const isFiltered = q.trim() !== '' || event !== 'all' || date !== '';
+  function clearFilters() {
+    setQ('');
+    setEvent('all');
+    setDate('');
+    setPage(1);
+  }
 
   /*
    * The `auth` pill filters login/logout CLIENT-SIDE over the loaded page.
@@ -183,9 +194,18 @@ export function AdminLogsPage() {
             }
           >
             {sorted.length === 0 ? (
-              <div className="admin-empty">
-                <p>{L.empty}</p>
-              </div>
+              <EmptyState
+                icon="fas fa-clock-rotate-left"
+                title={L.empty}
+                description={isFiltered ? C.empty_filtered_hint : L.empty_hint}
+                action={
+                  isFiltered ? (
+                    <Btn size="sm" variant="outline" onClick={clearFilters}>
+                      <i className="fas fa-rotate-left" aria-hidden="true" /> {C.clear_filters}
+                    </Btn>
+                  ) : undefined
+                }
+              />
             ) : (
               <DataTable
                 sticky

@@ -4,6 +4,7 @@ import {
   Btn,
   Card,
   DataTable,
+  EmptyState,
   PageHeader,
   StatCard,
 } from '@/components/ui';
@@ -61,6 +62,14 @@ export function AdminPatientsPage() {
   const pagination = query.data?.pagination;
   const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
 
+  /** See AdminMedicineRequestsPage — the recovery action only appears when a
+   *  filter is actually responsible for the empty list. */
+  const isFiltered = q.trim() !== '';
+  function clearFilters() {
+    setQ('');
+    setPage(1);
+  }
+
   const { sort, toggle, sorted } = useSort<AdminPatient, 'name' | 'date'>(
     rows,
     (row, key) => {
@@ -109,9 +118,19 @@ export function AdminPatientsPage() {
               }
             >
               {rows.length === 0 ? (
-                <div className="admin-empty">
-                  <p>{P.empty}</p>
-                </div>
+                <EmptyState
+                  icon="fas fa-user-injured"
+                  title={P.empty}
+                  description={isFiltered ? AR.admin.common.empty_filtered_hint : P.empty_hint}
+                  action={
+                    isFiltered ? (
+                      <Btn size="sm" variant="outline" onClick={clearFilters}>
+                        <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
+                        {AR.admin.common.clear_filters}
+                      </Btn>
+                    ) : undefined
+                  }
+                />
               ) : (
                 <DataTable
                   sticky

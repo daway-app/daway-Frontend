@@ -5,6 +5,7 @@ import {
   Btn,
   Card,
   DataTable,
+  EmptyState,
   Modal,
   PageHeader,
   StatCard,
@@ -72,6 +73,14 @@ export function AdminCategoriesPage() {
   const stats = query.data?.stats;
   const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
 
+  /** See AdminMedicineRequestsPage — the recovery action only appears when a
+   *  filter is actually responsible for the empty list. */
+  const isFiltered = q.trim() !== '';
+  function clearFilters() {
+    setQ('');
+    setPage(1);
+  }
+
   const toggleMutation = useApiMutation(async (id: number) => api.admin.toggleCategory(id));
 
   async function handleToggle(category: AdminCategory) {
@@ -123,9 +132,19 @@ export function AdminCategoriesPage() {
               }
             >
               {rows.length === 0 ? (
-                <div className="admin-empty">
-                  <p>{C.empty}</p>
-                </div>
+                <EmptyState
+                  icon="fas fa-layer-group"
+                  title={C.empty}
+                  description={isFiltered ? AR.admin.common.empty_filtered_hint : C.empty_hint}
+                  action={
+                    isFiltered ? (
+                      <Btn size="sm" variant="outline" onClick={clearFilters}>
+                        <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
+                        {AR.admin.common.clear_filters}
+                      </Btn>
+                    ) : undefined
+                  }
+                />
               ) : (
                 <DataTable
                   sticky
@@ -310,9 +329,11 @@ function CategoryLinksModalInner({
           loadingRows={3}
         >
           {links.length === 0 ? (
-            <div className="admin-empty">
-              <p>{C.empty_links}</p>
-            </div>
+            <EmptyState
+              icon="fas fa-link-slash"
+              title={C.empty_links}
+              description={C.empty_links_hint}
+            />
           ) : (
             <ul className="admin-detail-list">
               {links.map((link) => (

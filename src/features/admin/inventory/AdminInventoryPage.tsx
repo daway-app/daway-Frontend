@@ -5,6 +5,7 @@ import {
   Btn,
   Card,
   DataTable,
+  EmptyState,
   PageHeader,
   StatCard,
 } from '@/components/ui';
@@ -62,6 +63,14 @@ export function AdminInventoryPage() {
   const pagination = query.data?.pagination;
   const summary = query.data?.stock_summary;
   const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
+
+  /** See AdminMedicineRequestsPage — the recovery action only appears when a
+   *  filter is actually responsible for the empty list. */
+  const isFiltered = q.trim() !== '';
+  function clearFilters() {
+    setQ('');
+    setPage(1);
+  }
 
   /** Bucket a row by its summed quantity — see the note above. */
   function statusOf(row: AdminInventoryRow): {
@@ -127,9 +136,19 @@ export function AdminInventoryPage() {
               }
             >
               {rows.length === 0 ? (
-                <div className="admin-empty">
-                  <p>{I.empty}</p>
-                </div>
+                <EmptyState
+                  icon="fas fa-warehouse"
+                  title={I.empty}
+                  description={isFiltered ? AR.admin.common.empty_filtered_hint : I.empty_hint}
+                  action={
+                    isFiltered ? (
+                      <Btn size="sm" variant="outline" onClick={clearFilters}>
+                        <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
+                        {AR.admin.common.clear_filters}
+                      </Btn>
+                    ) : undefined
+                  }
+                />
               ) : (
                 <DataTable
                   sticky

@@ -115,13 +115,24 @@ export function AdminDashboardPage() {
               >
                 {dataset && (
                   <>
-                    <Chart
-                      kind="bar"
-                      labels={stats.chartData.labels}
-                      data={dataset.values}
-                      colors={[dataset.color]}
-                      legend={false}
-                    />
+                    {/*
+                     * The wrapper is NOT optional. `Chart` returns a bare
+                     * <canvas> and every config sets `maintainAspectRatio:false`,
+                     * so Chart.js sizes the canvas to its PARENT. With no sized
+                     * parent the canvas has no height to resolve against and
+                     * grows without bound — the dashboard bar chart filled the
+                     * whole viewport. `.chart-box` (height:260px) is the same
+                     * container the pharmacy dashboard uses for the same chart.
+                     */}
+                    <div className="chart-box">
+                      <Chart
+                        kind="bar"
+                        labels={stats.chartData.labels}
+                        data={dataset.values}
+                        colors={[dataset.color]}
+                        legend={false}
+                      />
+                    </div>
                     <div className="ph-chart-summary">
                       <span>
                         {AR.admin.common.results.replace('{count}', String(dataset.total))}

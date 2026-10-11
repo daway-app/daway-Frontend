@@ -1259,6 +1259,7 @@ export const AR = {
       filter_low: 'منخفض',
       filter_out: 'نفد',
       empty: 'لا توجد أدوية مطابقة',
+      empty_hint: 'لم يُسجَّل أي دواء بعد، أو أن البحث لا يطابق أي اسم.',
       pharmacy_count: '{count} صيدلية',
       unit_items: 'دواء',
     },
@@ -1287,6 +1288,7 @@ export const AR = {
       approved_msg: 'تم اعتماد الطلب',
       rejected_msg: 'تم رفض الطلب',
       empty: 'لا توجد طلبات في هذه الحالة',
+      empty_hint: 'عندما تقدّم صيدلية دواءً جديدًا للمراجعة سيظهر هنا.',
       search_hint: 'ابحث باسم الدواء (حرفان على الأقل)',
     },
 
@@ -1312,6 +1314,7 @@ export const AR = {
       updated: 'تم تحديث المستخدم',
       deleted: 'تم حذف المستخدم',
       empty: 'لا يوجد مستخدمون مطابقون',
+      empty_hint: 'لم يُطابق البحث أي حساب — جرّب الاسم أو البريد كاملًا.',
     },
 
     /** المرضى */
@@ -1323,6 +1326,7 @@ export const AR = {
       col_date: 'تاريخ التسجيل',
       total: 'إجمالي المرضى',
       empty: 'لا يوجد مرضى مطابقون',
+      empty_hint: 'لم يُطابق البحث أي مريض مسجَّل.',
     },
 
     /** المخزون */
@@ -1340,6 +1344,7 @@ export const AR = {
       status_low_stock: 'منخفض',
       status_out_of_stock: 'نفد',
       empty: 'لا توجد أصناف',
+      empty_hint: 'المخزون يُبنى تلقائيًا من أدوية الصيدليات المعتمدة.',
       unit: 'وحدة',
     },
 
@@ -1361,6 +1366,7 @@ export const AR = {
       action_toggle: 'تبديل الحالة',
       action_links: 'إدارة الأدوية',
       empty: 'لا توجد أقسام مطابقة',
+      empty_hint: 'لم يُطابق البحث أي قسم — جرّب جزءًا من الاسم.',
       links_title: 'أدوية القسم',
       link_review: 'بانتظار المراجعة',
       link_approved: 'معتمد',
@@ -1371,6 +1377,7 @@ export const AR = {
       link_type_moh: 'كتالوج الوزارة',
       link_type_local: 'دواء محلي',
       empty_links: 'لا توجد أدوية مرتبطة',
+      empty_links_hint: 'لم تُربط أي صيدلية بأدوية ضمن هذا القسم بعد.',
     },
 
     /** سجل النشاط */
@@ -1387,6 +1394,7 @@ export const AR = {
       filter_auth: 'دخول/خروج',
       date_label: 'التاريخ',
       empty: 'لا توجد أنشطة مطابقة',
+      empty_hint: 'لم تُسجَّل أي حركة ضمن هذه الفترة أو هذا النوع.',
       event_created: 'إنشاء',
       event_updated: 'تحديث',
       event_deleted: 'حذف',
@@ -1438,6 +1446,9 @@ export const AR = {
       error_title: 'تعذّر تحميل البيانات',
       error_hint: 'تحقّق من الاتصال وحاول مرة أخرى.',
       empty_title: 'لا توجد بيانات',
+      empty_filtered: 'لا توجد نتائج مطابقة',
+      empty_filtered_hint: 'جرّب تغيير كلمة البحث أو إلغاء التصفية الحالية.',
+      clear_filters: 'مسح عوامل التصفية',
       cancel: 'إلغاء',
       confirm: 'تأكيد',
       close: 'إغلاق',

@@ -1,6 +1,7 @@
 import { cloneElement, useEffect, useId, useRef } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { normaliseColumns } from './tableColumns';
 
 /**
  * Shared pharmacy UI primitives — thin wrappers over the Blade `ph-*` classes.
@@ -336,12 +337,33 @@ export function DataTable({
 }) {
   const cls = ['ph-table', sticky ? 'is-sticky' : '', className].filter(Boolean).join(' ');
 
+  /*
+   * `columns` is typed `Array<ReactNode | ColumnDef>`, but ReactNode is far
+   * wider than this component actually supports — it can hold a bare string,
+   * a number, null, an array. Two of those silently produce a broken header:
+   *
+   *   · `columns={[]}`      → `<thead><tr></tr></thead>`: an empty header row
+   *                           that still renders its border and height, so the
+   *                           table looks like it failed to load a header.
+   *   · `columns="الدواء"`  → React iterates a STRING by character, emitting
+   *                           one <th> per letter (6 columns for a 6-letter
+   *                           word). The table then has a header that has
+   *                           nothing to do with its body.
+   *
+   * Neither is catchable by the type checker, so the rule is a pure function
+   * (unit-tested in `tableColumns.test.ts`) rather than an inline filter.
+   * The body always renders regardless, so a mis-typed `columns` can no longer
+   * hide data.
+   */
+  const headerCells = normaliseColumns(columns);
+
   const table = (
     <table className={cls}>
       {caption && <caption className="ac-hidden">{caption}</caption>}
-      <thead>
-        <tr>
-          {columns.map((c, i) => {
+      {headerCells.length > 0 && (
+        <thead>
+          <tr>
+            {headerCells.map((c, i) => {
             const isDef =
               typeof c === 'object' && c !== null && !('$$typeof' in (c as object));
             const def = isDef ? (c as ColumnDef) : null;
@@ -404,9 +426,10 @@ export function DataTable({
                 </button>
               </th>
             );
-          })}
-        </tr>
-      </thead>
+            })}
+          </tr>
+        </thead>
+      )}
       <tbody>{children}</tbody>
     </table>
   );

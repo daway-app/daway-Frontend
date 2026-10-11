@@ -5,6 +5,7 @@ import {
   Btn,
   Card,
   DataTable,
+  EmptyState,
   PageHeader,
   StatCard,
 } from '@/components/ui';
@@ -59,6 +60,15 @@ export function AdminMedicinesPage() {
   const pagination = query.data?.pagination;
   const stats = query.data?.stats;
   const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
+
+  /** See AdminMedicineRequestsPage — the recovery action only appears when a
+   *  filter is actually responsible for the empty list. */
+  const isFiltered = q.trim() !== '' || status !== 'all';
+  function clearFilters() {
+    setQ('');
+    setStatus('all');
+    setPage(1);
+  }
 
   /** Status derived per row from the quantity — never from a stored flag. */
   function statusOf(row: AdminMedicine): { label: string; variant: 'ok' | 'low' | 'out' } {
@@ -143,9 +153,19 @@ export function AdminMedicinesPage() {
               }
             >
               {rows.length === 0 ? (
-                <div className="admin-empty">
-                  <p>{M.empty}</p>
-                </div>
+                <EmptyState
+                  icon="fas fa-pills"
+                  title={M.empty}
+                  description={isFiltered ? AR.admin.common.empty_filtered_hint : M.empty_hint}
+                  action={
+                    isFiltered ? (
+                      <Btn size="sm" variant="outline" onClick={clearFilters}>
+                        <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
+                        {AR.admin.common.clear_filters}
+                      </Btn>
+                    ) : undefined
+                  }
+                />
               ) : (
                 <DataTable
                   sticky

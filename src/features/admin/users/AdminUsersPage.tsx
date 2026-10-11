@@ -5,6 +5,7 @@ import {
   Btn,
   Card,
   DataTable,
+  EmptyState,
   Modal,
   PageHeader,
   StatCard,
@@ -71,6 +72,15 @@ export function AdminUsersPage() {
   const pagination = query.data?.pagination;
   const counts = query.data?.role_counts;
   const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
+
+  /** See AdminMedicineRequestsPage — the recovery action only appears when a
+   *  filter is actually responsible for the empty list. */
+  const isFiltered = q.trim() !== '' || role !== 'all';
+  function clearFilters() {
+    setQ('');
+    setRole('all');
+    setPage(1);
+  }
 
   const toggleMutation = useApiMutation(async (id: number) => api.admin.toggleUser(id));
   const deleteMutation = useApiMutation(async (id: number) => api.admin.deleteUser(id));
@@ -179,9 +189,19 @@ export function AdminUsersPage() {
               }
             >
               {rows.length === 0 ? (
-                <div className="admin-empty">
-                  <p>{U.empty}</p>
-                </div>
+                <EmptyState
+                  icon="fas fa-users"
+                  title={U.empty}
+                  description={isFiltered ? AR.admin.common.empty_filtered_hint : U.empty_hint}
+                  action={
+                    isFiltered ? (
+                      <Btn size="sm" variant="outline" onClick={clearFilters}>
+                        <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
+                        {AR.admin.common.clear_filters}
+                      </Btn>
+                    ) : undefined
+                  }
+                />
               ) : (
                 <DataTable
                   sticky

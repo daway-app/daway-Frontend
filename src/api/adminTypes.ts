@@ -148,6 +148,27 @@ export interface AdminMedicinesResponse {
   };
 }
 
+/** One medicine from `GET /api/admin/medicines/{id}` — the edit screen's payload. */
+export interface AdminMedicineDetail {
+  id: number;
+  trade_name: string;
+  active_ingredient: string | null;
+  description: string | null;
+  /** Absolute URL, or null when the catalogue entry has no photo. */
+  image_url: string | null;
+  stock: number;
+  pharmacy_count: number;
+  /** Convenience for the multi-select's initial value. */
+  alternative_ids: number[];
+  alternatives: Array<{ id: number; trade_name: string }>;
+}
+
+/** A trimmed catalogue entry — the alternatives picker's option list. */
+export interface AdminMedicineOption {
+  id: number;
+  trade_name: string;
+}
+
 /** A user row from `GET /api/admin/users`. */
 export interface AdminUserRow {
   id: number;
@@ -166,6 +187,30 @@ export interface AdminUsersResponse {
   pagination: Pagination;
   filters: { q: string; role: string };
   role_counts: { admin: number; pharmacy: number; patient: number };
+}
+
+/**
+ * `GET /api/admin/users/{id}` — the edit screen's payload.
+ *
+ * DEEPER than `AdminUserRow` on purpose: `pharmacy` is what lets the form know
+ * the account is pharmacy-linked and therefore cannot have its role changed.
+ * The endpoint returns the raw Eloquent model with `password`/`remember_token`
+ * hidden — `avatar` is the RAW stored path, so the client applies its own size
+ * transform exactly as it does on the list screen.
+ */
+export interface AdminUserDetail {
+  user: {
+    id: number;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    role: string;
+    is_active: boolean;
+    avatar: string | null;
+    created_at: string | null;
+    /** Present (non-null) when this user account IS a pharmacy's login. */
+    pharmacy?: { id: number } | null;
+  };
 }
 
 /** A medicine request row. */

@@ -6,11 +6,13 @@ import type {
   AdminLogsResponse,
   AdminMedicineRequestsResponse,
   AdminMedicinesResponse,
+  AdminMedicineDetail,
   AdminPharmaciesResponse,
   AdminPharmacy,
   AdminProfile,
   AdminSettingsResponse,
   AdminUsersResponse,
+  AdminUserDetail,
   DeliveredCredentials,
 } from './adminTypes';
 
@@ -29,6 +31,7 @@ export const ADMIN_ENDPOINTS = {
   pharmacyToggle: (id: number) => `/api/admin/pharmacies/${id}/toggle-status`,
   pharmacyReset: (id: number) => `/api/admin/pharmacies/${id}/reset-credentials`,
   medicines: '/api/admin/medicines',
+  medicine: (id: number) => `/api/admin/medicines/${id}`,
   medicineRequests: '/api/admin/medicine-requests',
   medicineRequest: (id: number) => `/api/admin/medicine-requests/${id}`,
   medicineRequestApprove: (id: number) => `/api/admin/medicine-requests/${id}/approve`,
@@ -160,6 +163,40 @@ export function createAdminApi(client: ApiClient) {
       return res.data;
     },
 
+    async medicine(id: number, signal?: AbortSignal) {
+      const res = await client.get<{ success: boolean; data: AdminMedicineDetail }>(
+        ADMIN_ENDPOINTS.medicine(id),
+        { signal },
+      );
+      return res.data;
+    },
+
+    /**
+     * Create a catalogue entry.
+     *
+     * The backend accepts EITHER an `image` URL (what this client sends, since
+     * there is no Cloudinary SDK here) or an uploaded `image_file`. Only the
+     * URL form is used by the React screens.
+     */
+    async createMedicine(body: Record<string, unknown>) {
+      const res = await client.post<{ success: boolean; message: string; data: { id: number } }>(
+        ADMIN_ENDPOINTS.medicines,
+        body,
+      );
+      return res;
+    },
+
+    async updateMedicine(id: number, body: Record<string, unknown>) {
+      return client.put<{ success: boolean; message: string }>(
+        ADMIN_ENDPOINTS.medicine(id),
+        body,
+      );
+    },
+
+    async deleteMedicine(id: number) {
+      return client.delete<{ success: boolean; message: string }>(ADMIN_ENDPOINTS.medicine(id));
+    },
+
     // ── Medicine requests ───────────────────────────────────────────────────
     async medicineRequests(params: AdminListParams = {}, signal?: AbortSignal) {
       const res = await client.get<{ success: boolean; data: AdminMedicineRequestsResponse }>(
@@ -190,6 +227,22 @@ export function createAdminApi(client: ApiClient) {
         { query: clean(params), signal },
       );
       return res.data;
+    },
+
+    async user(id: number, signal?: AbortSignal) {
+      const res = await client.get<{ success: boolean; data: AdminUserDetail }>(
+        ADMIN_ENDPOINTS.user(id),
+        { signal },
+      );
+      return res.data;
+    },
+
+    async createUser(body: Record<string, unknown>) {
+      const res = await client.post<{ success: boolean; message: string; data: { id: number } }>(
+        ADMIN_ENDPOINTS.users,
+        body,
+      );
+      return res;
     },
 
     async updateUser(id: number, body: Record<string, unknown>) {

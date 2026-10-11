@@ -63,11 +63,17 @@ function buildTree(adminFirst: boolean): RouteObject[] {
     ADMIN_ROUTES.dashboard,
     ADMIN_ROUTES.pharmacies,
     ADMIN_ROUTES.medicines,
+    ADMIN_ROUTES.medicineCreate,
+    // The edit route is a parametrised literal; the replica must use the same
+    // shape so `matchRoutes` resolves a concrete id through it.
+    '/admin/medicines/:id/edit',
     ADMIN_ROUTES.medicineRequests,
     ADMIN_ROUTES.categories,
     ADMIN_ROUTES.users,
     ADMIN_ROUTES.logs,
     ADMIN_ROUTES.settings,
+    ADMIN_ROUTES.profile,
+    ADMIN_ROUTES.profilePassword,
   ].map((path) => ({ path, element: `ADMIN_PAGE:${path}` }));
   const adminUnknown = { path: 'admin/*', element: 'ADMIN_NOT_FOUND' };
 
@@ -97,7 +103,17 @@ function resolve(tree: RouteObject[], pathname: string): string | null {
 }
 
 describe('admin route resolution', () => {
-  const everyAdminPath = Object.values(ADMIN_ROUTES);
+  /**
+   * Every admin path that is a plain STRING.
+   *
+   * `ADMIN_ROUTES` also carries builder FUNCTIONS (`medicineEdit(id)`), which
+   * are not paths until they are called — feeding one to `matchRoutes` would
+   * throw rather than test anything. The builders are covered by the dedicated
+   * cases below, which call them with a concrete id.
+   */
+  const everyAdminPath = (Object.values(ADMIN_ROUTES) as unknown[]).filter(
+    (p): p is string => typeof p === 'string',
+  );
 
   it.each(everyAdminPath.map((p) => [p]))(
     '%s resolves into the admin tree (admin declared first)',
@@ -122,6 +138,22 @@ describe('admin route resolution', () => {
       expect(winner).not.toBe(PHARMACY_CATCH_ALL);
     },
   );
+
+  it('the medicine edit builder resolves a concrete id into the admin tree', () => {
+    // The literal `create` segment and the parametrised `:id/edit` segment are
+    // siblings under `/admin/medicines`. Ranking must keep them apart: `/create`
+    // is not an id, and an id must not fall through to the list page.
+    const editPath = ADMIN_ROUTES.medicineEdit(42);
+    expect(editPath).toBe('/admin/medicines/42/edit');
+
+    const winner = resolve(buildTree(true), editPath);
+    expect(winner).toBe('ADMIN_PAGE:/admin/medicines/:id/edit');
+  });
+
+  it('the medicine create route is not swallowed by the :id/edit sibling', () => {
+    const winner = resolve(buildTree(true), ADMIN_ROUTES.medicineCreate);
+    expect(winner).toBe('ADMIN_PAGE:/admin/medicines/create');
+  });
 
   it('an unknown /admin/* path lands on the admin 404, not the pharmacy catch-all', () => {
     const winner = resolve(buildTree(true), '/admin/definitely-not-a-page');

@@ -32,9 +32,11 @@ import { AdminLayout } from '@/layouts/AdminLayout';
 import { AdminDashboardPage } from '@/features/admin/dashboard/AdminDashboardPage';
 import { AdminPharmaciesPage } from '@/features/admin/pharmacies/AdminPharmaciesPage';
 import { AdminMedicinesPage } from '@/features/admin/medicines/AdminMedicinesPage';
+import { AdminMedicineFormPage } from '@/features/admin/medicines/AdminMedicineFormPage';
 import { AdminMedicineRequestsPage } from '@/features/admin/requests/AdminMedicineRequestsPage';
 import { AdminCategoriesPage } from '@/features/admin/categories/AdminCategoriesPage';
 import { AdminUsersPage } from '@/features/admin/users/AdminUsersPage';
+import { AdminUserFormPage } from '@/features/admin/users/AdminUserFormPage';
 import { AdminLogsPage } from '@/features/admin/logs/AdminLogsPage';
 import { AdminSettingsPage } from '@/features/admin/settings/AdminSettingsPage';
 import { AdminProfilePage } from '@/features/admin/profile/AdminProfilePage';
@@ -87,9 +89,28 @@ export const router = createBrowserRouter([
               { path: ADMIN_ROUTES.dashboard, element: <AdminDashboardPage /> },
               { path: ADMIN_ROUTES.pharmacies, element: <AdminPharmaciesPage /> },
               { path: ADMIN_ROUTES.medicines, element: <AdminMedicinesPage /> },
+              {
+                // Literal `create` must resolve BEFORE `:id/edit`; both are
+                // literals here so the ranking is unambiguous either way, but
+                // keeping `create` first documents the intent.
+                path: ADMIN_ROUTES.medicineCreate,
+                element: <AdminMedicineFormPage mode="create" />,
+              },
+              {
+                path: '/admin/medicines/:id/edit',
+                element: <AdminMedicineFormPage mode="edit" />,
+              },
               { path: ADMIN_ROUTES.medicineRequests, element: <AdminMedicineRequestsPage /> },
               { path: ADMIN_ROUTES.categories, element: <AdminCategoriesPage /> },
               { path: ADMIN_ROUTES.users, element: <AdminUsersPage /> },
+              {
+                path: ADMIN_ROUTES.userCreate,
+                element: <AdminUserFormPage mode="create" />,
+              },
+              {
+                path: '/admin/users/:id/edit',
+                element: <AdminUserFormPage mode="edit" />,
+              },
               { path: ADMIN_ROUTES.logs, element: <AdminLogsPage /> },
               { path: ADMIN_ROUTES.settings, element: <AdminSettingsPage /> },
               { path: ADMIN_ROUTES.profile, element: <AdminProfilePage /> },

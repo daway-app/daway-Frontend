@@ -2,6 +2,7 @@ import { cloneElement, useEffect, useId, useRef } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { normaliseColumns } from './tableColumns';
+import { btnClassList } from './btnClass';
 
 /**
  * Shared pharmacy UI primitives — thin wrappers over the Blade `ph-*` classes.
@@ -173,6 +174,7 @@ export function Btn({
   children,
   to,
   href,
+  className,
   ...rest
 }: BtnCommon &
   Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
@@ -181,7 +183,21 @@ export function Btn({
     /** External / non-router link — renders an `<a>`. */
     href?: string;
   }) {
-  const cls = ['ph-btn', variant, size].filter(Boolean).join(' ');
+  /*
+   * `className` is appended, not replaced.
+   *
+   * 🔴 It used to be swallowed: the prop was accepted by the type (it arrives
+   * via ButtonHTMLAttributes) but never read, so `<Btn className="btn-x">`
+   * silently rendered WITHOUT `btn-x`. That is the worst kind of bug — the
+   * call site looks correct, type-checks, and does nothing. Callers that need
+   * an extra hook class (a test selector, a page-scoped style) get it now.
+   *
+   * ⚠️ `rest` is intentionally spread ONLY on the `<button>` branch: its type
+   * is HTMLButtonAttributes, so forwarding it to a `<Link>`/`<a>` is a type
+   * error (`onMouseDown` is `MouseEventHandler<HTMLButtonElement>`). Anchor
+   * elements therefore take the class hook and nothing else.
+   */
+  const cls = btnClassList(variant, size, className);
   const inner = (
     <>
       {icon && <i className={icon} />}

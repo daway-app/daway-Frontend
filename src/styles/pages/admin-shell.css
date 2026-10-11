@@ -887,3 +887,666 @@ html[data-theme='dark'] .admin-page .adp-card {
     color: var(--ink-soft);
     line-height: 1.7;
 }
+
+/* ----------------------------------------------------------
+   §7 — medicines charts (donut + progress bars)
+   ----------------------------------------------------------
+   Ported from `daway-backend/resources/css/pages/medicines.css` §5
+   (lines 300-593) — the two CSS-only charts the Blade medicines page draws
+   beside the stat cards. There is NO Chart.js here and no canvas: the donut is
+   a `conic-gradient` whose first segment angle arrives as the custom property
+   `--seg1`, and the bars are plain divs whose width arrives as `--fill-w`.
+
+   WHY IT WAS MISSING
+   ------------------
+   The React medicines page went straight from the stat cards to the table, so
+   the visual comparison Blade gives you at a glance (how much of the catalogue
+   is actually stocked, and the available/low/out split) was simply absent.
+
+   The data needed no backend work: `GET /api/admin/medicines` already returns
+   `in_pharmacy_pct`, `not_in_pharmacy_pct`, `available_pct`, `low_pct` and
+   `out_pct` in `stats`, and all five were already typed in `adminTypes.ts`.
+   The Blade percentages are integers (the controller rounds them), which is
+   also what the legend and the bar labels print.
+
+   SCOPING: every rule is `.admin-page …`, as everywhere else in this file.
+   ---------------------------------------------------------- */
+.admin-page .charts-section-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+    gap: 24px;
+    margin-block-end: 28px;
+}
+
+@media (max-width: 520px) {
+    /* `minmax(440px, 1fr)` cannot shrink below 440px, so on a phone the grid
+       would overflow sideways. One column, no minimum. */
+    .admin-page .charts-section-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.admin-page .chart-card {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.78));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+body.dark-mode .admin-page .chart-card,
+html[data-theme='dark'] .admin-page .chart-card {
+    background: linear-gradient(145deg, rgba(17, 36, 51, 0.94), rgba(42, 71, 97, 0.78));
+    border-color: var(--line);
+}
+
+.admin-page .chart-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 22px 45px rgba(15, 23, 42, 0.1);
+}
+
+.admin-page .chart-card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-block-end: 24px;
+}
+
+.admin-page .chart-card-header h3 {
+    font-size: 1.15rem;
+    color: var(--ink);
+    font-weight: 800;
+    margin: 0 0 2px 0;
+}
+
+.admin-page .chart-subtext {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin: 0;
+}
+
+.admin-page .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.3rem;
+    box-shadow: 0 7px 18px rgba(15, 23, 42, 0.08);
+    transition: transform 0.4s var(--ease);
+}
+
+.admin-page .chart-card:hover .header-icon {
+    transform: rotate(-7deg) scale(1.08);
+}
+
+.admin-page .header-icon.icon-teal { background: var(--teal-mist); color: var(--teal-text); }
+.admin-page .header-icon.icon-emerald { background: var(--success-bg); color: var(--success-text); }
+
+/* --- donut ---
+   `--seg1` is the boundary between the two slices, in degrees. The React side
+   computes it as `in_pharmacy_pct * 3.6` and passes it as an inline style. */
+.admin-page .chart-donut-layout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.admin-page .donut-container-lg {
+    position: relative;
+    width: 190px;
+    height: 190px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-page .donut-chart-animated {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(
+        #1c72a6 0deg var(--seg1),
+        #e11d48 var(--seg1) 360deg
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+    animation: adminDonutRotateIn 1.2s var(--ease) forwards;
+    transition: transform 0.3s ease;
+}
+
+.admin-page .chart-card:hover .donut-chart-animated {
+    transform: scale(1.04);
+}
+
+.admin-page .donut-inner-hole {
+    width: 130px;
+    height: 130px;
+    background: var(--paper);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+.admin-page .donut-number {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+}
+
+.admin-page .donut-caption {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 600;
+    margin-block-start: 4px;
+}
+
+@keyframes adminDonutRotateIn {
+    0% {
+        opacity: 0;
+        transform: rotate(-140deg) scale(0.6);
+    }
+    100% {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .admin-page .donut-chart-animated,
+    .admin-page .bar-fill {
+        animation: none;
+    }
+    .admin-page .bar-fill {
+        width: var(--fill-w);
+    }
+}
+
+/* --- legend --- */
+.admin-page .chart-legend-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.admin-page .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.admin-page .legend-row:hover {
+    background: var(--canvas);
+    transform: translateX(-4px);
+}
+
+body.dark-mode .admin-page .legend-row:hover,
+html[data-theme='dark'] .admin-page .legend-row:hover {
+    background: var(--line-soft);
+}
+
+.admin-page .dot-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--dot-color);
+    flex-shrink: 0;
+    box-shadow: 0 0 6px var(--dot-color);
+}
+
+.admin-page .legend-text {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.admin-page .badge-percent {
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+.admin-page .badge-teal { background: var(--teal-mist); color: var(--teal-text); }
+.admin-page .badge-sky { background: var(--info-bg); color: var(--info-text); }
+.admin-page .badge-amber { background: var(--warning-bg); color: var(--warning-text); }
+.admin-page .badge-rose { background: #ffe4e6; color: #be123c; }
+
+/* --- horizontal bars ---
+   `--fill-w` carries the width both as the resting width and as the end state
+   of the grow animation, so the bar settles at the right length even if the
+   animation is skipped. */
+.admin-page .bars-chart-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-block-start: 10px;
+}
+
+.admin-page .bar-progress-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.admin-page .bar-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-page .bar-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.admin-page .bar-percentage {
+    font-size: 0.9rem;
+    font-weight: 800;
+}
+
+.admin-page .text-emerald { color: var(--success-text); }
+.admin-page .text-amber { color: var(--warning-text); }
+.admin-page .text-rose { color: var(--danger-text); }
+
+.admin-page .bar-track {
+    width: 100%;
+    height: 14px;
+    background: var(--line-soft);
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+}
+
+.admin-page .bar-fill {
+    height: 100%;
+    width: var(--fill-w);
+    border-radius: 20px;
+    animation: adminBarGrow 1.4s var(--ease) forwards;
+    transition: width 0.6s ease;
+}
+
+.admin-page .fill-emerald {
+    background: linear-gradient(90deg, #10b981, #34d399);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
+.admin-page .fill-amber {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+.admin-page .fill-rose {
+    background: linear-gradient(90deg, #f43f5e, #fb7185);
+    box-shadow: 0 0 10px rgba(244, 63, 94, 0.4);
+}
+
+@keyframes adminBarGrow {
+    from { width: 0; }
+    to { width: var(--fill-w); }
+}
+
+/* ----------------------------------------------------------
+   §8 — medicine form: image preview + alternatives picker
+   ----------------------------------------------------------
+   The card / grid / control vocabulary of the form comes from
+   `medicines-edit.css` (`premium-card`, `card-head`, `card-icon`, `form-row`,
+   `fg`/`fl`/`fc`, `form-actions`, `btn-cancel`, `btn-submit`), which is already
+   bundled globally by `global.css` — nothing is re-declared here. Only the two
+   widgets that have no Blade counterpart are new, because Blade renders the
+   image as a `<input type=file>` and the alternatives as a TomSelect widget.
+
+   Both are scoped `.admin-page …` like everything else in this file; the form
+   page carries `admin-page` on its root, so the shared form classes above stay
+   unaffected for the pharmacy screens that also use them.
+   ---------------------------------------------------------- */
+.admin-page .med-image-preview {
+    margin-block-start: 4px;
+}
+
+.admin-page .med-image-preview img {
+    display: block;
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--line-strong);
+    background: var(--canvas);
+}
+
+.admin-page .med-alt-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-block: 4px 16px;
+    /* The catalogue search can return 20 rows; cap the height so the card does
+       not push the submit button off screen while browsing. */
+    max-height: 216px;
+    overflow-y: auto;
+    padding: 2px;
+}
+
+.admin-page .med-alt-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 20px;
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.admin-page .med-alt-option:hover {
+    border-color: var(--focus-ring);
+    background: var(--canvas);
+}
+
+.admin-page .med-alt-option.is-selected {
+    background: var(--teal-mist);
+    border-color: var(--teal-primary);
+    color: var(--teal-text);
+}
+
+.admin-page .med-alt-option i {
+    flex-shrink: 0;
+}
+
+.admin-page .med-alt-empty {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+.admin-page .med-alt-selected {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-block-start: 12px;
+    border-block-start: 1px dashed var(--line-strong);
+}
+
+.admin-page .med-alt-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.admin-page .med-alt-chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.admin-page .med-alt-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px 6px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: var(--canvas);
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.admin-page .med-alt-chip:hover {
+    border-color: var(--danger-fill);
+    color: var(--danger-text);
+    background: var(--danger-bg);
+}
+
+.admin-page .med-form-back {
+    margin: 4px 0 0;
+}
+
+.admin-page .med-form-back .ph-btn {
+    padding-inline: 0;
+}
+
+/* ----------------------------------------------------------
+   §9 — users: two-column layout + role distribution
+   ----------------------------------------------------------
+   Ported from `daway-backend/resources/css/pages/users.css` §3 and §6.
+   The users page is the only admin screen with a SIDE panel, so the
+   `dashboard-grid` lives here rather than in the shared shell block above.
+
+   The panel is not decoration: `role_counts` is computed platform-wide by the
+   API while the table is paginated and FILTERED, so the panel is the only place
+   the true composition of the user base is visible.
+   ---------------------------------------------------------- */
+.admin-page .dashboard-grid {
+    display: grid;
+    /* The table column may be squeezed freely (`minmax(0, 1fr)`) while the side
+       panel keeps a floor — a bar chart at 200px is unreadable, and a wide table
+       merely scrolls. */
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 34%);
+    gap: 20px;
+    align-items: start;
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .admin-page .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.admin-page .dashboard-grid > .left-column {
+    /* The side panel is declared SECOND in the DOM (matching Blade) but must
+       read FIRST in RTL — i.e. on the right. Explicit ordering beats relying on
+       the RTL row direction of the grid. */
+    grid-column: 2;
+}
+
+.admin-page .dashboard-grid > .right-column {
+    grid-column: 1;
+}
+
+@media (max-width: 1024px) {
+    .admin-page .dashboard-grid > .left-column,
+    .admin-page .dashboard-grid > .right-column {
+        grid-column: auto;
+    }
+    /* On one column the panel sits BELOW the table — it is a summary, and the
+       list is what the user came for. */
+    .admin-page .dashboard-grid > .left-column {
+        order: 2;
+    }
+}
+
+.admin-page .card-box {
+    background: var(--paper);
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    margin-block-end: 24px;
+    box-sizing: border-box;
+}
+
+body.dark-mode .admin-page .card-box,
+html[data-theme='dark'] .admin-page .card-box {
+    background: var(--paper);
+    border-color: var(--line);
+}
+
+.admin-page .card-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-page .role-dist-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-block-start: 8px;
+}
+
+.admin-page .role-dist-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+
+.admin-page .role-dist-count {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--ink);
+    min-width: 40px;
+    text-align: end;
+    flex-shrink: 0;
+}
+
+.admin-page .role-dist-bar-bg {
+    flex: 1;
+    height: 10px;
+    border-radius: 20px;
+    background-color: var(--line);
+    position: relative;
+    /* `visible` is load-bearing: the fill's ::after dot is positioned OUTSIDE
+       the bar's end, and `overflow: hidden` would clip it away. */
+    overflow: visible;
+}
+
+.admin-page .role-dist-bar-fill {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    bottom: 0;
+    border-start-start-radius: 20px;
+    border-start-end-radius: 20px;
+    transition: width 0.8s ease;
+}
+
+.admin-page .role-dist-bar-fill::after {
+    content: '';
+    position: absolute;
+    inset-inline-end: -5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    background-color: inherit;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    z-index: 2;
+}
+
+.admin-page .role-dist-label {
+    min-width: 72px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    text-align: start;
+    flex-shrink: 0;
+}
+
+/* ----------------------------------------------------------
+   §9b — filter pills (users page) + a no-wrap cell
+   ----------------------------------------------------------
+   `filter-pills` / `pill-btn` are ported from `users.css` 274-303. They are the
+   users page's role filter; the other list screens use `ph-pill`, which is a
+   different, larger control, so this is not a duplicate of it.
+   ---------------------------------------------------------- */
+.admin-page .filter-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.admin-page .pill-btn {
+    border: 1px solid var(--line-strong);
+    background: var(--paper);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.admin-page .pill-btn:hover {
+    background: var(--canvas);
+}
+
+.admin-page .pill-btn.active {
+    background: var(--teal-fill);
+    color: #ffffff;
+    border-color: var(--focus-ring);
+}
+
+/* A relative timestamp must not break across lines ("قبل 3 / أيام"). */
+.admin-page .ac-nowrap {
+    white-space: nowrap;
+}
+
+/* ----------------------------------------------------------
+   §9c — user form: the account avatar in the card header
+   ----------------------------------------------------------
+   `users/edit.blade.php` puts the account's photo in the header where
+   `users/create.blade.php` puts the `.header-icon` tile. The tile is already
+   styled in `users-create.css`; only the round photo is new.
+   ---------------------------------------------------------- */
+.admin-page .header-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid var(--line-strong);
+    background: var(--canvas);
+}
+
+/* `header-icon` in users-create.css is an emoji-sized box; the card header is
+   a flex row and needs the icon to keep its size against a long title. */
+.admin-page .card-header-modern .header-icon {
+    flex-shrink: 0;
+}

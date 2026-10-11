@@ -10,9 +10,19 @@ export const ADMIN_ROUTES = {
   dashboard: '/admin',
   pharmacies: '/admin/pharmacies',
   medicines: '/admin/medicines',
+  /**
+   * Create / edit are declared as SIBLING literals (`/admin/medicines/create`)
+   * rather than nested under a `/admin/medicines/*` wildcard, for the same
+   * reason as `profilePassword`: React Router ranks a literal segment above a
+   * wildcard, so `create` can never be swallowed as an `:id`.
+   */
+  medicineCreate: '/admin/medicines/create',
+  medicineEdit: (id: number | string) => `/admin/medicines/${id}/edit`,
   medicineRequests: '/admin/medicine-requests',
   categories: '/admin/categories',
   users: '/admin/users',
+  userCreate: '/admin/users/create',
+  userEdit: (id: number | string) => `/admin/users/${id}/edit`,
   logs: '/admin/logs',
   settings: '/admin/settings',
   profile: '/admin/profile',

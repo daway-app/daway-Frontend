@@ -1,6 +1,8 @@
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/auth/authHooks';
+import { useAdminAuth } from '@/auth/adminContext';
 import { ROUTES } from './paths';
+import { guestRedirect } from './guestGate';
 
 /**
  * Route guards, written as layout routes.
@@ -33,14 +35,25 @@ export function RequireAuth() {
 }
 
 /**
- * Gate for public-only routes (login). A signed-in user is redirected inward.
+ * Gate for the unified `/login` route.
+ *
+ * 🔴 IT MUST KNOW ABOUT **BOTH** SESSIONS, NOT JUST THE PHARMACY ONE.
+ * `/login` serves two roles — the pharmacy form and the admin form — so
+ * "already signed in" is true when EITHER token is present. An earlier version
+ * only checked the pharmacy token (`useAuth`), which produced a real, reported
+ * bug: an admin who already held a valid `daway.admin.token` was still shown
+ * the login screen, and because the layout never redirected, a fresh admin
+ * sign-in appeared to do nothing at all.
+ *
+ * The decision itself lives in `guestGate.ts` so it can be pinned by a test in
+ * this DOM-less suite; this component only supplies the two sessions.
  */
 export function RequireGuest() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated: pharmacySignedIn } = useAuth();
+  const { isAuthenticated: adminSignedIn } = useAdminAuth();
 
-  if (isAuthenticated) {
-    return <Navigate to={ROUTES.dashboard} replace />;
-  }
+  const to = guestRedirect({ pharmacySignedIn, adminSignedIn });
+  if (to) return <Navigate to={to} replace />;
 
   return <Outlet />;
 }

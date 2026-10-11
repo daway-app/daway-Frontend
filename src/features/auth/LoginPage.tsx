@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/authHooks';
 import { useAdminAuth } from '@/auth/adminContext';
@@ -55,13 +55,23 @@ import { ADMIN_ROUTES } from '@/routes/adminPaths';
 type Role = 'pharmacy' | 'admin';
 
 /**
- * How long the spinner may run before the user is offered a way out.
+ * How long the spinner may run before the user is offered an explanation.
  *
- * The API reads from a remote managed MySQL and a single request has been
- * measured at 5–12 s, so this is deliberately generous — it is a dead-request
- * escape hatch, not a request deadline. Blade used 15 s; the value is kept.
+ * 🔴 THIS IS A "STILL WORKING" NOTICE, NOT A DEADLINE — DO NOT LOWER IT.
+ * The API reads from a remote managed MySQL, and a single login request has
+ * been measured anywhere from 3 s to 36 s (the backend is a single-threaded
+ * dev server on top of a remote managed DB). At 15 s the notice fired DURING
+ * a request that then succeeded, which is actively harmful: the user reads
+ * "the server is slow", clicks retry, and the original — still in flight —
+ * resolves underneath them and navigates with the overlay already dismissed.
+ *
+ * The API client owns the real hard stop (`VITE_API_TIMEOUT_MS`, 60 s) and
+ * throws a proper `timeout` error, which this screen renders as a normal
+ * error. So this notice only needs to reassure, never to give up: 30 s is
+ * comfortably past the observed slow case while the client keeps the 60 s
+ * ceiling as the actual abort.
  */
-const LOGIN_TIMEOUT_MS = 15_000;
+const LOGIN_TIMEOUT_MS = 30_000;
 
 export function LoginPage() {
   const pharmacyAuth = useAuth();
@@ -75,10 +85,14 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Safety net, ported from Blade: if the response never arrives the spinner
-  // would otherwise spin forever and strand the user. After LOGIN_TIMEOUT_MS
-  // the form is restored and an explicit retry is offered.
-  const [timedOut, setTimedOut] = useState(false);
+  // Reassurance notice, ported from Blade and then corrected: if the response
+  // is slow the user is TOLD so, but the request is left running — see
+  // LOGIN_TIMEOUT_MS for why cancelling it here was a bug. The spinner keeps
+  // spinning behind the notice, and a late success still carries the user in.
+  const [isSlow, setIsSlow] = useState(false);
+  // Incremented on every explicit retry so a stale response from an abandoned
+  // attempt cannot navigate the user after they have moved on.
+  const attemptRef = useRef(0);
 
   const L = AR.admin.unified;
   const isAdmin = role === 'admin';
@@ -98,15 +112,20 @@ export function LoginPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
-    setTimedOut(false);
+    setIsSlow(false);
 
     if (!identity.trim() || !password) {
       setError(isAdmin ? L.missing_admin : L.missing_pharmacy);
       return;
     }
 
+    const attempt = ++attemptRef.current;
     setIsSubmitting(true);
-    const timer = window.setTimeout(() => setTimedOut(true), LOGIN_TIMEOUT_MS);
+    const timer = window.setTimeout(() => {
+      // Only ever an advisory. The request is NOT aborted — it may still
+      // succeed, and when it does we want the user signed in.
+      if (attempt === attemptRef.current) setIsSlow(true);
+    }, LOGIN_TIMEOUT_MS);
 
     try {
       if (isAdmin) {
@@ -114,8 +133,11 @@ export function LoginPage() {
       } else {
         await pharmacyAuth.login(identity.trim(), password);
       }
+      // A newer attempt superseded this one — do not navigate on its behalf.
+      if (attempt !== attemptRef.current) return;
       navigate(redirectTo, { replace: true });
     } catch (caught) {
+      if (attempt !== attemptRef.current) return;
       if (caught instanceof ApiError) {
         // The admin response distinguishes "disabled" / "not an admin" via 403
         // codes; the pharmacy response returns a ready-made Arabic message.
@@ -126,52 +148,34 @@ export function LoginPage() {
       }
     } finally {
       window.clearTimeout(timer);
-      setTimedOut(false);
-      setIsSubmitting(false);
+      if (attempt === attemptRef.current) {
+        setIsSlow(false);
+        setIsSubmitting(false);
+      }
     }
   }
 
   return (
     <div className="auth-container">
       <div
-        className={`loader-overlay${isSubmitting ? ' active' : ''}${timedOut ? ' show-timeout' : ''}`}
+        className={`loader-overlay${isSubmitting ? ' active' : ''}${isSlow ? ' show-slow' : ''}`}
         role="status"
         aria-live="polite"
-        aria-busy={isSubmitting && !timedOut}
+        aria-busy={isSubmitting}
         aria-hidden={!isSubmitting}
       >
-        {timedOut ? (
-          /* The request outlived the grace period. The form is behind this
-             overlay, so the retry has to live here. */
-          <div className="loader-timeout">
-            <span className="loader-timeout-icon" aria-hidden="true">
-              ⏳
-            </span>
-            <p className="loader-timeout-msg">
-              تأخّر الخادم في الرد. قد يكون الاتصال بطيئاً.
-            </p>
-            <button
-              type="button"
-              className="loader-timeout-btn"
-              onClick={() => {
-                setTimedOut(false);
-                setIsSubmitting(false);
-              }}
-            >
-              إعادة المحاولة
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="loader-spinner-box">
-              <div className="spinner" />
-              <span className="loader-icon" aria-hidden="true">
-                {isAdmin ? '🛡️' : '💊'}
-              </span>
-            </div>
-            <div className="loader-text">{L.submitting}</div>
-          </>
-        )}
+        <div className="loader-spinner-box">
+          <div className="spinner" />
+          <span className="loader-icon" aria-hidden="true">
+            {isAdmin ? '🛡️' : '💊'}
+          </span>
+        </div>
+        <div className="loader-text">{L.submitting}</div>
+        {isSlow ? (
+          /* Advisory only — the request is still running, so this says so
+             instead of offering a retry that would abandon a live attempt. */
+          <p className="loader-slow-note">{L.slow_note}</p>
+        ) : null}
       </div>
 
       {/* الجانب الأول: النموذج */}

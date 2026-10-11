@@ -26,6 +26,17 @@ import { ADMIN_ROUTES } from '@/routes/adminPaths';
  * proved they own the password — telling them "your account is disabled" then
  * leaks nothing and is genuinely more useful than "invalid credentials".
  */
+
+/**
+ * How long before the user is told the request is merely slow.
+ *
+ * Advisory, never a deadline — the API client owns the real 60 s abort. The
+ * backend reads a remote managed MySQL and has been measured at up to 36 s for
+ * a single login, so a shorter value would fire during a request that then
+ * succeeds. Kept in step with the unified `LoginPage`.
+ */
+const SLOW_NOTICE_MS = 30_000;
+
 export function AdminLoginPage() {
   const { login } = useAdminAuth();
   const navigate = useNavigate();
@@ -36,6 +47,9 @@ export function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Advisory only — the request keeps running; the spinner stays visible.
+  // See the same note in the unified LoginPage for why this is not a deadline.
+  const [isSlow, setIsSlow] = useState(false);
 
   const L = AR.admin.login;
 
@@ -52,6 +66,8 @@ export function AdminLoginPage() {
     }
 
     setIsSubmitting(true);
+    setIsSlow(false);
+    const timer = window.setTimeout(() => setIsSlow(true), SLOW_NOTICE_MS);
     try {
       await login(email.trim(), password);
       navigate(redirectTo, { replace: true });
@@ -67,6 +83,8 @@ export function AdminLoginPage() {
         setError(L.generic_error);
       }
     } finally {
+      window.clearTimeout(timer);
+      setIsSlow(false);
       setIsSubmitting(false);
     }
   }
@@ -74,7 +92,7 @@ export function AdminLoginPage() {
   return (
     <div className="auth-container">
       <div
-        className={`loader-overlay${isSubmitting ? ' active' : ''}`}
+        className={`loader-overlay${isSubmitting ? ' active' : ''}${isSlow ? ' show-slow' : ''}`}
         role="status"
         aria-live="polite"
         aria-busy={isSubmitting}
@@ -87,6 +105,7 @@ export function AdminLoginPage() {
           </span>
         </div>
         <div className="loader-text">{L.submitting}</div>
+        {isSlow ? <p className="loader-slow-note">{AR.admin.unified.slow_note}</p> : null}
       </div>
 
       <div className="auth-form-side">

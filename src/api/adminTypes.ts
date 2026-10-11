@@ -124,6 +124,8 @@ export interface AdminMedicine {
   id: number;
   trade_name: string;
   active_ingredient: string | null;
+  /** Absolute URL resolved server-side (`Image::url`); null when unset. */
+  image_url: string | null;
   stock: number | string;
   pharmacy_count: number | string;
   min_price: number | string | null;
@@ -186,48 +188,14 @@ export interface AdminMedicineRequestsResponse {
   stats: { pending: number; approved: number; rejected: number };
 }
 
-/** A patient row (a user with role=patient). */
-export interface AdminPatient {
-  id: number;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  created_at: string | null;
-}
-
-export interface AdminPatientsResponse {
-  patients: AdminPatient[];
-  pagination: Pagination;
-  filters: { q: string };
-  total_patients: number;
-}
-
-/** One inventory (catalog-wide) row. */
-export interface AdminInventoryRow {
-  id: number;
-  trade_name: string;
-  scientific_name: string | null;
-  pharmacy_medicines_sum_quantity: number;
-  pharmacy_medicines_count: number;
-}
-
-export interface AdminInventoryResponse {
-  medicines: AdminInventoryRow[];
-  pagination: Pagination;
-  stock_summary: {
-    total_items: number;
-    in_stock: number;
-    low_stock: number;
-    out_of_stock: number;
-  };
-}
-
 /** A category row. */
 export interface AdminCategory {
   id: number;
   name_ar: string;
   name_en: string | null;
   slug: string | null;
+  /** Raw stored path/URL from the `categories.image` column — may be null. */
+  image: string | null;
   is_active: boolean;
   sort_order: number | null;
   category_medicine_links_count: number;

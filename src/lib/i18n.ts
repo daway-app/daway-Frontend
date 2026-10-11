@@ -1109,8 +1109,6 @@ export const AR = {
       pharmacies: 'الصيدليات',
       medicines: 'الأدوية',
       categories: 'الأقسام',
-      inventory: 'المخزون',
-      patients: 'المرضى',
       users: 'المستخدمون',
       medicine_requests: 'طلبات الأدوية',
       system_settings: 'إعدادات النظام',
@@ -1256,6 +1254,7 @@ export const AR = {
     /** الأدوية */
     medicines: {
       title: 'الأدوية',
+      col_image: 'الصورة',
       col_medicine: 'الدواء',
       col_ingredient: 'المادة الفعّالة',
       col_stock: 'المخزون',
@@ -1378,6 +1377,7 @@ export const AR = {
       sync_confirm: 'ستتم مزامنة أقسام الكتالوج مع الأدوية (18,330 رابطاً). المزامنة تدوم دقائق — متأكد؟',
       search_placeholder: 'ابحث بالاسم العربي أو الإنجليزي...',
       searching: 'بحث...',
+      col_image: 'الصورة',
       col_category: 'القسم',
       col_links: 'الأدوية المرتبطة',
       col_needs_review: 'قيد المراجعة',

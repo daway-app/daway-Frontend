@@ -12,8 +12,6 @@ export const ADMIN_ROUTES = {
   medicines: '/admin/medicines',
   medicineRequests: '/admin/medicine-requests',
   categories: '/admin/categories',
-  inventory: '/admin/inventory',
-  patients: '/admin/patients',
   users: '/admin/users',
   logs: '/admin/logs',
   settings: '/admin/settings',

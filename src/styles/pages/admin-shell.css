@@ -465,12 +465,18 @@ html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
     color: var(--info-text);
 }
 
-.admin-page .cat-cell {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
+/* Category thumbnail — Blade renders 42×42 with radius 10 and object-fit cover
+   (inline style in `categories/_row.blade.php`). Pinned here rather than as an
+   inline style so dark mode and the tinted-tile fallback share one rule. */
+.admin-page .cat-cell__img {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
 }
+
 .admin-page .cat-cell__body {
     min-width: 0;
 }
@@ -500,6 +506,33 @@ html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
 .admin-page .cell-count {
     color: #1c72a6;
     font-weight: 700;
+}
+
+/* Medicine / category image column — a narrow cell holding only the thumbnail.
+   The tile itself reuses `.ph-med-thumb` from `pharmacy-hub.css` (or
+   `.cat-cell__img`), so both tables render the same thumbnail; this rule only
+   sizes the COLUMN and centres its content.
+
+   `width: 1%` is the standard "shrink this column to its content" idiom in a
+   table with `table-layout`-free sizing — but it must be paired with
+   `min-width` on the content, or the 1% is taken literally and a 42px image
+   collapses to ~36px (measured). */
+.admin-page .ac-thumb {
+    width: 1%;
+    white-space: nowrap;
+    text-align: center;
+}
+.admin-page .ac-thumb > * {
+    margin-inline: auto;
+}
+.admin-page .ac-thumb .ph-med-thumb,
+.admin-page .ac-thumb .cat-cell__img,
+.admin-page .ac-thumb .pill-icon-wrapper {
+    flex-shrink: 0;
+    min-width: 42px;
+}
+.admin-page .ac-thumb .ph-med-thumb {
+    min-width: 44px;
 }
 .admin-page .cell-empty {
     color: #94a3b8;

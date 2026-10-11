@@ -65,8 +65,6 @@ function buildTree(adminFirst: boolean): RouteObject[] {
     ADMIN_ROUTES.medicines,
     ADMIN_ROUTES.medicineRequests,
     ADMIN_ROUTES.categories,
-    ADMIN_ROUTES.inventory,
-    ADMIN_ROUTES.patients,
     ADMIN_ROUTES.users,
     ADMIN_ROUTES.logs,
     ADMIN_ROUTES.settings,

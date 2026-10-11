@@ -55,3 +55,7 @@ restored-*.png
 .chrome-probe*/
 .admin-verify/
 .login-verify/
+# Probe screenshots/reports written by tools/probe-*.mjs — regenerable evidence.
+.probe-out/
+tools/__token.txt
+tools/__*.mjs

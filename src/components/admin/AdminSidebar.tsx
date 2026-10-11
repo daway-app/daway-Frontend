@@ -8,7 +8,6 @@ import {
   IconCapsule,
   IconDashboard,
   IconLogOut,
-  IconUser,
 } from '@/components/layout/icons';
 
 /**
@@ -38,8 +37,6 @@ const MANAGEMENT_NAV: NavItem[] = [
   { to: ADMIN_ROUTES.pharmacies, label: A.pharmacies, icon: <IconBox />, activePrefix: true },
   { to: ADMIN_ROUTES.medicines, label: A.medicines, icon: <IconCapsule />, activePrefix: true },
   { to: ADMIN_ROUTES.categories, label: A.categories, icon: <IconFolder />, activePrefix: true },
-  { to: ADMIN_ROUTES.inventory, label: A.inventory, icon: <IconBox />, activePrefix: true },
-  { to: ADMIN_ROUTES.patients, label: A.patients, icon: <IconUser />, activePrefix: true },
   { to: ADMIN_ROUTES.users, label: A.users, icon: <IconUsers />, activePrefix: true },
   {
     to: ADMIN_ROUTES.medicineRequests,

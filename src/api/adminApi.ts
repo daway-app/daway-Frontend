@@ -3,11 +3,9 @@ import type {
   AdminCategoriesResponse,
   AdminCategoryLinksResponse,
   AdminDashboardResponse,
-  AdminInventoryResponse,
   AdminLogsResponse,
   AdminMedicineRequestsResponse,
   AdminMedicinesResponse,
-  AdminPatientsResponse,
   AdminPharmaciesResponse,
   AdminPharmacy,
   AdminSettingsResponse,
@@ -37,8 +35,6 @@ export const ADMIN_ENDPOINTS = {
   users: '/api/admin/users',
   user: (id: number) => `/api/admin/users/${id}`,
   userToggle: (id: number) => `/api/admin/users/${id}/toggle-status`,
-  patients: '/api/admin/patients',
-  inventory: '/api/admin/inventory',
   categories: '/api/admin/categories',
   categoryToggle: (id: number) => `/api/admin/categories/${id}/toggle-status`,
   categoryLinks: (id: number) => `/api/admin/categories/${id}/links`,
@@ -199,23 +195,6 @@ export function createAdminApi(client: ApiClient) {
         message: string;
         data: { is_active: boolean };
       }>(ADMIN_ENDPOINTS.userToggle(id));
-      return res.data;
-    },
-
-    // ── Patients + inventory (read-only) ────────────────────────────────────
-    async patients(params: AdminListParams = {}, signal?: AbortSignal) {
-      const res = await client.get<{ success: boolean; data: AdminPatientsResponse }>(
-        ADMIN_ENDPOINTS.patients,
-        { query: clean(params), signal },
-      );
-      return res.data;
-    },
-
-    async inventory(params: AdminListParams = {}, signal?: AbortSignal) {
-      const res = await client.get<{ success: boolean; data: AdminInventoryResponse }>(
-        ADMIN_ENDPOINTS.inventory,
-        { query: clean(params), signal },
-      );
       return res.data;
     },
 

@@ -34,8 +34,6 @@ import { AdminPharmaciesPage } from '@/features/admin/pharmacies/AdminPharmacies
 import { AdminMedicinesPage } from '@/features/admin/medicines/AdminMedicinesPage';
 import { AdminMedicineRequestsPage } from '@/features/admin/requests/AdminMedicineRequestsPage';
 import { AdminCategoriesPage } from '@/features/admin/categories/AdminCategoriesPage';
-import { AdminInventoryPage } from '@/features/admin/inventory/AdminInventoryPage';
-import { AdminPatientsPage } from '@/features/admin/patients/AdminPatientsPage';
 import { AdminUsersPage } from '@/features/admin/users/AdminUsersPage';
 import { AdminLogsPage } from '@/features/admin/logs/AdminLogsPage';
 import { AdminSettingsPage } from '@/features/admin/settings/AdminSettingsPage';
@@ -89,8 +87,6 @@ export const router = createBrowserRouter([
               { path: ADMIN_ROUTES.medicines, element: <AdminMedicinesPage /> },
               { path: ADMIN_ROUTES.medicineRequests, element: <AdminMedicineRequestsPage /> },
               { path: ADMIN_ROUTES.categories, element: <AdminCategoriesPage /> },
-              { path: ADMIN_ROUTES.inventory, element: <AdminInventoryPage /> },
-              { path: ADMIN_ROUTES.patients, element: <AdminPatientsPage /> },
               { path: ADMIN_ROUTES.users, element: <AdminUsersPage /> },
               { path: ADMIN_ROUTES.logs, element: <AdminLogsPage /> },
               { path: ADMIN_ROUTES.settings, element: <AdminSettingsPage /> },

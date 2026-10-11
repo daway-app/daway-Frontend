@@ -7,6 +7,7 @@ import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { AR } from '@/lib/i18n';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import { num, pageInfo } from '../shared';
+import { thumbUrl } from '@/lib/format';
 import type {
   AdminCategoriesResponse,
   AdminCategory,
@@ -279,6 +280,9 @@ export function AdminCategoriesPage() {
                 <table className="custom-table">
                   <thead>
                     <tr>
+                      <th scope="col" className="ac-thumb">
+                        {C.col_image}
+                      </th>
                       <th scope="col">{C.col_category}</th>
                       <th scope="col">{C.col_status}</th>
                       <th scope="col">{C.col_sort}</th>
@@ -360,31 +364,50 @@ function CategoryRow({
   const C = AR.admin.categories;
   const reviewCount = num(category.needs_review_count);
   const linkCount = num(category.category_medicine_links_count);
+  // Blade: `Image::thumbUrl($category->image, 84, 84)` displayed at 42×42. The
+  // API returns the RAW stored path, so the Cloudinary size transform is applied
+  // client-side — without it a 42px tile would pull a full-resolution image.
+  const image = thumbUrl(category.image, 84, 84);
 
   return (
     <tr>
-      <td>
-        <div className="cat-cell">
-          {/* Blade shows the category image, else a grid icon in a cyan tile. */}
+      {/* Dedicated image column — the category photo when set, else a grid icon
+          in a cyan tile. Kept separate from the name column so a missing image
+          leaves a clean empty slot rather than shifting the text. */}
+      <td className="ac-thumb">
+        {image ? (
+          <img
+            src={image}
+            alt={category.name_ar}
+            className="cat-cell__img"
+            width={42}
+            height={42}
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
           <span className="pill-icon-wrapper icon-cyan" aria-hidden="true">
             <i className="fas fa-table-cells-large" />
           </span>
-          <div className="cat-cell__body">
-            <strong className="cat-cell__name">{category.name_ar}</strong>
-            <br />
-            <small className="cat-cell__meta">
-              {[category.name_en, category.slug].filter(Boolean).join(' • ') || '—'}
-            </small>
-            {category.subcategories != null && category.subcategories.length > 0 && (
-              <div className="cat-cell__chips">
-                {category.subcategories.map((sub) => (
-                  <span className="cat-chip" key={sub.id}>
-                    {sub.name_ar}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+        )}
+      </td>
+
+      <td>
+        <div className="cat-cell__body">
+          <strong className="cat-cell__name">{category.name_ar}</strong>
+          <br />
+          <small className="cat-cell__meta">
+            {[category.name_en, category.slug].filter(Boolean).join(' • ') || '—'}
+          </small>
+          {category.subcategories != null && category.subcategories.length > 0 && (
+            <div className="cat-cell__chips">
+              {category.subcategories.map((sub) => (
+                <span className="cat-chip" key={sub.id}>
+                  {sub.name_ar}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </td>
 

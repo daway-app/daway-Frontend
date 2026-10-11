@@ -13,6 +13,7 @@ import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { AR } from '@/lib/i18n';
 import { money, num, pageInfo, tpl } from '../shared';
+import { thumbUrl } from '@/lib/format';
 import { ariaSort, useSort } from '@/lib/sort';
 import type { AdminMedicinesResponse, AdminMedicine } from '@/api/adminTypes';
 
@@ -171,6 +172,7 @@ export function AdminMedicinesPage() {
                   sticky
                   caption={M.title}
                   columns={[
+                    { label: M.col_image, className: 'ac-thumb' },
                     {
                       label: M.col_medicine,
                       sort: {
@@ -208,8 +210,25 @@ export function AdminMedicinesPage() {
                 >
                   {sorted.map((row) => {
                     const state = statusOf(row);
+                    const image = thumbUrl(row.image_url, 88, 88);
                     return (
                       <tr key={row.id}>
+                        <td className="ac-thumb">
+                          <span className="ph-med-thumb">
+                            {image ? (
+                              <img
+                                src={image}
+                                alt={row.trade_name}
+                                width={44}
+                                height={44}
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            ) : (
+                              <i className="fas fa-pills" aria-hidden="true" />
+                            )}
+                          </span>
+                        </td>
                         <td>{row.trade_name}</td>
                         <td>{row.active_ingredient ?? '—'}</td>
                         <td className="ac-num">{num(row.stock)}</td>

@@ -27,9 +27,8 @@ import { AccountingCashPage } from '@/features/pharmacy/accounting/AccountingCas
 import { NotFoundPage, PlaceholderPage } from '@/features/PlaceholderPage';
 import { SessionExpiryWatcher } from '@/auth/SessionExpiryWatcher';
 import { ADMIN_ROUTES } from './adminPaths';
-import { RequireAdmin, RequireAdminGuest } from './adminGuards';
-import { AdminAuthLayout, AdminLayout } from '@/layouts/AdminLayout';
-import { AdminLoginPage } from '@/features/admin/AdminLoginPage';
+import { RequireAdmin, RedirectAdminLoginToUnified } from './adminGuards';
+import { AdminLayout } from '@/layouts/AdminLayout';
 import { AdminDashboardPage } from '@/features/admin/dashboard/AdminDashboardPage';
 import { AdminPharmaciesPage } from '@/features/admin/pharmacies/AdminPharmaciesPage';
 import { AdminMedicinesPage } from '@/features/admin/medicines/AdminMedicinesPage';
@@ -66,15 +65,18 @@ export const router = createBrowserRouter([
       // is hard to trace. Declaring the admin tree first removes the question
       // entirely, and `/admin/*` is unambiguous because no pharmacy route
       // begins with `admin`.
+      //
+      // NOTE: there is no admin login branch here any more. A signed-out admin
+      // is handled by `RequireAdmin` below, which sends them to the unified
+      // `/login` — the single login that serves both roles.
       // ──────────────────────────────────────────────────────────────────────
+      // Legacy `/admin/login` — kept ONLY to bounce bookmarks and stale links
+      // into the unified screen. It sits outside `RequireAdmin` because its own
+      // redirect logic decides where the visitor goes (dashboard if already
+      // signed in, `/login` otherwise).
       {
-        element: <RequireAdminGuest />,
-        children: [
-          {
-            element: <AdminAuthLayout />,
-            children: [{ path: ADMIN_ROUTES.login, element: <AdminLoginPage /> }],
-          },
-        ],
+        path: ADMIN_ROUTES.login,
+        element: <RedirectAdminLoginToUnified />,
       },
       {
         element: <RequireAdmin />,

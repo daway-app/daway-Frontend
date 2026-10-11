@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '@/auth/adminContext';
 import { ADMIN_ROUTES } from './adminPaths';
+import { ROUTES } from './paths';
 
 /**
  * Admin route guards.
@@ -15,6 +16,17 @@ import { ADMIN_ROUTES } from './adminPaths';
  *
  * That distinction matters: a client-side guard can be bypassed by anyone who
  * edits the bundle, so the server must never rely on it — and it does not.
+ *
+ * ============================================================================
+ * 🔴 THERE IS NO SEPARATE ADMIN LOGIN SCREEN ANY MORE
+ * ============================================================================
+ * A signed-out admin is sent to the UNIFIED `/login`, which carries the role
+ * switch that decides which endpoint is called. Keeping a second admin-only
+ * login around meant two doors to the same session, and the redundant one
+ * (`/admin/login`) was reported as having no reason to exist.
+ *
+ * `state.from` is still passed so that an admin who was deep in the panel lands
+ * back on the page they asked for, rather than the dashboard.
  */
 
 /** Gate for authenticated admin areas. */
@@ -25,7 +37,7 @@ export function RequireAdmin() {
   if (!isAuthenticated) {
     return (
       <Navigate
-        to={ADMIN_ROUTES.login}
+        to={ROUTES.login}
         replace
         state={{ from: location.pathname + location.search }}
       />
@@ -35,13 +47,20 @@ export function RequireAdmin() {
   return <Outlet />;
 }
 
-/** Gate for the admin login screen — a signed-in admin is sent inward. */
-export function RequireAdminGuest() {
+/**
+ * Kept only so the legacy `/admin/login` URL can bounce into the unified
+ * screen instead of 404-ing for anyone with a bookmark. It performs no
+ * authentication of its own.
+ */
+export function RedirectAdminLoginToUnified() {
   const { isAuthenticated } = useAdminAuth();
+  const location = useLocation();
 
-  if (isAuthenticated) {
-    return <Navigate to={ADMIN_ROUTES.dashboard} replace />;
-  }
-
-  return <Outlet />;
+  return (
+    <Navigate
+      to={isAuthenticated ? ADMIN_ROUTES.dashboard : ROUTES.login}
+      replace
+      state={{ from: location.pathname }}
+    />
+  );
 }

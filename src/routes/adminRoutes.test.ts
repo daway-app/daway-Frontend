@@ -32,12 +32,20 @@ import { ROUTES } from './paths';
  * The replica must mirror `router.tsx`. If a route is added there and not here,
  * the test does not fail loudly — so the assertion below checks the FULL admin
  * path set, and `ADMIN_ROUTES` is the single source for both.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * UPDATED when the separate admin login was removed
+ * ─────────────────────────────────────────────────────────────────────────────
+ * `/admin/login` used to be a real page in its own branch. It is now a plain
+ * REDIRECT into the unified `/login`, declared outside `RequireAdmin`. The
+ * replica below reflects that, and an explicit case asserts the redirect still
+ * resolves — so the legacy URL keeps working for bookmarks.
  */
 
 /** Sentinel element names — the test only ever inspects which branch won. */
 const PHARMACY_CATCH_ALL = 'PHARMACY_CATCH_ALL';
 const PHARMACY_LOGIN = 'PHARMACY_LOGIN';
-const ADMIN_LOGIN = 'ADMIN_LOGIN';
+const ADMIN_LOGIN_REDIRECT = 'ADMIN_LOGIN_REDIRECT';
 
 /**
  * A structural replica of the two overlapping trees.
@@ -47,9 +55,9 @@ const ADMIN_LOGIN = 'ADMIN_LOGIN';
  * catch-all winning on ranking is what an adversarial order would expose.
  */
 function buildTree(adminFirst: boolean): RouteObject[] {
-  const adminLogin = {
+  const adminLoginRedirect = {
     path: ADMIN_ROUTES.login,
-    element: ADMIN_LOGIN,
+    element: ADMIN_LOGIN_REDIRECT,
   };
   const adminPages = [
     ADMIN_ROUTES.dashboard,
@@ -66,7 +74,7 @@ function buildTree(adminFirst: boolean): RouteObject[] {
   const adminUnknown = { path: 'admin/*', element: 'ADMIN_NOT_FOUND' };
 
   const adminBranch: RouteObject[] = [
-    adminLogin,
+    adminLoginRedirect,
     ...adminPages,
     adminUnknown,
   ];
@@ -120,6 +128,24 @@ describe('admin route resolution', () => {
   it('an unknown /admin/* path lands on the admin 404, not the pharmacy catch-all', () => {
     const winner = resolve(buildTree(true), '/admin/definitely-not-a-page');
     expect(winner).toBe('ADMIN_NOT_FOUND');
+  });
+
+  it('the legacy /admin/login resolves to a REDIRECT, not a login page', () => {
+    // There is exactly one login screen now (`/login`). This URL must keep
+    // resolving — old bookmarks exist — but it must NOT render its own form.
+    // If someone reintroduces a page here, this assertion fails and forces the
+    // question of why a second login door is needed.
+    const winner = resolve(buildTree(true), ADMIN_ROUTES.login);
+    expect(winner).toBe(ADMIN_LOGIN_REDIRECT);
+  });
+
+  it('the legacy /admin/login is NOT swallowed by the admin catch-all', () => {
+    // `/admin/*` is declared AFTER `/admin/login` in the replica, so ranking
+    // must keep the literal path on the redirect. If it ever fell to the
+    // catch-all, a bookmark would silently become a 404.
+    const winner = resolve(buildTree(false), ADMIN_ROUTES.login);
+    expect(winner).not.toBe('ADMIN_NOT_FOUND');
+    expect(winner).toBe(ADMIN_LOGIN_REDIRECT);
   });
 
   it('a genuine pharmacy path still reaches the pharmacy login', () => {

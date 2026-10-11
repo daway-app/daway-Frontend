@@ -83,15 +83,3 @@ export function AdminLayout() {
     </>
   );
 }
-
-/** Bare layout for the admin login screen. */
-export function AdminAuthLayout() {
-  return (
-    <div className="auth-shell">
-      <main className="auth-shell__content">
-        <Outlet />
-      </main>
-      <Toaster />
-    </div>
-  );
-}

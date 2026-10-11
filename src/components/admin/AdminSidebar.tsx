@@ -50,6 +50,7 @@ const MANAGEMENT_NAV: NavItem[] = [
 const SETTINGS_NAV: NavItem[] = [
   { to: ADMIN_ROUTES.settings, label: A.system_settings, icon: <IconSettings />, activePrefix: true },
   { to: ADMIN_ROUTES.logs, label: A.activity_log, icon: <IconList />, activePrefix: true },
+  { to: ADMIN_ROUTES.profile, label: A.profile, icon: <IconUser />, activePrefix: true },
 ];
 
 export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -245,6 +246,16 @@ function IconList() {
       <line x1="3" y1="6" x2="3.01" y2="6" />
       <line x1="3" y1="12" x2="3.01" y2="12" />
       <line x1="3" y1="18" x2="3.01" y2="18" />
+    </svg>
+  );
+}
+
+/** Single user — the "my profile" nav entry. */
+function IconUser() {
+  return (
+    <svg {...iconProps()}>
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
     </svg>
   );
 }

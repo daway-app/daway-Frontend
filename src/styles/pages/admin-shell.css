@@ -534,6 +534,21 @@ html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
 .admin-page .ac-thumb .ph-med-thumb {
     min-width: 44px;
 }
+
+/* User avatar in the users table — a round 36px photo, matching the Blade
+   `users/index.blade.php` cell. The initials fallback reuses `.ph-avatar-sm`
+   from `pharmacy-hub.css`. */
+.admin-page .user-avatar-img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
+}
+.admin-page .ac-thumb .user-avatar-img {
+    min-width: 36px;
+}
 .admin-page .cell-empty {
     color: #94a3b8;
     font-size: 13px;
@@ -677,4 +692,198 @@ html[data-theme='dark'] .admin-page .action-btn {
     background: #ffe4e6;
     color: #be123c;
     border: 1px solid #fecdd3;
+}
+
+/* ----------------------------------------------------------
+   §7 — admin profile (ملفي الشخصي) + password change
+
+   Visual model: `pharmacy/profile/edit.blade.php`'s profile banner — a gradient
+   block with the name inside, a large avatar overlapping its bottom edge, then
+   the details. The admin profile is a SINGLE centred card (no "side" column,
+   because an admin account has no second group of content to show).
+
+   Every rule is scoped under `.admin-page`: the Blade original was page-scoped,
+   but React bundles all CSS globally, so an unscoped `.fg` / `.fc` would leak
+   into the pharmacy forms.
+   ---------------------------------------------------------- */
+
+/* The card. Centred and width-capped — a profile is a narrow block of facts,
+   and stretching it across the canvas leaves the banner stranded in whitespace. */
+.admin-page .adp-card {
+    max-width: 520px;
+    margin-inline: auto;
+    background: var(--paper);
+    border: 1px solid var(--line-soft);
+    border-radius: 18px;
+    overflow: hidden;
+    padding-block-end: 26px;
+    box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
+}
+
+body.dark-mode .admin-page .adp-card,
+html[data-theme='dark'] .admin-page .adp-card {
+    border-color: var(--line-strong);
+    box-shadow: none;
+}
+
+/* ── Banner: gradient block, name inside, space reserved for the avatar ── */
+.admin-page .adp-banner {
+    /* 150px tall; the avatar below is pulled up by half its own height so it
+       straddles the banner's bottom edge. `padding-block-end` leaves room for
+       that overlap so the name never collides with the circle. */
+    min-height: 150px;
+    padding: 26px 24px 62px;
+    background: linear-gradient(135deg, var(--info-text), #0a1a2e);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    text-align: center;
+}
+
+.admin-page .adp-banner h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.35rem;
+    line-height: 1.4;
+    /* A long name must wrap inside the banner, not overflow it. */
+    overflow-wrap: anywhere;
+}
+
+/* ── Avatar: overlaps the banner's bottom edge, centred ────────────────── */
+.admin-page .adp-avatar-wrap {
+    display: flex;
+    justify-content: center;
+    /* Pull the circle up into the banner. Negative margin (not absolute
+       positioning) so the flow below still reserves the space it takes. */
+    margin-block-start: -56px;
+}
+
+.admin-page .adp-avatar {
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    background: var(--info-bg);
+    color: var(--info-text);
+    font-size: 2.6rem;
+    font-weight: 700;
+    /* A thick ring in the page colour is what makes the overlap read as a
+       deliberate "cut-out" rather than a circle pasted over the banner. */
+    border: 4px solid var(--paper);
+    box-shadow: 0 6px 18px rgb(15 23 42 / 18%);
+}
+
+.admin-page .adp-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* ── Facts: centred, label above value ────────────────────────────────── */
+.admin-page .adp-facts {
+    margin: 22px 0 0;
+    padding: 0 24px;
+    display: grid;
+    gap: 16px;
+    text-align: center;
+}
+
+.admin-page .adp-fact dt {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+    margin: 0 0 5px;
+}
+
+.admin-page .adp-fact dd {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+}
+
+/* ── Actions: side by side, under the details ─────────────────────────── */
+.admin-page .adp-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 24px 24px 0;
+}
+
+.admin-page .adp-actions .ph-btn {
+    /* Equal-width buttons read as a deliberate pair rather than a primary plus
+       a leftover, and keeps them tidy when they wrap on a narrow screen. */
+    min-width: 168px;
+    justify-content: center;
+}
+
+.admin-page .adp-actions .ph-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.admin-page .adp-note {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 7px;
+    margin: 14px 24px 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--ink-faint);
+    text-align: center;
+}
+
+.admin-page .adp-note i {
+    margin-block-start: 2px;
+    flex-shrink: 0;
+}
+
+/* ----------------------------------------------------------
+   Password form — reuses the auth `.fg` / `.fl` / `.fc` controls, which are
+   defined globally (auth.css). Only the container and actions are new here.
+   ---------------------------------------------------------- */
+.admin-page .admin-password-form {
+    max-width: 480px;
+    /* 🔴 `margin-inline: auto` is load-bearing. Without it the form kept its
+       480px width but sat flush against the card's leading edge, leaving a huge
+       empty column on the other side (measured in the probe screenshot). */
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.admin-page .admin-password-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-block-start: 6px;
+}
+
+.admin-page .admin-password-done {
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    text-align: center;
+    padding-block: 8px;
+}
+
+.admin-page .admin-password-done i {
+    font-size: 2.4rem;
+    color: var(--success-text);
+}
+
+.admin-page .admin-password-done p {
+    margin: 0;
+    color: var(--ink-soft);
+    line-height: 1.7;
 }

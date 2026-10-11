@@ -8,6 +8,7 @@ import type {
   AdminMedicinesResponse,
   AdminPharmaciesResponse,
   AdminPharmacy,
+  AdminProfile,
   AdminSettingsResponse,
   AdminUsersResponse,
   DeliveredCredentials,
@@ -40,6 +41,16 @@ export const ADMIN_ENDPOINTS = {
   categoryLinks: (id: number) => `/api/admin/categories/${id}/links`,
   logs: '/api/admin/logs',
   settings: '/api/admin/settings',
+  /**
+   * Own profile + password change.
+   *
+   * ⚠️ These are ADMIN-scoped even though a pharmacy equivalent exists
+   * (`/api/profile/pharmacy`). The pharmacy route begins with
+   * `abort_unless($user->role === 'pharmacy', 403)` — it refuses an admin by
+   * design — so pointing the admin screen at it would always 403.
+   */
+  profile: '/api/admin/profile',
+  changePassword: '/api/admin/change-password',
 } as const;
 
 export interface AdminListParams {
@@ -255,6 +266,36 @@ export function createAdminApi(client: ApiClient) {
 
     async updateSettings(body: Record<string, unknown>) {
       return client.post<{ success: boolean; message: string }>(ADMIN_ENDPOINTS.settings, body);
+    },
+
+    // ── Own profile ─────────────────────────────────────────────────────────
+    async profile(signal?: AbortSignal) {
+      const res = await client.get<{ success: boolean; data: { user: AdminProfile } }>(
+        ADMIN_ENDPOINTS.profile,
+        { signal },
+      );
+      return res.data;
+    },
+
+    /**
+     * Change the signed-in admin's password.
+     *
+     * 🔴 The server DELETES ALL TOKENS on success, so the response is the last
+     * thing this session will ever get — the caller must send the user back to
+     * the login screen, not continue on a now-dead token.
+     *
+     * A 422 carries `errors.current_password` / `errors.password`; the screen
+     * maps those onto the fields rather than showing one generic message.
+     */
+    async changePassword(body: {
+      current_password: string;
+      password: string;
+      password_confirmation: string;
+    }) {
+      return client.post<{ success: boolean; message: string }>(
+        ADMIN_ENDPOINTS.changePassword,
+        body,
+      );
     },
   };
 }

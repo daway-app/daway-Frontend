@@ -156,6 +156,8 @@ export interface AdminUserRow {
   phone: string | null;
   role: string;
   is_active: boolean;
+  /** Raw stored path/URL from `users.avatar` — may be null. */
+  avatar: string | null;
   created_at: string | null;
 }
 
@@ -251,4 +253,26 @@ export interface AdminSettingsResponse {
   catalog_count: number;
   catalog_file_exists: boolean;
   catalog_file_size: number;
+}
+
+/**
+ * The signed-in admin's own profile — `GET /api/admin/profile`.
+ *
+ * 🔴 `avatar_url` is a RESOLVED absolute URL, not the raw `users.avatar`
+ * column. The Blade profile page passes the raw column through
+ * `Image::thumbUrl`; the API resolves it server-side with `Image::url` (the
+ * same split used for `AdminMedicine.image_url`). Sending the raw column would
+ * force every client to know the storage layout — and on this project all
+ * images are Cloudinary, whose stored value is NOT directly loadable.
+ *
+ * `phone` is nullable: an admin created before the phone column was required
+ * has NULL there, and the screen must render `—` rather than "null".
+ */
+export interface AdminProfile {
+  id: number;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  role: string;
 }

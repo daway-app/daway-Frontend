@@ -15,8 +15,14 @@ import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { AR, roleLabel } from '@/lib/i18n';
 import { ariaSort, useSort } from '@/lib/sort';
+import { thumbUrl } from '@/lib/format';
 import { num, pageInfo } from '../shared';
 import type { AdminUsersResponse, AdminUserRow } from '@/api/adminTypes';
+
+/** First two characters of the name, used when there is no avatar. */
+function initials(name: string): string {
+  return name.trim().slice(0, 2);
+}
 
 /**
  * Admin users — list, activate/deactivate, delete.
@@ -207,6 +213,7 @@ export function AdminUsersPage() {
                   sticky
                   caption={U.title}
                   columns={[
+                    { label: U.col_avatar, className: 'ac-thumb' },
                     {
                       label: U.col_name,
                       sort: {
@@ -234,8 +241,28 @@ export function AdminUsersPage() {
                 >
                   {sorted.map((row) => {
                     const self = isSelf(row);
+                    const avatar = thumbUrl(row.avatar, 72, 72);
                     return (
                       <tr key={row.id}>
+                        <td className="ac-thumb">
+                          {/* Blade `users/index.blade.php`: the photo when set,
+                              else the first two initials in a round tile. */}
+                          {avatar ? (
+                            <img
+                              src={avatar}
+                              alt={row.name}
+                              className="user-avatar-img"
+                              width={36}
+                              height={36}
+                              loading="lazy"
+                              decoding="async"
+                            />
+                          ) : (
+                            <span className="ph-avatar-sm" aria-hidden="true">
+                              {initials(row.name)}
+                            </span>
+                          )}
+                        </td>
                         <td>
                           {row.name}
                           {self && <Badge variant="new">أنت</Badge>}

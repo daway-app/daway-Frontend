@@ -37,6 +37,8 @@ import { AdminCategoriesPage } from '@/features/admin/categories/AdminCategories
 import { AdminUsersPage } from '@/features/admin/users/AdminUsersPage';
 import { AdminLogsPage } from '@/features/admin/logs/AdminLogsPage';
 import { AdminSettingsPage } from '@/features/admin/settings/AdminSettingsPage';
+import { AdminProfilePage } from '@/features/admin/profile/AdminProfilePage';
+import { AdminPasswordChangePage } from '@/features/admin/profile/AdminPasswordChangePage';
 
 /**
  * Pharmacy Web route table.
@@ -90,6 +92,15 @@ export const router = createBrowserRouter([
               { path: ADMIN_ROUTES.users, element: <AdminUsersPage /> },
               { path: ADMIN_ROUTES.logs, element: <AdminLogsPage /> },
               { path: ADMIN_ROUTES.settings, element: <AdminSettingsPage /> },
+              { path: ADMIN_ROUTES.profile, element: <AdminProfilePage /> },
+              {
+                // Declared AFTER `profile` — the literal `/admin/profile/password`
+                // must win over a bare `profile` match, which it does by ranking,
+                // but keeping the order intuitive costs nothing and mirrors the
+                // accounting `sales/create` → `sales/:number` precedent.
+                path: ADMIN_ROUTES.profilePassword,
+                element: <AdminPasswordChangePage />,
+              },
               // Unknown admin path → the admin 404, NOT the pharmacy catch-all.
               { path: 'admin/*', element: <NotFoundPage /> },
             ],

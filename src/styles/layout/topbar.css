@@ -39,7 +39,7 @@ body.dark-mode {
 }
 
 .topbar {
-    display: flex;
+    
     justify-content: space-between;
     align-items: center;
     padding: 16px 28px;
@@ -69,7 +69,7 @@ body.dark-mode .topbar {
 
 .topbar-title-group p {
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: var(--fs-xs);
     margin: 0;
     font-weight: 500;
 }
@@ -83,7 +83,7 @@ body.dark-mode .topbar {
 .icon-btn {
     width: 40px;
     height: 40px;
-    border-radius: 12px;
+    border-radius: var(--ph-r-md);
     background: var(--btn-bg);
     border: 1px solid var(--border-color);
     display: flex;
@@ -91,7 +91,7 @@ body.dark-mode .topbar {
     justify-content: center;
     cursor: pointer;
     color: var(--text-secondary);
-    font-size: 16px;
+    font-size: var(--fs-lg);
     position: relative;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -113,7 +113,7 @@ body.dark-mode .topbar {
 .theme-toggle-btn .icon-3d {
     display: inline-block;
     transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
-    font-size: 18px;
+    font-size: var(--fs-lg2);
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
@@ -149,7 +149,7 @@ body.dark-mode .theme-toggle-btn .icon-3d {
     inset-inline-end: 0;
     background-color: var(--topbar-bg);
     border: 1px solid var(--border-color);
-    border-radius: 14px;
+    border-radius: var(--ph-r-md);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
     width: 380px;
     max-height: 520px;
@@ -175,7 +175,7 @@ body.dark-mode .theme-toggle-btn .icon-3d {
 }
 .notifications-header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: var(--fs-lg);
     color: var(--text-primary);
 }
 .notifications-header .clear-all-btn {
@@ -183,7 +183,7 @@ body.dark-mode .theme-toggle-btn .icon-3d {
     border: none;
     color: var(--teal-text);
     cursor: pointer;
-    font-size: 12px;
+    font-size: var(--fs-xs);
 }
 .notifications-list {
     padding: 0;
@@ -219,13 +219,13 @@ body.dark-mode .theme-toggle-btn .icon-3d {
 .notification-content { flex-grow: 1; }
 .notification-title {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--fs-md);
     font-weight: 500;
     color: var(--text-primary);
 }
 .notification-time {
     margin: 0;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--text-secondary);
 }
 .no-notifications, .loading-notifications, .error-notifications {
@@ -241,19 +241,19 @@ body.dark-mode .theme-toggle-btn .icon-3d {
 .notifications-footer a {
     color: var(--teal-text);
     text-decoration: none;
-    font-size: 13px;
+    font-size: var(--fs-sm);
 }
 .notification-badge {
     position: absolute;
     top: 4px;
     background-color: var(--badge-red);
     color: white;
-    font-size: 10px;
+    font-size: var(--fs-2xs);
     font-weight: bold;
     height: 16px;
     min-width: 16px;
     padding: 0 4px;
-    border-radius: 8px;
+    border-radius: var(--ph-r-sm);
     display: none;
     align-items: center;
     justify-content: center;
@@ -268,7 +268,7 @@ html[dir="ltr"] .notification-badge { right: 4px; left: auto; }
     align-items: center;
     gap: 12px;
     height: 48px;
-    border-radius: 14px;
+    border-radius: var(--ph-r-md);
     cursor: pointer;
     transition: all 0.2s ease;
     border: 1px solid var(--border-color);
@@ -305,7 +305,7 @@ html[dir="ltr"] .notification-badge { right: 4px; left: auto; }
     align-items: center;
     justify-content: center;
     color: #ffffff;
-    font-size: 15px;
+    font-size: var(--fs-md);
     font-weight: 700;
     box-shadow: 0 2px 6px rgba(28, 114, 166, 0.25);
     background-size: cover;
@@ -337,7 +337,7 @@ html[dir="ltr"] .notification-badge { right: 4px; left: auto; }
 [dir="ltr"] .user-details { text-align: left; }
 
 .user-name {
-    font-size: 13.5px;
+    font-size: var(--fs-sm);
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.25;
@@ -356,7 +356,7 @@ html[dir="ltr"] .notification-badge { right: 4px; left: auto; }
     align-items: center;
     gap: 4px;
     width: fit-content;
-    font-size: 10.5px;
+    font-size: var(--fs-2xs);
     font-weight: 600;
     color: var(--teal-text);
     background: rgba(28, 114, 166, 0.1);
@@ -413,7 +413,7 @@ body.dark-mode .logout-btn {
 .logout-card {
     background: var(--topbar-bg);
     padding: 24px 36px;
-    border-radius: 16px;
+    border-radius: var(--ph-r-lg);
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
     display: flex;
     flex-direction: column;
@@ -429,14 +429,14 @@ body.dark-mode .logout-btn {
 .spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid var(--border-color);
-    border-top-color: var(--accent-teal);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+    
+    
+    
+    
 }
 
 .logout-text {
-    font-size: 14px;
+    font-size: var(--fs-md);
     font-weight: 700;
     color: var(--text-primary);
 }
@@ -464,7 +464,7 @@ body.dark-mode .logout-btn {
     background: var(--topbar-bg);
     width: 100%;
     max-width: 380px;
-    border-radius: 16px;
+    border-radius: var(--ph-r-lg);
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
     overflow: hidden;
     transform: scale(0.9);
@@ -484,7 +484,7 @@ body.dark-mode .logout-btn {
 
 .profile-modal-header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: var(--fs-lg);
     color: var(--text-primary);
 }
 
@@ -501,8 +501,8 @@ body.dark-mode .logout-btn {
 
 .modal-btn {
     padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 13px;
+    border-radius: var(--ph-r-sm);
+    font-size: var(--fs-sm);
     font-weight: 600;
     cursor: pointer;
     border: 1px solid var(--line-strong);
@@ -524,14 +524,14 @@ body.dark-mode .logout-btn {
 
 .modal-btn.primary:hover { background: var(--accent-teal-dark); }
 
-.form-group { margin-bottom: 14px; }
+.form-group {  }
 
 .form-group label {
-    display: block;
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-    font-weight: 500;
+    
+    
+    
+    
+    
 }
 
 .form-group input {
@@ -540,8 +540,8 @@ body.dark-mode .logout-btn {
     border: 1px solid var(--line-strong);
     background: var(--topbar-bg);
     color: var(--text-primary);
-    border-radius: 8px;
-    font-size: 13px;
+    border-radius: var(--ph-r-sm);
+    font-size: var(--fs-sm);
     outline: none;
     transition: border-color 0.2s;
 }
@@ -571,7 +571,7 @@ body.dark-mode .logout-btn {
 /* -- Language switcher -- */
 .lang-switch-btn { text-decoration: none; }
 .lang-switch-btn .lang-label {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     font-weight: 800;
     color: var(--teal-deep, var(--teal-text));
 }

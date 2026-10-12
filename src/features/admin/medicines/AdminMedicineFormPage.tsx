@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Btn, FormField, LoadingState, Notice } from '@/components/ui';
+import { Btn, FormField, LoadingState, Notice, PageHeader } from '@/components/ui';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { AR } from '@/lib/i18n';
@@ -174,15 +174,13 @@ export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
   return (
     <div className="admin-page">
       <div className="edit-medicine-page-wrapper">
-        <div className="page-heading">
-          <div className="page-heading-icon" aria-hidden="true">
-            <i className={isEdit ? 'fas fa-pen' : 'fas fa-plus'} />
-          </div>
-          <div>
-            <h1>{isEdit ? M.edit_title.replace('{name}', nameAr || '…') : M.create_title}</h1>
-            <p>{AR.admin.medicines.main_description}</p>
-          </div>
-        </div>
+        {/* Was a hand-rolled `.page-heading` (22px title, its own 52px icon
+            box). `PageHeader` is the same header every other screen uses. */}
+        <PageHeader
+          title={isEdit ? M.edit_title.replace('{name}', nameAr || '…') : M.create_title}
+          subtitle={AR.admin.medicines.main_description}
+          iconChip={<i className={isEdit ? 'fas fa-pen' : 'fas fa-plus'} />}
+        />
 
         {error && (
           <div style={{ marginBlockEnd: 16 }}>

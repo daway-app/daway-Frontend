@@ -7,45 +7,14 @@
     animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Header */
-.page-heading {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 22px;
-}
-.page-heading-icon {
-    width: 52px;
-    height: 52px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 16px;
-    font-size: 24px;
-    background: linear-gradient(135deg, var(--canvas), #e0f2fe);
-    color: var(--teal-text);
-    box-shadow: 0 8px 22px rgba(28, 114, 166, 0.12);
-}
-.page-heading h1 {
-    margin: 0 0 4px;
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--ink);
-}
-.page-heading p {
-    margin: 0;
-    color: var(--ink-soft);
-    font-size: 13px;
-}
+/* The `.page-heading` / `.page-heading-icon` block was deleted here: all three
+   screens that used it now render `<PageHeader>`, which owns the title
+   (`.ph-head h1`) and the icon chip (`.ph-head-icon`) in ui-system.css. */
 
-/* Card */
+/* Surface comes from the shared `.ph-card` group in ui-system.css. */
 .premium-card {
     position: relative;
     overflow: hidden;
-    background: rgba(255,255,255,.94);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    box-shadow: 0 8px 28px rgba(15,23,42,.055);
     margin-bottom: 20px;
 }
 .card-head {
@@ -65,11 +34,11 @@
 .card-icon {
     width: 42px;
     height: 42px;
-    border-radius: 13px;
+    border-radius: var(--ph-r-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 19px;
+    font-size: var(--fs-xl);
 }
 .card-icon.teal {
     background: var(--teal-mist);
@@ -77,13 +46,13 @@
 }
 .card-head h2 {
     margin: 0 0 3px;
-    font-size: 15px;
+    font-size: var(--fs-md);
     font-weight: 800;
     color: var(--ink);
 }
 .card-head p {
     margin: 0;
-    font-size: 11px;
+    font-size: var(--fs-2xs);
     color: var(--ink-soft);
 }
 .card-body {
@@ -98,35 +67,20 @@
     margin-bottom: 16px;
 }
 .fg {
-    margin-bottom: 17px;
+    
 }
 .fl {
-    display: block;
-    font-size: 12.5px;
-    font-weight: 800;
-    color: var(--ink);
-    margin-bottom: 7px;
+    
+    
+    
+    
+    
 }
 .req {
     color: var(--danger-text);
 }
-.fc {
-    width: 100%;
-    height: 44px;
-    padding: 10px 14px;
-    border: 1px solid var(--line-strong);
-    border-radius: 11px;
-    font-size: 13px;
-    background: var(--paper);
-    color: var(--ink);
-    outline: none;
-    box-sizing: border-box;
-    transition: all 0.25s ease;
-}
-.fc:focus {
-    border-color: var(--focus-ring);
-    box-shadow: 0 0 0 4px rgba(13,148,136,.09);
-}
+/* Field surface comes from the shared input group in ui-system.css — it was a
+   44px-tall, 11px-radius box with its own focus glow, matching nothing else. */
 
 /* Alternatives Section */
 .alternatives-list {
@@ -141,7 +95,7 @@
     justify-content: space-between;
     background: var(--canvas);
     padding: 8px 12px;
-    border-radius: 8px;
+    border-radius: var(--ph-r-sm);
     border: 1px solid var(--line);
 }
 .remove-alternative-btn {
@@ -162,37 +116,20 @@
     gap: 12px;
     margin-top: 24px;
 }
-.btn-cancel {
-    background: var(--line-soft);
-    color: var(--ink-soft);
-    padding: 12px 24px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: 700;
-}
-.btn-submit {
-    background: #1C72A6;
-    color: #fff;
-    padding: 12px 24px;
-    border-radius: 12px;
-    border: none;
-    font-weight: 700;
-    cursor: pointer;
-}
-
+/* `.btn-submit` / `.btn-cancel` are owned by ui-system.css — declaring them here
+   too meant the winning values came from import order, not from this file. */
 /* Dark Mode */
-body.dark-mode .page-heading h1,
 body.dark-mode .card-head h2,
-body.dark-mode .fl,
-body.dark-mode .fc {
+body.dark-mode .fl {
     color: var(--ink);
 }
-body.dark-mode .page-heading p,
 body.dark-mode .card-head p {
     color: var(--ink-soft);
 }
-body.dark-mode .premium-card,
-body.dark-mode .fc,
+/* `.fc` and `.btn-cancel` were dropped from these dark overrides: both now
+   resolve to the shared input/button groups, whose values are tokens that
+   already flip. Leaving them here re-overrode the unified surface in dark mode
+   (a higher-specificity `body.dark-mode` rule beats the shared class). */
 body.dark-mode .card-head {
     background: var(--paper);
     border-color: var(--line-strong);
@@ -201,15 +138,8 @@ body.dark-mode .alternative-item {
     background: var(--line-soft);
     border-color: var(--line-strong);
 }
-body.dark-mode .btn-cancel {
-    background: var(--line-soft);
-    color: var(--ink);
-}
 
 @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(15px); }
     to { opacity: 1; transform: translateY(0); }
 }
-
-/* الوضع الداكن — التدرّج الفاتح كان يُرسم كما هو */
-body.dark-mode .page-heading-icon { background: var(--teal-mist); }

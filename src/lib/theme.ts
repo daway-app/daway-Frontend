@@ -19,7 +19,10 @@ function apply(theme: Theme): void {
   const isDark = theme === 'dark';
   document.body.classList.toggle('dark-mode', isDark);
   document.documentElement.classList.toggle('dark-mode', isDark);
-  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  // 🔴 `data-theme` used to be set here too. It was write-only — no CSS
+  // selector and no component ever read it — so it was removed (Phase 5).
+  // The class on <html> is the single contract, and it is the one the
+  // pre-paint snippet can set before <body> exists.
   // Charts read colours from CSS tokens at draw time and must be rebuilt when
   // the theme flips — the Blade app does this with a MutationObserver on
   // documentElement; React charts subscribe to this event instead.

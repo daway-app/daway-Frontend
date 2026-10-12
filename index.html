@@ -48,9 +48,7 @@
       (function () {
         try {
           var dark = localStorage.getItem('theme') === 'dark';
-          var el = document.documentElement;
-          el.classList.toggle('dark-mode', dark);
-          el.setAttribute('data-theme', dark ? 'dark' : 'light');
+          document.documentElement.classList.toggle('dark-mode', dark);
         } catch (e) {
           /* storage unavailable — stay on the default light theme */
         }

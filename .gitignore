@@ -59,3 +59,9 @@ restored-*.png
 .probe-out/
 tools/__token.txt
 tools/__*.mjs
+
+# Before/after screenshots written by tools/shoot-*.mjs — regenerable evidence.
+outputs/screens/
+
+# Session backup (phase 1-5) — regenerable evidence, not tracked.
+.backup/

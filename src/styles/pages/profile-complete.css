@@ -58,7 +58,7 @@ body.dark-mode .complete-card {
         .complete-col {
             background: var(--pc-surface-alt);
             border: 1px solid var(--pc-line);
-            border-radius: 14px;
+            border-radius: var(--ph-r-md);
             padding: 22px;
             display: flex;
             flex-direction: column;
@@ -92,17 +92,17 @@ body.dark-mode .complete-card {
             align-items: center;
             justify-content: center;
             color: #ffffff;
-            font-size: 26px;
+            font-size: var(--fs-2xl);
             font-weight: 700;
         }
         .complete-hero-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-        .complete-hero-text strong { font-size: 17px; color: var(--pc-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .complete-hero-text strong { font-size: var(--fs-lg); color: var(--pc-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         /* dark colour now comes from --pc-text (--ink) automatically */
         .complete-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-size: 12px;
+            font-size: var(--fs-xs);
             font-weight: 700;
             padding: 4px 12px;
             border-radius: 999px;
@@ -123,7 +123,7 @@ body.dark-mode .complete-card {
         .complete-security-head .lock-ic {
             width: 42px;
             height: 42px;
-            border-radius: 12px;
+            border-radius: var(--ph-r-md);
             background: rgba(28,114,166,0.1);
             color: var(--pc-accent);
             display: flex;
@@ -131,15 +131,15 @@ body.dark-mode .complete-card {
             justify-content: center;
             flex-shrink: 0;
         }
-        .complete-security-head h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--pc-text); }
+        .complete-security-head h3 { margin: 0; font-size: var(--fs-lg); font-weight: 700; color: var(--pc-text); }
         /* see above — tokenised */
-        .complete-security-head p { margin: 2px 0 0; font-size: 12.5px; color: var(--pc-text-soft); }
+        .complete-security-head p { margin: 2px 0 0; font-size: var(--fs-xs); color: var(--pc-text-soft); }
         body.dark-mode .complete-security-head p { color: var(--ink-soft); }
 
         .complete-card {
             background: var(--pc-surface);
             border: 1px solid var(--pc-line);
-            border-radius: 12px;
+            border-radius: var(--ph-r-md);
             overflow: hidden;
         }
         body.dark-mode .complete-card { background: var(--paper); border-color: var(--line); }
@@ -151,12 +151,12 @@ body.dark-mode .complete-card {
             border-bottom: 1px solid var(--pc-line);
         }
         body.dark-mode .complete-card-head { border-color: var(--line); }
-        .complete-card-head h3 { margin: 0; font-size: 14.5px; font-weight: 700; color: var(--pc-text); }
+        .complete-card-head h3 { margin: 0; font-size: var(--fs-md); font-weight: 700; color: var(--pc-text); }
         /* see above — tokenised */
         .complete-card-ic {
             width: 32px;
             height: 32px;
-            border-radius: 9px;
+            border-radius: var(--ph-r-sm);
             background: rgba(28,114,166,0.1);
             color: var(--pc-accent);
             display: flex;
@@ -168,7 +168,7 @@ body.dark-mode .complete-card {
 
         .complete-map {
             height: 220px;
-            border-radius: 10px;
+            border-radius: var(--ph-r-sm);
             border: 1px solid var(--pc-line);
             overflow: hidden;
             z-index: 0;
@@ -185,9 +185,9 @@ body.dark-mode .complete-card {
             background: rgba(28,114,166,0.08);
             color: var(--pc-accent);
             border: none;
-            border-radius: 9px;
+            border-radius: var(--ph-r-sm);
             padding: 7px 13px;
-            font-size: 12px;
+            font-size: var(--fs-xs);
             font-weight: 700;
             cursor: pointer;
             font-family: inherit;
@@ -213,7 +213,7 @@ body.dark-mode .complete-card {
             display: flex;
             align-items: center;
             gap: 7px;
-            font-size: 13px;
+            font-size: var(--fs-sm);
             font-weight: 600;
             color: var(--pc-text-soft);
             width: 110px;
@@ -229,14 +229,14 @@ body.dark-mode .complete-card {
             min-width: 200px;
         }
         .complete-day-sep { color: var(--pc-text-faint); }
-        .complete-day-times .form-control { padding: 7px 10px; font-size: 12.5px; }
+        .complete-day-times .form-control { padding: 7px 10px; font-size: var(--fs-xs); }
         .complete-day-quick { display: flex; gap: 5px; }
         .btn-mini {
             background: var(--pc-surface-alt);
             border: none;
-            border-radius: 8px;
+            border-radius: var(--ph-r-sm);
             padding: 5px 10px;
-            font-size: 11px;
+            font-size: var(--fs-2xs);
             font-weight: 700;
             color: var(--pc-text-soft);
             cursor: pointer;
@@ -254,7 +254,7 @@ body.dark-mode .complete-card {
             margin-top: auto;
             padding-top: 6px;
         }
-        .complete-footer .btn-submit { width: 100%; padding: 13px; font-size: 14px; }
+        .complete-footer .btn-submit { width: 100%; padding: 13px; font-size: var(--fs-md); }
 
         .input-with-icon { position: relative; }
         .input-with-icon > svg:first-child {
@@ -270,9 +270,9 @@ body.dark-mode .complete-card {
         .input-with-icon .form-control { padding-inline-start: 38px; }
         .input-with-icon .form-control[type="password"] { padding-inline-end: 38px; }
         textarea.form-control { resize: vertical; min-height: 70px; }
-        .field-error { color: var(--pc-danger); font-size: 12px; margin-top: 5px; display: block; }
+        .field-error { color: var(--pc-danger); font-size: var(--fs-xs); margin-top: 5px; display: block; }
         body.dark-mode .field-error { color: #fca5a5; }
-        .hint-under { margin: 6px 0 0; font-size: 12px; color: var(--pc-text-faint); }
+        .hint-under { margin: 6px 0 0; font-size: var(--fs-xs); color: var(--pc-text-faint); }
         body.dark-mode .hint-under { color: var(--ink-faint); }
         .eye-toggle {
             position: absolute;
@@ -287,7 +287,7 @@ body.dark-mode .complete-card {
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
+            border-radius: var(--ph-r-sm);
             transition: color 0.2s ease, background-color 0.2s ease;
         }
         .eye-toggle:hover { color: var(--pc-accent); background: rgba(28,114,166,0.08); }

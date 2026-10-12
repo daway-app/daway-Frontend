@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AR } from '@/lib/i18n';
-import { AsyncBoundary } from '@/components/ui';
+import { AsyncBoundary, PageHeader } from '@/components/ui';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -75,12 +75,12 @@ export function MedicineRequestPage() {
 
   return (
     <div className="edit-medicine-page-wrapper">
-      <div className="page-heading">
-        <div>
-          <h1>{R.heading.replace(':pharmacy', user?.name ?? '')}</h1>
-          <p>{R.subtitle}</p>
-        </div>
-      </div>
+      {/* Was a hand-rolled `.page-heading`. No chip on this screen — the title
+          carries no icon, which `PageHeader` handles by omitting `iconChip`. */}
+      <PageHeader
+        title={R.heading.replace(':pharmacy', user?.name ?? '')}
+        subtitle={R.subtitle}
+      />
 
       <AsyncBoundary
         isLoading={categories.isLoading}

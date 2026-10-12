@@ -19,21 +19,46 @@ export function PageHeader({
   subtitle,
   actions,
   icon,
+  iconChip,
 }: {
   title: string;
   subtitle?: ReactNode;
   actions?: ReactNode;
-  /** Optional Font Awesome class rendered before the title. */
+  /** Optional Font Awesome class rendered INLINE before the title. */
   icon?: string;
+  /**
+   * Optional icon rendered inside the standard chip beside the title.
+   *
+   * WHY A SEPARATE PROP rather than overloading `icon`: `icon` is a Font Awesome
+   * class string drawn inline inside the `<h1>`; this one is a boxed 46px chip
+   * that sits BESIDE the title block and may hold arbitrary content — the
+   * alternatives page passes an inline `<svg>`, which a class string cannot
+   * express. Reusing `icon` would have changed how every existing call site
+   * renders.
+   */
+  iconChip?: ReactNode;
 }) {
+  const body = (
+    <>
+      <h1>
+        {icon && <i className={icon} />} {title}
+      </h1>
+      {subtitle != null && <p>{subtitle}</p>}
+    </>
+  );
+
   return (
     <div className="ph-head">
-      <div className="ph-page-title">
-        <h1>
-          {icon && <i className={icon} />} {title}
-        </h1>
-        {subtitle != null && <p>{subtitle}</p>}
-      </div>
+      {iconChip != null ? (
+        <div className="ph-page-title has-chip">
+          <div className="ph-head-icon" aria-hidden="true">
+            {iconChip}
+          </div>
+          <div>{body}</div>
+        </div>
+      ) : (
+        <div className="ph-page-title">{body}</div>
+      )}
       {actions != null && <div className="ph-actions">{actions}</div>}
     </div>
   );

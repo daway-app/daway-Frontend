@@ -24,17 +24,17 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* Surface comes from the shared `.ph-card` group in ui-system.css.
+   ⚠️ This bare `.main-card` is NOT the one the admin pages use — they resolve
+   to the more specific `.admin-page .main-card` in admin-shell.css. This rule
+   reaches ProfileCompletePage, which is not wrapped in `.admin-page`. */
 .main-card {
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Coloured, prominent card header */
 .card-header-modern {
-    background: linear-gradient(135deg, #155E85 0%, #0F766E 100%);
+    background: linear-gradient(135deg, var(--teal-deep) 0%, #0F766E 100%);
     color: #ffffff;
     padding: 25px 30px;
     display: flex;
@@ -43,14 +43,14 @@
 }
 
 .header-title-area h2 {
-    font-size: 19px;
+    font-size: var(--fs-xl);
     font-weight: 700;
     margin: 0 0 5px 0;
     color: #ffffff;
 }
 
 .header-title-area p {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     margin: 0;
     color: #ccfbf1;
     opacity: 0.9;
@@ -60,11 +60,11 @@
     width: 50px;
     height: 50px;
     background: rgba(255, 255, 255, 0.15);
-    border-radius: 14px;
+    border-radius: var(--ph-r-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: var(--fs-2xl);
     backdrop-filter: blur(5px);
 }
 
@@ -90,7 +90,7 @@
 
 .form-group label {
     display: block;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     font-weight: 600;
     color: var(--ink);
     margin-bottom: 8px;
@@ -100,29 +100,10 @@
     color: var(--danger-text);
 }
 
-.form-control {
-    width: 100%;
-    padding: 11px 16px;
-    font-size: 13px;
-    border: 1px solid var(--line-strong);
-    border-radius: 12px;
-    outline: none;
-    background-color: var(--canvas);
-    color: var(--ink);
-    box-sizing: border-box;
-    transition: all 0.25s ease;
-}
-
-.form-control:hover {
-    border-color: var(--line-strong);
-    background-color: var(--paper);
-}
-
-.form-control:focus {
-    border-color: var(--focus-ring);
-    background-color: var(--paper);
-    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
-}
+/* Field surface — height, radius, border, focus ring and the
+   hover/disabled/readonly/error states — comes from the shared input group in
+   ui-system.css. What stays here is only what is specific to this screen: the
+   select chevron and the password-toggle inset. */
 
 /* Password field wrapper + eye toggle */
 .password-container {
@@ -143,7 +124,7 @@
     border: none;
     cursor: pointer;
     color: var(--ink-soft);
-    font-size: 16px;
+    font-size: var(--fs-lg);
     padding: 0;
     display: flex;
     align-items: center;
@@ -177,7 +158,7 @@
 }
 
 .strength-text {
-    font-size: 11px;
+    font-size: var(--fs-2xs);
     margin-top: 5px;
     display: block;
     font-weight: 500;
@@ -206,38 +187,10 @@ select.form-control {
     gap: 12px;
 }
 
-.btn-submit {
-    background-color: var(--teal-fill);
-    color: #ffffff;
-    padding: 11px 24px;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 13px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
-}
-
-.btn-submit:hover {
-    background-color: #1C72A6;
-    transform: translateY(-1px);
-}
-
-.btn-cancel {
-    color: var(--ink-soft);
-    text-decoration: none;
-    font-size: 13px;
-    font-weight: 500;
-    padding: 11px 18px;
-    border-radius: 12px;
-    transition: all 0.2s ease;
-}
-
-.btn-cancel:hover {
-    background-color: var(--line);
-    color: var(--ink);
-}
+/* `.btn-submit` / `.btn-cancel` are owned by ui-system.css. This file's copies
+   used `padding: 11px 24px`, `border-radius: 12px`, `font-size: 13px` and a
+   hard-coded teal glow (`rgba(20,184,166,.2)`) — and, being imported later,
+   they were also painting the medicines form. All deleted. */
 
 /* Error box */
 .alert-danger-modern {
@@ -245,8 +198,8 @@ select.form-control {
     border: 1px solid #fecaca;
     color: var(--danger-text);
     padding: 14px 18px;
-    border-radius: 12px;
-    font-size: 13px;
+    border-radius: var(--ph-r-md);
+    font-size: var(--fs-sm);
     margin-bottom: 25px;
 }
 
@@ -256,8 +209,8 @@ select.form-control {
     border: 1px solid #86EFAC;
     color: var(--success-text);
     padding: 14px 18px;
-    border-radius: 12px;
-    font-size: 14px;
+    border-radius: var(--ph-r-md);
+    font-size: var(--fs-md);
     font-weight: 600;
 }
 
@@ -273,12 +226,6 @@ select.form-control {
 /* ==========================================
    Dark Mode
    ========================================== */
-body.dark-mode .main-card {
-    background: var(--paper);
-    border-color: var(--line);
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.35);
-}
-
 body.dark-mode .card-footer-modern {
     background-color: var(--canvas);
     border-top-color: var(--line);
@@ -288,29 +235,10 @@ body.dark-mode .form-group label {
     color: var(--ink);
 }
 
-body.dark-mode .form-control {
-    background-color: var(--canvas);
-    border-color: var(--line-strong);
-    color: var(--ink);
-}
-
-body.dark-mode .form-control:hover {
-    border-color: #14b8a6;
-    background-color: var(--paper);
-}
-
-body.dark-mode .form-control:focus {
-    border-color: #14b8a6;
-    background-color: var(--paper);
-    box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
-}
-
-body.dark-mode .form-control::placeholder {
-    color: var(--ink-faint);
-}
-
-/* AUDIT B-9/B-16 — dark read-only/disabled field rule consolidated into
-   base.css so this visual has one owner and one token pair. */
+/* The `.form-control` dark overrides are gone: the field now resolves to the
+   shared input group in ui-system.css, whose values are all tokens that flip
+   with the theme. They also carried two hard-coded teals (`#14b8a6`) on hover
+   and focus that no longer exist in the design. */
 
 body.dark-mode .toggle-password {
     color: var(--ink-soft);
@@ -332,14 +260,8 @@ body.dark-mode select.form-control {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%237BC1B7'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
 }
 
-body.dark-mode .btn-cancel {
-    color: var(--ink-soft);
-}
-
-body.dark-mode .btn-cancel:hover {
-    background-color: var(--line-soft);
-    color: var(--ink);
-}
+/* The `.btn-cancel` dark pair is gone — the button now resolves to the shared
+   `.ph-btn` outline values, which are tokens that already flip. */
 
 body.dark-mode .alert-danger-modern {
     background-color: rgba(239, 68, 68, 0.12);

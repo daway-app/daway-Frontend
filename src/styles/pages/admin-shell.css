@@ -57,18 +57,17 @@
     --primary: var(--teal-primary);
     --primary-dark: var(--teal-deep);
     --primary-soft: var(--teal-mist);
-    --primary-glow: rgba(28, 114, 166, 0.35);
+    --primary-glow: var(--primary-glow);
     --surface: var(--paper);
     --shadow-sm: 0 8px 24px rgba(15, 23, 42, 0.05);
     --shadow-md: 0 18px 45px rgba(15, 23, 42, 0.08);
 }
 
-body.dark-mode,
-html[data-theme='dark'] {
+body.dark-mode {
     --muted: var(--ink-soft);
     --surface: var(--paper);
-    --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.2);
-    --shadow-md: 0 18px 45px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 8px 24px var(--sh-ink-20);
+    --shadow-md: 0 18px 45px var(--sh-ink-30);
 }
 
 /* ----------------------------------------------------------
@@ -147,14 +146,14 @@ html[data-theme='dark'] {
 }
 
 body.dark-mode .admin-page .header-title-section h1,
-html[data-theme='dark'] .admin-page .header-title-section h1 {
+body.dark-mode .admin-page .header-title-section h1 {
     background: linear-gradient(135deg, var(--ink), var(--ink-soft));
     -webkit-background-clip: text;
     background-clip: text;
 }
 
 .admin-page .header-title-section p {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--muted);
     margin: 0;
 }
@@ -172,7 +171,7 @@ html[data-theme='dark'] .admin-page .header-title-section h1 {
 .admin-page .breadcrumb-trail {
     display: flex;
     gap: 6px;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--ink-faint);
     margin-block-end: 20px;
 }
@@ -205,58 +204,31 @@ html[data-theme='dark'] .admin-page .header-title-section h1 {
     }
 }
 
+/* Surface (bg / border / radius / shadow) comes from the single `.ph-card`
+   group in ui-system.css — not repeated here. Padding and layout stay.
+   The old top hairline (`::before`, a teal gradient) is gone: it made the
+   stat card the only card in the app wearing a decoration, and it referenced
+   `--primary` for a value the shared surface already expresses. */
 .admin-page .stat-card {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.88));
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
     padding: 20px 24px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     min-height: 100px;
-    box-shadow: var(--shadow-sm);
     transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease);
     text-decoration: none;
     color: inherit;
 }
 
-body.dark-mode .admin-page .stat-card,
-html[data-theme='dark'] .admin-page .stat-card {
-    background: linear-gradient(145deg, rgba(17, 36, 51, 0.96), rgba(42, 71, 97, 0.88));
-    border-color: var(--line);
-}
-
-/* The top hairline: right-anchored, drawn at 35% and grown to full width. */
-.admin-page .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 44%;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, var(--primary));
-    opacity: 0.75;
-    transform: scaleX(0.35);
-    transform-origin: right;
-    transition: transform 0.45s var(--ease);
-}
-.admin-page .stat-card:hover::before {
-    transform: scaleX(1);
-}
-.admin-page .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-md);
-}
-
 .admin-page .stat-title {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--muted);
     font-weight: 600;
 }
 .admin-page .stat-value {
-    font-size: 26px;
+    font-size: var(--fs-2xl);
     font-weight: 800;
     margin-block-start: 8px;
     transition: transform 0.35s var(--ease);
@@ -278,13 +250,17 @@ html[data-theme='dark'] .admin-page .stat-card {
     cursor: pointer;
     transition: box-shadow 0.2s, transform 0.15s;
 }
-.admin-page .stat-card-link:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
-}
-.admin-page .stat-card-danger {
-    background: var(--danger-bg) !important;
-    border-color: rgba(220, 38, 38, 0.3) !important;
+/* The hover lift lives in the shared card-hover group in ui-system.css. */
+/* The needs-review variant: redefines the shared surface tokens on the element
+   itself, so the single `.ph-card` group rule paints it — no `!important`, and
+   no second copy of the surface to keep in sync.
+   `.admin-page .stat-card.stat-card-danger` (0,3,0) outranks the group's
+   `.admin-page .stat-card` (0,2,0) on specificity, so source order is irrelevant.
+   The border was `rgba(220,38,38,.3)`; `--danger` is that same red as a token
+   (full opacity — the one visible difference, noted in the phase report). */
+.admin-page .stat-card.stat-card-danger {
+    --surface-bg: var(--danger-bg);
+    --surface-border: var(--danger);
 }
 .admin-page .stat-card-danger .stat-title {
     color: var(--danger-text);
@@ -293,21 +269,14 @@ html[data-theme='dark'] .admin-page .stat-card {
 /* ----------------------------------------------------------
    §6a — search card
    ---------------------------------------------------------- */
+/* Surface comes from the shared `.ph-card` group in ui-system.css. Padding and
+   the flex layout stay here. */
 .admin-page .filter-card {
-    background: var(--paper);
-    border-radius: 16px;
     padding: 14px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-block-end: 24px;
-    border: 1px solid #e2e8f0;
-}
-
-body.dark-mode .admin-page .filter-card,
-html[data-theme='dark'] .admin-page .filter-card {
-    background: var(--paper);
-    border-color: var(--line);
 }
 
 .admin-page .filter-row {
@@ -317,24 +286,10 @@ html[data-theme='dark'] .admin-page .filter-card {
     width: 100%;
 }
 
+/* Everything but the flex sizing comes from the shared input group in
+   ui-system.css — including the border, which was a hard-coded `#e2e8f0`. */
 .admin-page .filter-input {
     flex: 1;
-    padding: 10px 16px;
-    background: var(--canvas);
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 13px;
-    font-family: inherit;
-    color: var(--ink);
-    outline: none;
-    transition: border-color 0.2s;
-}
-.admin-page .filter-input:focus {
-    border-color: var(--focus-ring);
-    box-shadow: 0 0 0 3px var(--teal-mist);
-}
-.admin-page .filter-input::placeholder {
-    color: var(--ink-faint);
 }
 
 /* The debounce indicator. Blade toggles `display` inline from JS; here it is a
@@ -344,7 +299,7 @@ html[data-theme='dark'] .admin-page .filter-card {
     align-items: center;
     gap: 6px;
     color: var(--teal-text);
-    font-size: 13px;
+    font-size: var(--fs-sm);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -369,19 +324,12 @@ html[data-theme='dark'] .admin-page .filter-card {
    edge-to-edge, which is why `.card-top-bar` and the `th` carry their own
    24px inline padding.
    ---------------------------------------------------------- */
+/* Surface comes from the shared `.ph-card` group in ui-system.css.
+   The asymmetric padding (24px 0 20px 0) is deliberate — the table runs
+   edge-to-edge — so it stays. */
 .admin-page .main-card {
-    background: var(--paper);
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
     padding: 24px 0 20px 0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     overflow: hidden;
-}
-
-body.dark-mode .admin-page .main-card,
-html[data-theme='dark'] .admin-page .main-card {
-    background: var(--paper);
-    border-color: var(--line);
 }
 
 .admin-page .card-top-bar {
@@ -391,54 +339,52 @@ html[data-theme='dark'] .admin-page .main-card {
     align-items: center;
 }
 .admin-page .card-top-bar h3 {
-    font-size: 16px;
+    font-size: var(--fs-lg);
     font-weight: 800;
     color: var(--ink);
     margin: 0;
 }
 .admin-page .card-top-bar span {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--ink-faint);
 }
 
+/* Admin tables normally come from the `DataTable` component, which already
+   emits `.ph-table`. `.custom-table` is the one hand-rolled table left
+   (categories), so it now takes the same header treatment, row hover and
+   border tokens as `.ph-table`.
+   Padding, column widths and markup are untouched; the cell font-size is left
+   for the typography pass (Phase 4). */
 .admin-page .custom-table {
     width: 100%;
     border-collapse: collapse;
     text-align: right;
+    /* Matches `.ph-table`, which sets the same size on the <table>. The cells
+       used to carry their own 13px, so this one table read a size smaller than
+       every `DataTable` on the same screens. */
+    font-size: var(--fs-md);
 }
 .admin-page .custom-table th {
-    background: var(--paper);
-    color: var(--muted);
-    font-size: 12px;
+    background: var(--ph-canvas);
+    color: var(--ph-ink-soft);
+    font-size: var(--fs-sm);
     font-weight: 700;
+    letter-spacing: 0.01em;
     padding: 12px 24px;
-    border-block: 1px solid #f1f5f9;
+    border-block: 1px solid var(--ph-line);
 }
 .admin-page .custom-table td {
     padding: 16px 24px;
-    border-block-end: 1px solid #f8fafc;
-    font-size: 13px;
+    border-block-end: 1px solid var(--ph-line-soft);
     vertical-align: middle;
-    color: var(--ink);
+    color: var(--ph-ink);
 }
 
-body.dark-mode .admin-page .custom-table th,
-html[data-theme='dark'] .admin-page .custom-table th {
-    background: var(--paper);
-    border-color: var(--line);
+.admin-page .custom-table tbody tr {
+    transition: background-color var(--tr-fast);
 }
-body.dark-mode .admin-page .custom-table td,
-html[data-theme='dark'] .admin-page .custom-table td {
-    border-color: var(--line);
-    color: var(--ink);
-}
-
 .admin-page .custom-table tbody tr:hover {
-    background-color: var(--canvas);
-}
-body.dark-mode .admin-page .custom-table tbody tr:hover,
-html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
-    background-color: var(--line-soft);
+    background-color: var(--ph-teal-mist);
 }
 
 /* A horizontally scrollable variant for the wide pages (users, logs). The
@@ -453,11 +399,11 @@ html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
 .admin-page .pill-icon-wrapper {
     width: 36px;
     height: 36px;
-    border-radius: 10px;
+    border-radius: var(--ph-r-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: var(--fs-lg);
     flex-shrink: 0;
 }
 .admin-page .icon-cyan {
@@ -471,7 +417,7 @@ html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
 .admin-page .cat-cell__img {
     width: 42px;
     height: 42px;
-    border-radius: 10px;
+    border-radius: var(--ph-r-sm);
     object-fit: cover;
     flex-shrink: 0;
     display: block;
@@ -481,12 +427,12 @@ html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
     min-width: 0;
 }
 .admin-page .cat-cell__name {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink);
 }
 .admin-page .cat-cell__meta {
-    color: #94a3b8;
-    font-size: 11px;
+    color: var(--ink-faint);
+    font-size: var(--fs-2xs);
     overflow-wrap: anywhere;
 }
 .admin-page .cat-cell__chips {
@@ -496,15 +442,15 @@ html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
     gap: 4px;
 }
 .admin-page .cat-chip {
-    font-size: 10px;
+    font-size: var(--fs-2xs);
     background: var(--field-bg, #f1f5f9);
     color: #64748b;
-    border-radius: 6px;
+    border-radius: var(--ph-r-sm);
     padding: 2px 6px;
 }
 
 .admin-page .cell-count {
-    color: #1c72a6;
+    color: var(--teal-text);
     font-weight: 700;
 }
 
@@ -550,8 +496,8 @@ html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
     min-width: 36px;
 }
 .admin-page .cell-empty {
-    color: #94a3b8;
-    font-size: 13px;
+    color: var(--ink-faint);
+    font-size: var(--fs-sm);
 }
 
 /* ----------------------------------------------------------
@@ -559,8 +505,8 @@ html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
    ---------------------------------------------------------- */
 .admin-page .pill-badge {
     padding: 5px 14px;
-    border-radius: 20px;
-    font-size: 11px;
+    border-radius: var(--ph-r-xl);
+    font-size: var(--fs-2xs);
     font-weight: 700;
     display: inline-flex;
     align-items: center;
@@ -588,9 +534,9 @@ html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
 }
 
 .admin-page .status-badge.available { background-color: var(--success-bg); color: var(--success-text); }
-.admin-page .status-badge.unavailable { background-color: #ffe4e6; color: #be123c; }
+.admin-page .status-badge.unavailable { background-color: var(--danger-bg); color: var(--danger-text); }
 .admin-page .status-badge.low { background-color: var(--warning-bg); color: var(--warning-text); }
-.admin-page .status-badge.out { background-color: #ffe4e6; color: #be123c; }
+.admin-page .status-badge.out { background-color: var(--danger-bg); color: var(--danger-text); }
 
 .admin-page .badge-category { background-color: var(--info-bg); color: var(--info-text); }
 .admin-page .badge-none {
@@ -610,34 +556,35 @@ html[data-theme='dark'] .admin-page .custom-table tbody tr:hover {
     gap: 8px;
 }
 
+/* Row-action icon buttons — the `.ph-btn.icon` metrics (`--ctl-h-sm` square,
+   `--ph-r-md`), so a table action and a toolbar icon button finally match.
+   They were 30px/8px with a hard-coded `#e2e8f0` border and no dark handling. */
 .admin-page .action-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
+    width: var(--ctl-h-sm);
+    height: var(--ctl-h-sm);
+    border-radius: var(--ph-r-md);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #e2e8f0;
-    background: var(--paper);
-    color: var(--ink-soft);
+    border: 1px solid var(--ph-line);
+    background: var(--ph-paper);
+    color: var(--ph-ink-soft);
     cursor: pointer;
     padding: 0;
-    transition: all 0.2s ease;
-}
-
-body.dark-mode .admin-page .action-btn,
-html[data-theme='dark'] .admin-page .action-btn {
-    background: var(--line-soft);
-    border-color: var(--line-strong);
+    transition: background-color var(--tr-fast), border-color var(--tr-fast),
+        color var(--tr-fast);
 }
 
 .admin-page .action-btn.edit { color: var(--warning-text); }
 .admin-page .action-btn.delete { color: var(--danger-text); }
-.admin-page .action-btn.view { color: #1c72a6; }
+.admin-page .action-btn.view { color: var(--teal-text); }
 
-.admin-page .action-btn.edit:hover { background-color: var(--warning-bg); border-color: #ffedd5; }
-.admin-page .action-btn.delete:hover { background-color: var(--danger-bg); border-color: #fee2e2; }
-.admin-page .action-btn.view:hover { background-color: var(--info-bg); border-color: #bae6fd; }
+/* The hover border was a hand-picked pale tint (`#ffedd5`, `#fee2e2`,
+   `#bae6fd`) with no token of its own; the matching state background token
+   gives the same "fills in" affordance from the palette. */
+.admin-page .action-btn.edit:hover { background-color: var(--warning-bg); border-color: var(--warning-bg); }
+.admin-page .action-btn.delete:hover { background-color: var(--danger-bg); border-color: var(--danger-bg); }
+.admin-page .action-btn.view:hover { background-color: var(--info-bg); border-color: var(--info-bg); }
 
 .admin-page .action-btn:disabled {
     opacity: 0.55;
@@ -657,7 +604,7 @@ html[data-theme='dark'] .admin-page .action-btn {
 }
 .admin-page .pagination-wrapper .page-meta {
     direction: rtl;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     color: var(--ink-faint);
     padding: 0 8px;
 }
@@ -669,7 +616,7 @@ html[data-theme='dark'] .admin-page .action-btn {
 .admin-page .table-empty-cell {
     text-align: center;
     padding: 24px;
-    color: #94a3b8;
+    color: var(--ink-faint);
 }
 
 /* ----------------------------------------------------------
@@ -678,10 +625,10 @@ html[data-theme='dark'] .admin-page .action-btn {
    come from tokens and dark mode is handled.
    ---------------------------------------------------------- */
 .admin-page .flash {
-    border-radius: 12px;
+    border-radius: var(--ph-r-md);
     padding: 12px 18px;
     margin-block-end: 16px;
-    font-size: 14px;
+    font-size: var(--fs-md);
 }
 .admin-page .flash.success {
     background: var(--success-bg);
@@ -689,8 +636,8 @@ html[data-theme='dark'] .admin-page .action-btn {
     border: 1px solid #a7f3d0;
 }
 .admin-page .flash.error {
-    background: #ffe4e6;
-    color: #be123c;
+    background: var(--danger-bg);
+    color: var(--danger-text);
     border: 1px solid #fecdd3;
 }
 
@@ -714,14 +661,14 @@ html[data-theme='dark'] .admin-page .action-btn {
     margin-inline: auto;
     background: var(--paper);
     border: 1px solid var(--line-soft);
-    border-radius: 18px;
+    border-radius: var(--ph-r-lg);
     overflow: hidden;
     padding-block-end: 26px;
     box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
 }
 
 body.dark-mode .admin-page .adp-card,
-html[data-theme='dark'] .admin-page .adp-card {
+body.dark-mode .admin-page .adp-card {
     border-color: var(--line-strong);
     box-shadow: none;
 }
@@ -745,7 +692,7 @@ html[data-theme='dark'] .admin-page .adp-card {
 .admin-page .adp-banner h2 {
     margin: 0;
     color: #fff;
-    font-size: 1.35rem;
+    font-size: var(--fs-xl);
     line-height: 1.4;
     /* A long name must wrap inside the banner, not overflow it. */
     overflow-wrap: anywhere;
@@ -794,7 +741,7 @@ html[data-theme='dark'] .admin-page .adp-card {
 }
 
 .admin-page .adp-fact dt {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 600;
     letter-spacing: 0.02em;
     color: var(--ink-faint);
@@ -803,7 +750,7 @@ html[data-theme='dark'] .admin-page .adp-card {
 
 .admin-page .adp-fact dd {
     margin: 0;
-    font-size: 15px;
+    font-size: var(--fs-md);
     font-weight: 500;
     color: var(--ink);
     overflow-wrap: anywhere;
@@ -836,7 +783,7 @@ html[data-theme='dark'] .admin-page .adp-card {
     justify-content: center;
     gap: 7px;
     margin: 14px 24px 0;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     line-height: 1.6;
     color: var(--ink-faint);
     text-align: center;
@@ -926,28 +873,21 @@ html[data-theme='dark'] .admin-page .adp-card {
     }
 }
 
+/* Surface comes from the shared `.ph-card` group in ui-system.css. Padding
+   stays 28px. The `backdrop-filter` went with the old translucent gradient:
+   against an opaque surface it can never show through, so it was inert. */
 .admin-page .chart-card {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.78));
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid #e2e8f0;
-    border-radius: 20px;
     padding: 28px;
-    box-shadow: var(--shadow-sm);
     transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
-}
-
-body.dark-mode .admin-page .chart-card,
-html[data-theme='dark'] .admin-page .chart-card {
-    background: linear-gradient(145deg, rgba(17, 36, 51, 0.94), rgba(42, 71, 97, 0.78));
-    border-color: var(--line);
 }
 
 .admin-page .chart-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 22px 45px rgba(15, 23, 42, 0.1);
+    /* Was a hard-coded `0 22px 45px rgba(15,23,42,.1)`. The shared lift token
+       keeps this card's hover consistent with every other card. */
+    box-shadow: var(--ph-sh-md);
 }
 
 .admin-page .chart-card-header {
@@ -958,14 +898,14 @@ html[data-theme='dark'] .admin-page .chart-card {
 }
 
 .admin-page .chart-card-header h3 {
-    font-size: 1.15rem;
+    font-size: var(--fs-lg2);
     color: var(--ink);
     font-weight: 800;
     margin: 0 0 2px 0;
 }
 
 .admin-page .chart-subtext {
-    font-size: 0.78rem;
+    font-size: var(--fs-xs);
     color: var(--muted);
     margin: 0;
 }
@@ -973,12 +913,12 @@ html[data-theme='dark'] .admin-page .chart-card {
 .admin-page .header-icon {
     width: 44px;
     height: 44px;
-    border-radius: 12px;
+    border-radius: var(--ph-r-md);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    font-size: 1.3rem;
+    font-size: var(--fs-xl);
     box-shadow: 0 7px 18px rgba(15, 23, 42, 0.08);
     transition: transform 0.4s var(--ease);
 }
@@ -1050,7 +990,7 @@ html[data-theme='dark'] .admin-page .chart-card {
 }
 
 .admin-page .donut-caption {
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     color: var(--muted);
     font-weight: 600;
     margin-block-start: 4px;
@@ -1091,7 +1031,7 @@ html[data-theme='dark'] .admin-page .chart-card {
     align-items: center;
     gap: 10px;
     padding: 8px 12px;
-    border-radius: 10px;
+    border-radius: var(--ph-r-sm);
     transition: all 0.2s ease;
 }
 
@@ -1101,7 +1041,7 @@ html[data-theme='dark'] .admin-page .chart-card {
 }
 
 body.dark-mode .admin-page .legend-row:hover,
-html[data-theme='dark'] .admin-page .legend-row:hover {
+body.dark-mode .admin-page .legend-row:hover {
     background: var(--line-soft);
 }
 
@@ -1117,23 +1057,23 @@ html[data-theme='dark'] .admin-page .legend-row:hover {
 .admin-page .legend-text {
     flex: 1;
     min-width: 0;
-    font-size: 0.88rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     color: var(--ink);
 }
 
 .admin-page .badge-percent {
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     font-weight: 800;
     padding: 4px 10px;
-    border-radius: 12px;
+    border-radius: var(--ph-r-md);
     white-space: nowrap;
 }
 
 .admin-page .badge-teal { background: var(--teal-mist); color: var(--teal-text); }
 .admin-page .badge-sky { background: var(--info-bg); color: var(--info-text); }
 .admin-page .badge-amber { background: var(--warning-bg); color: var(--warning-text); }
-.admin-page .badge-rose { background: #ffe4e6; color: #be123c; }
+.admin-page .badge-rose { background: var(--danger-bg); color: var(--danger-text); }
 
 /* --- horizontal bars ---
    `--fill-w` carries the width both as the resting width and as the end state
@@ -1160,13 +1100,13 @@ html[data-theme='dark'] .admin-page .legend-row:hover {
 }
 
 .admin-page .bar-title {
-    font-size: 0.9rem;
+    font-size: var(--fs-md);
     font-weight: 700;
     color: var(--ink);
 }
 
 .admin-page .bar-percentage {
-    font-size: 0.9rem;
+    font-size: var(--fs-md);
     font-weight: 800;
 }
 
@@ -1178,7 +1118,7 @@ html[data-theme='dark'] .admin-page .legend-row:hover {
     width: 100%;
     height: 14px;
     background: var(--line-soft);
-    border-radius: 20px;
+    border-radius: var(--ph-r-xl);
     overflow: hidden;
     position: relative;
 }
@@ -1186,7 +1126,7 @@ html[data-theme='dark'] .admin-page .legend-row:hover {
 .admin-page .bar-fill {
     height: 100%;
     width: var(--fill-w);
-    border-radius: 20px;
+    border-radius: var(--ph-r-xl);
     animation: adminBarGrow 1.4s var(--ease) forwards;
     transition: width 0.6s ease;
 }
@@ -1234,7 +1174,7 @@ html[data-theme='dark'] .admin-page .legend-row:hover {
     width: 72px;
     height: 72px;
     object-fit: cover;
-    border-radius: 10px;
+    border-radius: var(--ph-r-sm);
     border: 1px solid var(--line-strong);
     background: var(--canvas);
 }
@@ -1257,10 +1197,10 @@ html[data-theme='dark'] .admin-page .legend-row:hover {
     gap: 8px;
     padding: 7px 12px;
     border: 1px solid var(--line-strong);
-    border-radius: 20px;
+    border-radius: var(--ph-r-xl);
     background: var(--paper);
     color: var(--ink);
-    font-size: 12.5px;
+    font-size: var(--fs-xs);
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
@@ -1284,7 +1224,7 @@ html[data-theme='dark'] .admin-page .legend-row:hover {
 
 .admin-page .med-alt-empty {
     margin: 0;
-    font-size: 12.5px;
+    font-size: var(--fs-xs);
     color: var(--muted);
 }
 
@@ -1297,7 +1237,7 @@ html[data-theme='dark'] .admin-page .legend-row:hover {
 }
 
 .admin-page .med-alt-count {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 700;
     color: var(--muted);
 }
@@ -1317,10 +1257,10 @@ html[data-theme='dark'] .admin-page .legend-row:hover {
     gap: 8px;
     padding: 6px 10px 6px 12px;
     border: 1px solid var(--line-strong);
-    border-radius: 8px;
+    border-radius: var(--ph-r-sm);
     background: var(--canvas);
     color: var(--ink);
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
@@ -1392,24 +1332,15 @@ html[data-theme='dark'] .admin-page .legend-row:hover {
     }
 }
 
+/* Surface comes from the shared `.ph-card` group in ui-system.css. */
 .admin-page .card-box {
-    background: var(--paper);
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
     padding: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     margin-block-end: 24px;
     box-sizing: border-box;
 }
 
-body.dark-mode .admin-page .card-box,
-html[data-theme='dark'] .admin-page .card-box {
-    background: var(--paper);
-    border-color: var(--line);
-}
-
 .admin-page .card-title {
-    font-size: 15px;
+    font-size: var(--fs-md);
     font-weight: 800;
     color: var(--ink);
     margin: 0 0 16px 0;
@@ -1434,7 +1365,7 @@ html[data-theme='dark'] .admin-page .card-box {
 }
 
 .admin-page .role-dist-count {
-    font-size: 13px;
+    font-size: var(--fs-sm);
     font-weight: 800;
     color: var(--ink);
     min-width: 40px;
@@ -1445,7 +1376,7 @@ html[data-theme='dark'] .admin-page .card-box {
 .admin-page .role-dist-bar-bg {
     flex: 1;
     height: 10px;
-    border-radius: 20px;
+    border-radius: var(--ph-r-xl);
     background-color: var(--line);
     position: relative;
     /* `visible` is load-bearing: the fill's ::after dot is positioned OUTSIDE
@@ -1474,13 +1405,13 @@ html[data-theme='dark'] .admin-page .card-box {
     background-color: inherit;
     border: 2px solid #ffffff;
     border-radius: 50%;
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 2px var(--sh-ink-20);
     z-index: 2;
 }
 
 .admin-page .role-dist-label {
     min-width: 72px;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     font-weight: 700;
     color: var(--ink);
     text-align: start;
@@ -1504,8 +1435,8 @@ html[data-theme='dark'] .admin-page .card-box {
     border: 1px solid var(--line-strong);
     background: var(--paper);
     padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 12px;
+    border-radius: var(--ph-r-xl);
+    font-size: var(--fs-xs);
     font-weight: 600;
     color: var(--ink-soft);
     font-family: inherit;

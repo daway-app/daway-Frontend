@@ -75,6 +75,35 @@
        It is the teal-light brand value, which is what the call site meant. */
     --ph-teal-soft: var(--teal-light);
 
+    /* ---------- Type scale (Phase 4.1) ----------
+       Seven steps, chosen to cover the sizes the app actually uses (11/12/13/14
+       px were by far the most common). `rem` throughout so text still scales
+       with the user's browser setting.
+
+       🔴 THE ROOT IS 15px, NOT 16px — `html { font-size: 15px }` in base.css.
+       The px figures below are what each step ACTUALLY renders at; the rem
+       value is the source of truth. (The phase brief assumed a 16px base; the
+       decision was to keep 15px and document it rather than shift every
+       screen by changing the root.) Display sizes (page titles, big stat
+       numbers, icon glyphs) are deliberately NOT on this scale — they are
+       composition, not body text. */
+    --fs-2xs: 0.6875rem; /* 10.3px */
+    --fs-xs: 0.75rem; /* 11.25px */
+    --fs-sm: 0.8125rem; /* 12.2px */
+    --fs-md: 0.875rem; /* 13.1px */
+    --fs-lg: 1rem; /* 15px */
+    --fs-lg2: 1.125rem; /* 16.9px — used 9×, too common to shave down */
+    --fs-xl: 1.25rem; /* 18.75px */
+    --fs-2xl: 1.5rem; /* 22.5px */
+
+    /* The one card surface. Aliases into tokens.css — no new colour.
+       Declared here (not repeated per card) so every card in the app resolves
+       to the same four values, and changing the surface is a one-line edit. */
+    --surface-bg: var(--ph-paper);
+    --surface-border: var(--ph-line);
+    --surface-radius: var(--ph-r-lg);
+    --surface-shadow: var(--ph-sh);
+
     /* Text placed on a BRIGHT accent fill — the dark-mode teal gradient used by
        primary buttons and active pills. A dark ink is required there, and no
        surface token expresses it: `--sidebar-bg` happens to be dark in dark
@@ -85,10 +114,7 @@
 }
 
 /* Dark mode: the ring needs more presence against a dark field. */
-html.dark-mode,
-body.dark-mode,
-html[data-theme='dark'],
-body[data-theme='dark'] {
+html.dark-mode {
     --ring: 0 0 0 3px rgba(56, 189, 248, 0.35);
 }
 
@@ -104,9 +130,14 @@ body {
     line-height: 1.7;
 }
 
-/* Page title — the single h1 of a screen. */
+/* Page title — the single h1 of a screen.
+   🔴 `.ph-page-title h1` is declared HERE alongside `.ph-head h1` on purpose:
+   they used to be split (1.6rem inside `.ph-head`, 1.7rem standalone), so the
+   same class rendered at two sizes depending on nesting. One owner, one size.
+   (1.6rem is a display size, deliberately outside the 7-step text scale.) */
 .ph-page h1,
-.ph-head h1 {
+.ph-head h1,
+.ph-page-title h1 {
     font-size: 1.6rem;
     font-weight: 700;
     line-height: 1.35;
@@ -118,7 +149,7 @@ body {
 .ph-card-head h2,
 .ph-card-title,
 .ph-modal-head h3 {
-    font-size: 1.05rem;
+    font-size: var(--fs-lg);
     font-weight: 700;
     line-height: 1.4;
     color: var(--ph-ink);
@@ -127,16 +158,42 @@ body {
 /* Supporting text under a title. */
 .ph-head p,
 .ph-page-title .subtitle {
-    font-size: 0.9rem;
+    font-size: var(--fs-md);
     line-height: 1.6;
     color: var(--ph-ink-faint);
+}
+
+/* The page-title icon chip — one box for a title icon, everywhere.
+   46px (`--ctl-h-lg`, the shared large-control height) so it lines up with a
+   large button, `--ph-r-md` radius, and the teal mist/ink pair. */
+.ph-head-icon {
+    width: var(--ctl-h-lg);
+    height: var(--ctl-h-lg);
+    border-radius: var(--ph-r-md);
+    background: var(--ph-teal-mist);
+    color: var(--ph-teal-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-lg2);
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+/* Only a title WITH a chip becomes a row. Making `.ph-page-title` flex
+   unconditionally would place the <h1> and its <p> side by side on every page
+   that has no chip — i.e. it would break every existing call site. */
+.ph-page-title.has-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
 }
 
 /* Field labels — distinct from body text by weight, not by size. */
 .ph-form-label,
 .ac-field-label,
 .fl {
-    font-size: 0.85rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     color: var(--ph-ink-soft);
 }
@@ -144,7 +201,7 @@ body {
 /* Helper / hint text. */
 .ph-hint,
 .ac-field-help {
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     line-height: 1.55;
     color: var(--ph-ink-faint);
 }
@@ -179,10 +236,11 @@ body {
     padding: 0 var(--sp-4);
     border: 1px solid transparent;
     border-radius: var(--ph-r-md);
-    font-size: 0.9rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     line-height: 1;
     white-space: nowrap;
+    text-decoration: none;
     cursor: pointer;
     transition:
         background-color var(--tr-fast),
@@ -197,7 +255,7 @@ body {
 .ph-btn.icon {
     min-height: var(--ctl-h-sm);
     padding: 0 var(--sp-3);
-    font-size: 0.85rem;
+    font-size: var(--fs-md);
 }
 
 .ph-btn.icon {
@@ -270,8 +328,12 @@ body {
     box-shadow: none;
 }
 
-/* Auth pages use their own submit/cancel classes — align them to the same
-   scale so login and the dashboard look like one product. */
+/* Auth/form submit + cancel — ONE definition.
+   🔴 These were declared in THREE places before (here, users-create.css and
+   medicines-edit.css). Only the metrics lived here, so the colours came from
+   whichever page file was imported last — meaning the admin users form's button
+   colours were also painting the medicines form. Both page copies are deleted;
+   this is now the single owner, and the variants follow `.ph-btn`. */
 .btn-submit,
 .btn-cancel {
     display: inline-flex;
@@ -281,9 +343,32 @@ body {
     min-height: var(--ctl-h-md);
     padding: 0 var(--sp-5);
     border-radius: var(--ph-r-md);
+    border: 1px solid transparent;
     font-weight: 600;
+    font-size: var(--fs-md);
+    line-height: 1;
+    cursor: pointer;
+    text-decoration: none;
     transition: background-color var(--tr-fast), border-color var(--tr-fast),
-        box-shadow var(--tr-fast), transform var(--tr-fast);
+        box-shadow var(--tr-fast), transform var(--tr-fast), color var(--tr-fast);
+}
+.btn-submit {
+    background: var(--ph-teal);
+    border-color: var(--ph-teal);
+    color: #fff;
+}
+.btn-submit:hover:not(:disabled) {
+    background: var(--ph-teal-deep);
+    border-color: var(--ph-teal-deep);
+}
+.btn-cancel {
+    background: var(--ph-paper);
+    border-color: var(--ph-line);
+    color: var(--ph-ink-soft);
+}
+.btn-cancel:hover {
+    background: var(--ph-canvas);
+    color: var(--ph-ink);
 }
 .btn-submit:active:not(:disabled),
 .btn-cancel:active:not(:disabled) {
@@ -298,23 +383,51 @@ body {
 .btn-cancel:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+    transform: none;
 }
 
 /* ==========================================================
-   4. Cards — one radius, border, shadow, padding, hover
+   4. Cards — ONE surface, declared once
+   ----------------------------------------------------------
+   Every card in the app resolves to this single rule: the ph-* reference
+   (`.ph-card`, `.ph-stat`), the admin shell (`.stat-card`, `.filter-card`,
+   `.main-card`, `.chart-card`, `.card-box`), and the form/profile cards
+   (`.main-card` bare, `.premium-card`).
+
+   🔴 THE BORDER IS `--ph-line`, NOT `--ph-line-soft`.
+   `pharmacy-hub.css` declares `.ph-card`/`.ph-stat` with `--ph-line-soft`, but
+   THIS file is imported last in `global.css`, so `--ph-line` is what actually
+   paints. The duplicated declarations were deleted from the page files so the
+   two can no longer disagree — the rendered value is now the only value.
    ========================================================== */
-.ph-card {
-    background: var(--ph-paper);
-    border: 1px solid var(--ph-line);
-    border-radius: var(--ph-r-lg);
-    box-shadow: var(--ph-sh);
-    transition: box-shadow var(--tr-base), border-color var(--tr-base);
+.ph-card,
+.ph-stat,
+.admin-page .stat-card,
+.admin-page .filter-card,
+.admin-page .main-card,
+.admin-page .chart-card,
+.admin-page .card-box,
+.main-card,
+.premium-card {
+    background: var(--surface-bg);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--surface-radius);
+    box-shadow: var(--surface-shadow);
 }
 
-/* Cards do not lift on hover. Only a card that is itself a link/button is
-   interactive, and no screen currently renders one — so no `:hover` rule is
-   shipped for a case that cannot occur (the `check:css` ratchet would flag it).
-   Add the rule together with the first clickable card. */
+/* Cards do not lift on hover, with one exception: a stat card that is itself a
+   link. `.ph-stat` is the reference for that affordance, so the admin stat card
+   shares its motion rather than inventing a second one. */
+.ph-stat:hover,
+.admin-page .stat-card:hover,
+.admin-page .stat-card-link:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ph-sh-md);
+}
+
+.ph-card {
+    transition: box-shadow var(--tr-base), border-color var(--tr-base);
+}
 .ph-card-head {
     padding: var(--sp-5) var(--sp-6);
     border-block-end: 1px solid var(--ph-line-soft);
@@ -322,7 +435,7 @@ body {
 
 .ph-card-head p {
     margin: var(--sp-1) 0 0;
-    font-size: 0.85rem;
+    font-size: var(--fs-md);
     color: var(--ph-ink-faint);
 }
 
@@ -338,6 +451,10 @@ body {
 /* ==========================================================
    5. Inputs — one height, radius, border, focus, disabled, error
    ----------------------------------------------------------
+   Every text field in the app resolves to this group: the ph-* reference
+   (`.ph-control`), the users form (`.form-control`), the medicines form
+   (`.fc`), and the admin filter bar (`.filter-input`).
+
    NOTE: `.ph-control` used `padding: 11px 14px` (≈40px tall) while the buttons
    beside it were 42px, so a field and its button never quite lined up. Both now
    use the shared control heights.
@@ -346,6 +463,9 @@ body {
 .ph-select,
 .ph-textarea,
 .ph-input,
+.form-control,
+.fc,
+.admin-page .filter-input,
 input.ph-control,
 select.ph-control,
 textarea.ph-control {
@@ -356,7 +476,7 @@ textarea.ph-control {
     border-radius: var(--ph-r-md);
     background: var(--field-bg);
     color: var(--ph-ink);
-    font-size: 0.9rem;
+    font-size: var(--fs-md);
     line-height: 1.5;
     outline: none;
     transition: border-color var(--tr-fast), box-shadow var(--tr-fast),
@@ -374,22 +494,35 @@ textarea.ph-control {
 .ph-control::placeholder,
 .ph-input::placeholder,
 .ph-textarea::placeholder,
-.ph-select::placeholder {
+.ph-select::placeholder,
+.form-control::placeholder,
+.fc::placeholder,
+.admin-page .filter-input::placeholder {
     color: var(--ph-ink-faint);
     opacity: 0.75;
 }
 
-/* Hover — a quiet affordance, not a colour change. */
+/* Hover — a quiet affordance, not a colour change.
+   `.form-control` used to also flip its background here; a field that changes
+   fill on hover reads as interactive in a way a text box is not. */
 .ph-control:hover:not(:disabled):not([readonly]),
-.ph-select:hover:not(:disabled) {
-    border-color: var(--ph-line-strong);
+.ph-select:hover:not(:disabled),
+.form-control:hover:not(:disabled):not([readonly]),
+.fc:hover:not(:disabled):not([readonly]),
+.admin-page .filter-input:hover:not(:disabled):not([readonly]) {
+    border-color: var(--line-strong);
 }
 
-/* Focus — one ring, shared with buttons. */
+/* Focus — one ring, shared with buttons.
+   `.form-control` and `.fc` shipped their own hand-written teal glows
+   (`0 0 0 4px rgba(...)`) at two different alphas; both now use `--ring`. */
 .ph-control:focus,
 .ph-select:focus,
 .ph-textarea:focus,
-.ph-input:focus {
+.ph-input:focus,
+.form-control:focus,
+.fc:focus,
+.admin-page .filter-input:focus {
     border-color: var(--focus-ring);
     box-shadow: var(--ring);
 }
@@ -399,7 +532,13 @@ textarea.ph-control {
 .ph-select:disabled,
 .ph-textarea:disabled,
 .ph-control[readonly],
-.ph-textarea[readonly] {
+.ph-textarea[readonly],
+.form-control:disabled,
+.form-control[readonly],
+.fc:disabled,
+.fc[readonly],
+.admin-page .filter-input:disabled,
+.admin-page .filter-input[readonly] {
     background: var(--ph-canvas);
     color: var(--ph-ink-faint);
     cursor: not-allowed;
@@ -413,13 +552,19 @@ textarea.ph-control {
 .ph-control[aria-invalid='true'],
 .ph-select[aria-invalid='true'],
 .ph-textarea[aria-invalid='true'],
-.ph-input[aria-invalid='true'] {
+.ph-input[aria-invalid='true'],
+.form-control[aria-invalid='true'],
+.fc[aria-invalid='true'],
+.admin-page .filter-input[aria-invalid='true'] {
     border-color: var(--ph-red);
 }
 .ph-control[aria-invalid='true']:focus,
 .ph-select[aria-invalid='true']:focus,
 .ph-textarea[aria-invalid='true']:focus,
-.ph-input[aria-invalid='true']:focus {
+.ph-input[aria-invalid='true']:focus,
+.form-control[aria-invalid='true']:focus,
+.fc[aria-invalid='true']:focus,
+.admin-page .filter-input[aria-invalid='true']:focus {
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.22);
 }
 
@@ -427,7 +572,7 @@ textarea.ph-control {
    6. Tables — one header treatment, one row hover
    ========================================================== */
 .ph-table th {
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     font-weight: 700;
     letter-spacing: 0.01em;
     color: var(--ph-ink-soft);
@@ -475,7 +620,7 @@ textarea.ph-control {
     gap: var(--sp-1);
     padding: 3px var(--sp-2);
     border-radius: var(--ph-r-full);
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     font-weight: 700;
     line-height: 1.5;
     white-space: nowrap;
@@ -488,19 +633,19 @@ textarea.ph-control {
 }
 .ph-empty i {
     font-size: 2rem;
-    color: var(--ph-line-strong);
+    color: var(--line-strong);
     display: block;
     margin-block-end: var(--sp-3);
 }
 .ph-empty h3 {
     margin: 0;
-    font-size: 1rem;
+    font-size: var(--fs-lg);
     font-weight: 700;
     color: var(--ph-ink-soft);
 }
 .ph-empty p {
     margin: var(--sp-1) 0 0;
-    font-size: 0.85rem;
+    font-size: var(--fs-md);
 }
 
 /* A failure-flavoured empty state (data could not be produced, not merely
@@ -561,14 +706,14 @@ textarea.ph-control {
 
 .ph-setup-title {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: var(--fs-lg);
     font-weight: 700;
     color: var(--ph-ink);
 }
 
 .ph-setup-count {
     margin: var(--sp-1) 0 0;
-    font-size: 0.85rem;
+    font-size: var(--fs-md);
     color: var(--ph-ink-faint);
     font-variant-numeric: tabular-nums;
 }
@@ -577,7 +722,7 @@ textarea.ph-control {
     border: none;
     background: none;
     color: var(--ph-ink-faint);
-    font-size: 1.25rem;
+    font-size: var(--fs-xl);
     line-height: 1;
     padding: 0 var(--sp-1);
     cursor: pointer;
@@ -634,7 +779,7 @@ textarea.ph-control {
 }
 
 .ph-setup-steps .is-todo > i {
-    color: var(--ph-line-strong);
+    color: var(--line-strong);
 }
 
 .ph-setup-step-text {
@@ -646,13 +791,13 @@ textarea.ph-control {
 }
 
 .ph-setup-step-label {
-    font-size: 0.9rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     color: var(--ph-ink);
 }
 
 .ph-setup-step-hint {
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     color: var(--ph-ink-faint);
 }
 
@@ -661,7 +806,7 @@ textarea.ph-control {
     display: inline-flex;
     align-items: center;
     gap: var(--sp-1);
-    font-size: 0.85rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     color: var(--ph-teal-text);
     transition: gap var(--tr-fast);
@@ -741,7 +886,7 @@ textarea.ph-control {
 
 .ph-field-msg {
     margin: 0;
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     line-height: 1.5;
     color: var(--ph-ink-faint);
 }
@@ -850,7 +995,7 @@ body.dark-mode .ph-table.is-sticky thead th {
 /* The inactive indicator is quiet; the active one is the accent colour, so the
    sorted column is obvious at a glance without a heavy treatment. */
 .ph-sort-ic {
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     opacity: 0.35;
     transition: opacity 0.15s var(--ease);
 }
@@ -886,7 +1031,7 @@ body.dark-mode .ph-table.is-sticky thead th {
     background: var(--ph-teal-text, #1C72A6);
     color: #ffffff;
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: var(--fs-lg);
     text-decoration: none;
     box-shadow: 0 8px 24px rgba(4, 20, 26, 0.28);
     transform: translateY(-200%);
@@ -949,7 +1094,7 @@ body.dark-mode .ph-table.is-sticky thead th {
 }
 
 body.dark-mode .cmdk,
-body[data-theme='dark'] .cmdk {
+body.dark-mode .cmdk {
     border-color: var(--line);
 }
 
@@ -968,7 +1113,7 @@ body[data-theme='dark'] .cmdk {
     border: 0;
     background: transparent;
     font: inherit;
-    font-size: 1rem;
+    font-size: var(--fs-lg);
     color: var(--ph-ink);
     outline: none;
 }
@@ -987,7 +1132,7 @@ body[data-theme='dark'] .cmdk {
 .cmdk-esc,
 .cmdk-foot kbd {
     font-family: inherit;
-    font-size: 0.7rem;
+    font-size: var(--fs-2xs);
     line-height: 1;
     padding: 3px 6px;
     border: 1px solid var(--ph-line);
@@ -1036,7 +1181,7 @@ body[data-theme='dark'] .cmdk {
 .cmdk-item-label {
     flex: 1;
     min-width: 0;
-    font-size: 0.92rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -1045,7 +1190,7 @@ body[data-theme='dark'] .cmdk {
 
 .cmdk-item-group {
     flex-shrink: 0;
-    font-size: 0.72rem;
+    font-size: var(--fs-xs);
     color: var(--ph-ink-faint);
 }
 
@@ -1057,14 +1202,14 @@ body[data-theme='dark'] .cmdk {
 
 .cmdk-empty-title {
     margin: 0;
-    font-size: 0.95rem;
+    font-size: var(--fs-lg);
     font-weight: 600;
     color: var(--ph-ink);
 }
 
 .cmdk-empty-hint {
     margin: var(--sp-1) 0 0;
-    font-size: 0.82rem;
+    font-size: var(--fs-sm);
     color: var(--ph-ink-faint);
 }
 
@@ -1076,7 +1221,7 @@ body[data-theme='dark'] .cmdk {
     padding: var(--sp-2) var(--sp-4);
     border-block-start: 1px solid var(--ph-line-soft);
     background: var(--ph-canvas);
-    font-size: 0.72rem;
+    font-size: var(--fs-xs);
     color: var(--ph-ink-faint);
 }
 
@@ -1105,7 +1250,7 @@ body[data-theme='dark'] .cmdk {
     background: transparent;
     color: var(--ph-ink-faint);
     font: inherit;
-    font-size: 0.78rem;
+    font-size: var(--fs-xs);
     font-weight: 600;
     cursor: pointer;
     transition: color var(--tr-fast), border-color var(--tr-fast), background var(--tr-fast);
@@ -1113,7 +1258,7 @@ body[data-theme='dark'] .cmdk {
 
 .cmdk-trigger:hover {
     color: var(--ph-ink);
-    border-color: var(--ph-line-strong);
+    border-color: var(--line-strong);
 }
 
 .cmdk-trigger:focus-visible {
@@ -1222,7 +1367,7 @@ body[data-theme='dark'] .cmdk {
     background: var(--ph-paper);
     color: var(--ph-ink);
     box-shadow: var(--ph-sh-md);
-    font-size: 0.86rem;
+    font-size: var(--fs-md);
     font-weight: 600;
     line-height: 1.5;
     pointer-events: auto;
@@ -1260,7 +1405,7 @@ body[data-theme='dark'] .cmdk {
     border-radius: var(--ph-r-sm);
     background: transparent;
     color: var(--ph-ink-faint);
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     cursor: pointer;
     transition: background var(--tr-fast), color var(--tr-fast);
 }
@@ -1354,7 +1499,7 @@ body[data-theme='dark'] .cmdk {
 
 .push-banner__icon {
     color: var(--ph-teal-text);
-    font-size: 1.1rem;
+    font-size: var(--fs-lg2);
     line-height: 1.7;
     flex: 0 0 auto;
 }
@@ -1368,13 +1513,13 @@ body[data-theme='dark'] .cmdk {
     margin: 0;
     font-weight: 700;
     color: var(--ph-ink);
-    font-size: 0.95rem;
+    font-size: var(--fs-lg);
 }
 
 .push-banner__body {
     margin: 0;
     color: var(--ph-ink-soft);
-    font-size: 0.9rem;
+    font-size: var(--fs-md);
 }
 
 .push-banner__actions {

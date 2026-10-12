@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { PageHeader } from '@/components/ui';
 import { AR } from '@/lib/i18n';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -76,8 +77,13 @@ export function AlternativeCreatePage() {
 
   return (
     <div className="edit-medicine-page-wrapper">
-      <div className="page-heading">
-        <div className="page-heading-icon">
+      {/* Was a hand-rolled `.page-heading` (22px title + its own 52px icon
+          box). The icon is an inline <svg>, which is why `iconChip` takes a
+          node rather than a Font Awesome class. */}
+      <PageHeader
+        title={C.heading.replace(':pharmacy', user?.name ?? '')}
+        subtitle={C.card_title}
+        iconChip={
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -91,12 +97,8 @@ export function AlternativeCreatePage() {
           >
             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
           </svg>
-        </div>
-        <div>
-          <h1>{C.heading.replace(':pharmacy', user?.name ?? '')}</h1>
-          <p>{C.card_title}</p>
-        </div>
-      </div>
+        }
+      />
 
       <div className="premium-card">
         <div className="card-head">

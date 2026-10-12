@@ -6,14 +6,15 @@
    forward verbatim. Values must stay byte-identical to the
    backend file — do not invent or "improve" any value.
 
-   ⚠️ Theme switching relies on the .dark-mode class on BOTH
-      <html> and <body> (same as Blade), so dark values are
-      declared for both selectors.
+   ⚠️ Theme switching keys on the `.dark-mode` class on <html>. The dark token
+      block below therefore uses `html.dark-mode` — NOT `body.dark-mode` —
+      because the pre-paint snippet in index.html runs before <body> exists and
+      can only mark <html>. Keying it on <body> would flash light on every
+      reload in dark mode.
 
-   React divergence (audit B-15): lib/theme.ts ALSO sets
-   data-theme="dark"|"light" on <html>. That attribute is now
-   consumed as an equivalent selector below, so it is a real API
-   rather than a dead write. Class and attribute stay in sync.
+   (Audit B-15 used to claim `data-theme="dark"|"light"` on <html> was "a real
+    API". It was not: nothing ever READ it — no selector, no component — so it
+    was a dead write and has been removed from lib/theme.ts and index.html.)
    ========================================================== */
 
 :root {
@@ -69,15 +70,25 @@
     --sidebar-width: 260px;
     --topbar-height: 64px;
 
-    --r-sm:  8px;
-    --r-md:  12px;
-    --r-lg:  18px;
-    --r-xl:  24px;
-    --r-full: 9999px;
+    /* Radius — aliases into the ONE scale (`--ph-r-*`), so there is a single
+       source of truth. `--ac-r-*` already did this.
+       ⚠️ `--r-xl` is deliberately NOT aliased: it is 24px while `--ph-r-xl` is
+       20px — a 4px move, beyond the 2px the phase allows. Reported, not changed. */
+    --r-sm: var(--ph-r-sm);
+    --r-md: var(--ph-r-md);
+    --r-lg: var(--ph-r-lg);
+    --r-xl: 24px;
+    --r-full: var(--ph-r-full);
 
     --sh-sm: 0 1px 2px rgba(12,34,36,.06);
     --sh-md: 0 8px 20px rgba(21,94,133,.10);
     --sh-lg: 0 20px 40px -12px rgba(0,68,82,.20);
+
+    /* Shadow inks — the repeated black alphas, named so overlays stop spelling
+       them out. Same values, so nothing moves visually. One-off alphas
+       (0.06 / 0.08) are deliberately left inline. */
+    --sh-ink-20: rgba(0, 0, 0, 0.2);
+    --sh-ink-30: rgba(0, 0, 0, 0.3);
 
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
@@ -108,17 +119,7 @@
 /* ==========================================================
    الوضع الداكن — نفس الأسماء، قيم مختلفة
    ========================================================== */
-html.dark-mode,
-body.dark-mode,
-/* AUDIT B-15 FIX — `data-theme="dark"` was being SET by lib/theme.ts but read
-   by no CSS, i.e. a dead hook that would mislead anyone who assumed a
-   [data-theme] contract existed. Rather than delete the attribute, it is now a
-   real (and preferred) selector: an attribute selector is more robust than a
-   class because it cannot be clobbered by another class on the same element,
-   and it survives element swaps. Kept alongside `.dark-mode` so the Blade
-   behaviour and the pre-paint snippet both keep working unchanged. */
-html[data-theme='dark'],
-body[data-theme='dark'] {
+html.dark-mode {
     /* ---------- المحايدات (الداكن) ---------- */
     --ink:          #EAF4F8;
     --ink-soft:     #93C5FD;

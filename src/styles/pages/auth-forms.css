@@ -62,7 +62,7 @@ body {
 }
 
 /* الداكن: تخفيف التدرّجات الزخرفية كي لا تُغرق الكحلي */
-html.dark-mode .auth-shell {
+body.dark-mode .auth-shell {
     background:
         radial-gradient(1100px 620px at 12% -10%, rgba(123,193,183,.10), transparent 60%),
         radial-gradient(900px 560px at 105% 110%, rgba(28,114,166,.16), transparent 55%),
@@ -136,7 +136,7 @@ html.dark-mode .auth-shell {
     width: 92px;
     height: 92px;
     background: var(--paper);
-    border-radius: 22px;
+    border-radius: var(--ph-r-xl);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -170,7 +170,7 @@ html.dark-mode .auth-shell {
     border: 1px solid rgba(255,255,255,.2);
     padding: 6px 14px;
     border-radius: 999px;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: .02em;
     margin-bottom: 18px;
@@ -185,7 +185,7 @@ html.dark-mode .auth-shell {
 }
 
 .hero-desc {
-    font-size: 14px;
+    font-size: var(--fs-md);
     line-height: 1.85;
     color: rgba(255,255,255,.82);
 }
@@ -300,14 +300,17 @@ html.dark-mode .auth-shell {
 }
 
 .form-title {
-    font-size: 25px;
+    /* 25px → --fs-2xl (renders 22.5px at the 15px root). Re-applied by hand:
+       the scale script skips a value used once (count ≤ 1) and this is the only
+       25px left in the codebase, so the automated run dropped it. */
+    font-size: var(--fs-2xl);
     font-weight: 800;
     color: var(--ink);
     margin-bottom: 6px;
 }
 
 .form-subtitle {
-    font-size: 13.5px;
+    font-size: var(--fs-sm);
     color: var(--ink-soft);
     margin-bottom: 28px;
     line-height: 1.6;
@@ -318,7 +321,7 @@ html.dark-mode .auth-shell {
 
 .fl {
     display: block;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     font-weight: 700;
     color: var(--ink);
     margin-bottom: 8px;
@@ -332,7 +335,7 @@ html.dark-mode .auth-shell {
     border-radius: var(--r-sm);
     border: 1.5px solid var(--line-strong);
     background: var(--teal-mist-2);
-    font-size: 14px;
+    font-size: var(--fs-md);
     font-weight: 500;
     color: var(--ink);
     outline: none;
@@ -358,7 +361,7 @@ html.dark-mode .auth-shell {
     background: transparent;
     border: none;
     color: var(--teal-text);
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 700;
     cursor: pointer;
     padding: 6px 10px;
@@ -371,7 +374,7 @@ html.dark-mode .auth-shell {
     display: flex;
     align-items: flex-start;
     gap: 6px;
-    font-size: 12px;
+    font-size: var(--fs-xs);
     line-height: 1.6;
     color: var(--teal-text);
     background: var(--teal-mist);
@@ -382,7 +385,7 @@ html.dark-mode .auth-shell {
 }
 
 .error-message {
-    font-size: 12px;
+    font-size: var(--fs-xs);
     font-weight: 600;
     color: var(--danger-text);
     margin-top: 6px;
@@ -395,7 +398,7 @@ html.dark-mode .auth-shell {
     justify-content: space-between;
     align-items: center;
     margin: 4px 0 24px;
-    font-size: 13px;
+    font-size: var(--fs-sm);
 }
 
 .remember-label {
@@ -415,7 +418,7 @@ html.dark-mode .auth-shell {
 /* نص إرشادي بديل عن رابط "نسيت كلمة المرور" الميّت (لا يوجد مسار استعادة بعد) */
 .forgot-hint {
     color: var(--ink-soft);
-    font-size: 12.5px;
+    font-size: var(--fs-xs);
     font-weight: 600;
     text-align: end;
 }
@@ -428,7 +431,7 @@ html.dark-mode .auth-shell {
     border: none;
     padding: 14px;
     border-radius: var(--r-sm);
-    font-size: 15px;
+    font-size: var(--fs-md);
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
@@ -447,7 +450,7 @@ html.dark-mode .auth-shell {
 .auth-footer {
     text-align: center;
     margin-top: 26px;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     color: var(--ink-soft);
 }
 .auth-footer a {
@@ -473,7 +476,7 @@ html.dark-mode .auth-shell {
     color: var(--teal-text);
     font-weight: 700;
     font-family: inherit;
-    font-size: 13px;
+    font-size: var(--fs-sm);
     cursor: pointer;
 }
 .auth-footer__link:hover { text-decoration: underline; }
@@ -518,8 +521,8 @@ html.dark-mode .auth-shell {
     border-radius: 50%;
     animation: spin .8s linear infinite;
 }
-.loader-icon { font-size: 18px; }
-.loader-text { font-size: 13.5px; font-weight: 700; color: var(--teal-text); }
+.loader-icon { font-size: var(--fs-lg2); }
+.loader-text { font-size: var(--fs-sm); font-weight: 700; color: var(--teal-text); }
 
 /* -- ملاحظة البطء -- 
    إرشادية فقط: الطلب لا يُلغى، والمؤشّر يبقى يدور فوقه.
@@ -527,7 +530,7 @@ html.dark-mode .auth-shell {
 .loader-slow-note {
     display: none;
     margin: 6px 0 0;
-    font-size: 12.5px;
+    font-size: var(--fs-xs);
     line-height: 1.7;
     color: var(--ink-soft);
     text-align: center;
@@ -547,20 +550,20 @@ html.dark-mode .auth-shell {
 
 /* الحقول: `--teal-mist-2` شبه شفاف في الداكن ⇒ لا سطح للحقل.
    `--field-bg` هو التوكن المخصّص لحقول الإدخال (نفس نمط بقية الصفحات). */
-html.dark-mode .fc,
-html.dark-mode .select-fc {
+body.dark-mode .fc,
+body.dark-mode .select-fc {
     background: var(--field-bg);
 }
 
 /* طبقة التحميل كانت بيضاء صريحة (rgba(255,255,255,.92)) — تُبهت العين
    في الداكن وتُخفي المحتوى خلف حجاب ساطع. */
-html.dark-mode .loader-overlay {
+body.dark-mode .loader-overlay {
     background: rgba(5, 12, 18, .92);
 }
 
 /* الكرت: `--paper` يصير #112433 تلقائياً، لكن الظل الأبيض حول الحاوية
    يجب أن يتبع الظلال الداكنة المعرّفة في tokens.css. */
-html.dark-mode .auth-container {
+body.dark-mode .auth-container {
     box-shadow: var(--sh-lg);
     border: 1px solid var(--line-soft);
 }
@@ -583,9 +586,6 @@ html.dark-mode .auth-container {
 }
 
 /* إتاحة الوصول: احترام تفضيل تقليل الحركة */
-@media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
-}
 
 /* ==========================================================
    مُبدِّل نوع الحساب (Segmented switch) — صفحة الدخول الموحّدة
@@ -648,7 +648,7 @@ html.dark-mode .auth-container {
     background: transparent;
     border-radius: var(--r-full);
     font-family: inherit;
-    font-size: 14px;
+    font-size: var(--fs-md);
     font-weight: 700;
     color: var(--ink-soft);
     cursor: pointer;
@@ -669,16 +669,16 @@ html.dark-mode .auth-container {
 
 /* الداكن: `--teal-mist-2` شبه شفاف ⇒ لا سطح للمسار، و`--paper` يصير داكناً
    فلا يبرز المؤشّر. نستخدم سطح الحقل المعتمد + ظلّاً أوضح. */
-html.dark-mode .role-switch {
+body.dark-mode .role-switch {
     background: var(--field-bg);
 }
 
-html.dark-mode .role-switch__thumb {
+body.dark-mode .role-switch__thumb {
     background: var(--teal-primary);
     box-shadow: 0 2px 10px rgba(5, 12, 18, .5);
 }
 
-html.dark-mode .role-switch__option[aria-pressed="true"] {
+body.dark-mode .role-switch__option[aria-pressed="true"] {
     color: var(--paper);
 }
 

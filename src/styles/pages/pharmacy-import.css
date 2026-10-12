@@ -23,7 +23,7 @@
     border: 1px solid var(--ph-line-soft);
     border-radius: var(--ph-r-md);
     font-weight: 600;
-    font-size: .88rem;
+    font-size: var(--fs-md);
     color: var(--ph-ink-soft);
     transition: var(--ph-tr);
 }
@@ -83,7 +83,7 @@
 .pi-drop p {
     margin: 0 0 14px;
     color: var(--ph-ink-soft);
-    font-size: .88rem;
+    font-size: var(--fs-md);
 }
 
 .pi-file-input {
@@ -93,7 +93,7 @@
 }
 
 .pi-file-name {
-    font-size: .85rem;
+    font-size: var(--fs-md);
     color: var(--ph-teal-text);
     font-weight: 600;
     min-height: 1.2em;
@@ -114,14 +114,14 @@
     border: 1px solid var(--ph-line-soft);
     border-radius: var(--ph-r-sm);
     background: var(--ph-paper);
-    font-size: .85rem;
+    font-size: var(--fs-md);
 }
 
 .pi-column code {
     background: var(--ph-canvas);
     padding: 2px 7px;
-    border-radius: 6px;
-    font-size: .78rem;
+    border-radius: var(--ph-r-sm);
+    font-size: var(--fs-xs);
     color: var(--ph-teal-text);
     direction: ltr;
 }
@@ -134,7 +134,7 @@
 .pi-column span.pi-col-desc {
     color: var(--ph-ink-faint);
     margin-inline-start: auto;
-    font-size: .78rem;
+    font-size: var(--fs-xs);
 }
 
 /* --- شريط الملخّص --- */
@@ -155,13 +155,13 @@
 
 .pi-summary-card strong {
     display: block;
-    font-size: 1.6rem;
+    font-size: var(--fs-2xl);
     line-height: 1.1;
     margin-block-end: 4px;
 }
 
 .pi-summary-card span {
-    font-size: .82rem;
+    font-size: var(--fs-sm);
     color: var(--ph-ink-faint);
     display: block;
 }
@@ -169,7 +169,7 @@
 .pi-summary-card small {
     display: block;
     margin-block-start: 6px;
-    font-size: .74rem;
+    font-size: var(--fs-xs);
     color: var(--ph-ink-faint);
     line-height: 1.5;
 }
@@ -196,7 +196,7 @@
     background: var(--ph-paper);
     color: var(--ph-ink-soft);
     font-weight: 600;
-    font-size: .83rem;
+    font-size: var(--fs-sm);
     cursor: pointer;
     transition: var(--ph-tr);
 }
@@ -215,12 +215,12 @@
     display: block;
     font-weight: 400;
     color: var(--ph-ink-faint);
-    font-size: .76rem;
+    font-size: var(--fs-xs);
     margin-block-start: 2px;
 }
 
 .pi-resolved {
-    font-size: .85rem;
+    font-size: var(--fs-md);
     color: var(--ph-ink-soft);
 }
 
@@ -236,7 +236,7 @@
 }
 
 .pi-suggestions li {
-    font-size: .78rem;
+    font-size: var(--fs-xs);
     color: var(--ph-ink-faint);
 }
 
@@ -247,7 +247,7 @@
     gap: 6px;
     padding: 5px 11px;
     border-radius: var(--ph-r-full);
-    font-size: .76rem;
+    font-size: var(--fs-xs);
     font-weight: 700;
     white-space: nowrap;
     background: var(--ph-line-soft);
@@ -272,7 +272,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: .83rem;
+    font-size: var(--fs-sm);
     color: var(--ph-ink-soft);
     cursor: pointer;
 }
@@ -291,7 +291,7 @@
     padding: 7px 11px;
     border: 1px solid var(--line-strong);
     border-radius: var(--ph-r-sm);
-    font-size: .83rem;
+    font-size: var(--fs-sm);
     background: var(--ph-paper);
     color: var(--ph-ink);
 }
@@ -325,14 +325,14 @@
     border: 0;
     background: transparent;
     cursor: pointer;
-    font-size: .83rem;
+    font-size: var(--fs-sm);
     color: var(--ph-ink);
     border-block-end: 1px solid var(--ph-line-soft);
 }
 
 .pi-search-results button:hover { background: var(--ph-teal-mist); }
-.pi-search-results button small { display: block; color: var(--ph-ink-faint); font-size: .74rem; }
-.pi-search-results .pi-no-results { padding: 10px 12px; font-size: .8rem; color: var(--ph-ink-faint); }
+.pi-search-results button small { display: block; color: var(--ph-ink-faint); font-size: var(--fs-xs); }
+.pi-search-results .pi-no-results { padding: 10px 12px; font-size: var(--fs-sm); color: var(--ph-ink-faint); }
 
 /* --- بطاقات الدمج --- */
 .pi-merge {
@@ -351,8 +351,8 @@
     margin-block-end: 10px;
 }
 
-.pi-merge-head strong { font-size: .92rem; }
-.pi-merge-head span { font-size: .78rem; color: var(--ph-ink-faint); }
+.pi-merge-head strong { font-size: var(--fs-md); }
+.pi-merge-head span { font-size: var(--fs-xs); color: var(--ph-ink-faint); }
 
 .pi-merge-options {
     display: flex;
@@ -364,7 +364,7 @@
     display: flex;
     align-items: center;
     gap: 7px;
-    font-size: .84rem;
+    font-size: var(--fs-sm);
     color: var(--ph-ink-soft);
     cursor: pointer;
 }
@@ -390,13 +390,13 @@
 }
 
 .pi-pending-note {
-    font-size: .85rem;
+    font-size: var(--fs-md);
     color: var(--ph-orange-text);
     font-weight: 600;
 }
 
 .pi-ready-note {
-    font-size: .85rem;
+    font-size: var(--fs-md);
     color: var(--ph-green-text);
     font-weight: 600;
 }
@@ -405,7 +405,7 @@
 .pi-alert {
     padding: 13px 16px;
     border-radius: var(--ph-r-md);
-    font-size: .85rem;
+    font-size: var(--fs-md);
     margin-block-end: 16px;
     border: 1px solid transparent;
 }
@@ -425,7 +425,7 @@
 .pi-hidden { display: none !important; }
 
 .pi-inline-note {
-    font-size: .78rem;
+    font-size: var(--fs-xs);
     color: var(--ph-ink-faint);
     margin: 0;
 }
@@ -441,9 +441,9 @@
     background: var(--ph-teal-mist, var(--line-soft));
     border: 1px solid rgba(13, 148, 136, .25);
     border-inline-start: 3px solid var(--ph-teal, #0d9488);
-    border-radius: 10px;
+    border-radius: var(--ph-r-sm);
     color: var(--ph-ink-soft, var(--ink));
-    font-size: .84rem;
+    font-size: var(--fs-sm);
 }
 .pi-rate-limit::before {
     content: '';
@@ -462,7 +462,7 @@
 }
 .pi-rate-limit.is-exhausted::before { background: var(--ph-orange, #ea580c); }
 
-.pi-recent td { font-size: .84rem; }
+.pi-recent td { font-size: var(--fs-sm); }
 
 /* ==========================================================
    الوضع الداكن — كان هذا الملف بلا أي قاعدة داكنة

@@ -81,7 +81,7 @@
 
 .placeholder__title {
     margin: 0 0 8px;
-    font-size: 22px;
+    font-size: var(--fs-xl);
 }
 
 .placeholder__note {

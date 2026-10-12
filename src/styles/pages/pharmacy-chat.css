@@ -12,7 +12,7 @@
     position: relative;
 }
 .ph-chat-bubble .ph-chat-text {
-    font-size: .95rem;
+    font-size: var(--fs-lg);
     color: var(--ph-ink);
     word-break: break-word;
 }
@@ -21,7 +21,7 @@
     align-items: center;
     gap: 6px;
     margin-top: 4px;
-    font-size: .72rem;
+    font-size: var(--fs-xs);
     color: var(--ph-ink-faint);
 }
 .ph-chat-bubble .ph-chat-time { font-variant-numeric: tabular-nums; }

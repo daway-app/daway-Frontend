@@ -183,7 +183,10 @@ export function AdminUsersPage() {
           <p>{U.main_description}</p>
         </div>
         <div className="header-actions">
-          <Btn to={ADMIN_ROUTES.userCreate} icon="fas fa-plus" className="btn-add-pharmacy">
+          {/* Filled to match Blade's `.btn-add-pharmacy` (and the pharmacies
+              screen's `variant="primary"`) — the class name was never carried
+              into this repo, so this rendered as bare text. */}
+          <Btn to={ADMIN_ROUTES.userCreate} variant="primary" icon="fas fa-plus">
             {U.add_button}
           </Btn>
         </div>

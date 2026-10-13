@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/auth/authHooks';
-import { CommandPaletteTrigger } from './CommandPalette';
 import { AR, roleLabel } from '@/lib/i18n';
 import { initTheme, toggleTheme } from '@/lib/theme';
+import { topbarTitleFor } from './routeTitles';
 import { IconBell, IconMoon, IconSun } from './icons';
 
 /**
@@ -15,11 +16,20 @@ import { IconBell, IconMoon, IconSun } from './icons';
  *     button.icon-btn.theme-toggle-btn > span.icon-3d.sun-icon / .moon-icon
  *     .user-profile-btn > .avatar + .user-details
  *
+ * Avatar parity with Blade: Laravel renders `auth()->user()->avatar` (thumbUrl
+ * 84×84) or the name's first letter when null. The SPA session payload
+ * (`/api/login/pharmacy`) carries NO avatar field and the pharmacy profile
+ * endpoint has none either — so the React topbar shows the initial, which is
+ * exactly what Blade renders for a pharmacy account without an avatar. (Do NOT
+ * substitute the pharmacy logo here — the topbar shows the USER, not the store.)
+ *
  * Notifications are MOCK/static (API integration is out of scope for this
  * phase) — the dropdown renders Blade's empty-state text.
  */
 export function Topbar() {
   const { user } = useAuth();
+  const { pathname } = useLocation();
+  const heading = topbarTitleFor(pathname);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -42,19 +52,14 @@ export function Topbar() {
   }, []);
 
   const initial = user?.name ? user.name.trim().charAt(0) : '؟';
-
   return (
     <div className="topbar">
       <div className="topbar-title-group">
-        <h1>{AR.topbar.dashboard_title}</h1>
-        <p>{AR.topbar.dashboard_subtitle}</p>
+        <h1>{heading.title}</h1>
+        <p>{heading.subtitle}</p>
       </div>
 
       <div className="topbar-actions">
-        {/* Command palette trigger — a quiet, keyboard-first affordance so the
-            Ctrl+K shortcut is discoverable rather than secret. */}
-        <CommandPaletteTrigger />
-
         {/* Language switch — static label "EN" (Blade shows the other locale) */}
         <a
           href="#"
@@ -106,7 +111,10 @@ export function Topbar() {
           </span>
         </button>
 
-        {/* User profile */}
+        {/* User profile — الاسم والصورة يظلان ظاهرين هنا (طلب عبود)، وزر
+            الخروج مقره فوتر السايدبار أسفل. مطابق لـBlade: صورة المستخدم
+            من `auth()->user()->avatar` — غير متاحة لجلسة الصيدلية بالـSPA،
+            فيُعرض الحرف الأول كما يفعل Blade عندما تكون null. */}
         <div className="user-profile-btn" title={AR.layout.edit_profile_modal_title}>
           <div className="avatar">{initial}</div>
           <div className="user-details">

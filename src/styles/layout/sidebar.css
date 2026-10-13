@@ -56,25 +56,19 @@ html[dir="rtl"] .nav-section {
     height: 100vh;
     background: var(--sidebar-bg);
     padding: 24px 16px;
-    
+
     flex-direction: column;
     box-sizing: border-box;
     user-select: none;
     position: fixed;
     top: 0;
+    /* Logical: pins the bar to the inline-start edge (right in RTL, left in
+       LTR); the border faces the content on the inline-END side. */
+    inset-inline-start: 0;
+    border-inline-end: 1px solid var(--sidebar-border);
     z-index: 1000;
     overflow: hidden;
     transition: background-color 0.3s;
-}
-
-html[dir="rtl"] .sidebar-pro {
-    right: 0;
-    border-left: 1px solid var(--sidebar-border);
-}
-
-html[dir="ltr"] .sidebar-pro {
-    left: 0;
-    border-right: 1px solid var(--sidebar-border);
 }
 
 body.dark-mode .sidebar-pro {
@@ -219,16 +213,11 @@ body.dark-mode .section-label { color: var(--ink-faint); }
     height: 60%;
     background: var(--active-glow);
     transition: transform 0.3s var(--ease-spring);
-}
-
-html[dir="rtl"] .nav-item::before {
-    right: 0;
-    border-radius: 4px 0 0 4px;
-}
-
-html[dir="ltr"] .nav-item::before {
-    left: 0;
-    border-radius: 0 4px 4px 0;
+    /* Logical: hugs the item's inline-start edge; the rounded corners are the
+       far (inline-end) ones in both directions. */
+    inset-inline-start: 0;
+    border-start-end-radius: 4px;
+    border-end-end-radius: 4px;
 }
 
 .nav-item:hover {
@@ -541,6 +530,41 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
     .nav-submenu .nav-subitem { transition: none; }
 }
 
+/*
+ * 🔴 ENTRANCE ANIMATIONS MUST BE DISABLE-ABLE.
+ *
+ * `sidebarSlideIn` / `sidebarSlideInRtl` start at `opacity: 0` and are applied
+ * with `animation-fill-mode: both` — so while the animation is pending the
+ * element renders in its FROM state, i.e. INVISIBLE. If the animation never
+ * runs (a reduced-motion setting, a capture tool that freezes animations at
+ * t=0, an extension), the logo header, every nav section and the user footer
+ * stay invisible forever — which reads as "the sidebar logo is missing".
+ *
+ * Disabling the animation under `prefers-reduced-motion` removes that failure
+ * mode instead of hiding it: no animation ⇒ no `both` fill ⇒ the element keeps
+ * its normal, fully-opaque style. Motion-sensitive users get the same result.
+ */
+@media (prefers-reduced-motion: reduce) {
+    /*
+     * 🔴 `html[dir]` IS REQUIRED — not cosmetic.
+     *
+     * The direction rules near the top of this file are
+     * `html[dir="rtl"] .sidebar-logo-header, html[dir="rtl"] .nav-section
+     * { animation-name: … }` — specificity (0,2,1). A plain
+     * `.sidebar-logo-header { animation: none }` is only (0,1,0), so it LOST:
+     * `animation` resets `animation-name` to `none`, then the more specific
+     * rule set it back and the entrance animation ran anyway (measured: the
+     * footer obeyed, the logo and every nav section did not).
+     * Prefixing with `html[dir]` matches (0,2,1) and, being later in the file,
+     * wins on source order.
+     */
+    html[dir] .sidebar-logo-header,
+    html[dir] .nav-section,
+    .user-profile-footer {
+        animation: none;
+    }
+}
+
 /* ==========================================================
    Responsive — from daway-backend/public/css/responsive.css
    ========================================================== */
@@ -564,7 +588,7 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
     .logo-icon-box {
         width: 48px;
         height: 48px;
-        border-radius: var(--ph-r-md)--ph-r-md);
+        border-radius: var(--ph-r-md);
     }
 
     .logo-title,
@@ -579,7 +603,7 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
     .nav-item {
         justify-content: center;
         padding: 12px;
-        font-size: var(--fs-xl)--fs-xl);
+        font-size: var(--fs-xl);
     }
 
     .nav-section { margin-bottom: 18px; }
@@ -593,7 +617,7 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
 
     .more-options-btn {
         padding: 5px;
-        font-size: var(--fs-lg2)--fs-lg2);
+        font-size: var(--fs-lg2);
     }
 
     .avatar-box {
@@ -601,8 +625,9 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
         height: 36px;
     }
 
-    html[dir="rtl"] .main-wrapper { margin-right: 76px; }
-    html[dir="ltr"] .main-wrapper { margin-left: 76px; }
+    /* Same inline-start margin as the base rule — 76px matches the collapsed
+       icon-only sidebar width. */
+    .main-wrapper { margin-inline-start: 76px; }
 
     .topbar {  }
 }
@@ -611,8 +636,8 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
 @media (max-width: 768px) {
     .sidebar-pro {
         position: fixed;
-        left: 0;
-        right: 0;
+        /* Bottom bar: pinned to BOTH inline edges (full width). */
+        inset-inline: 0;
         top: auto;
         bottom: 0;
         width: 100%;
@@ -625,9 +650,8 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
         overflow-x: auto;
         overflow-y: hidden;
         scrollbar-width: none;
-        border-left: none;
-        border-right: none;
-        border-top: 1px solid var(--sidebar-border);
+        border-inline: none;
+        border-block-start: 1px solid var(--sidebar-border);
         z-index: 1001;
     }
 
@@ -656,7 +680,7 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
     .nav-item {
         margin: 0;
         padding: 10px 14px;
-        font-size: var(--fs-lg2)--fs-lg2);
+        font-size: var(--fs-lg2);
         flex-shrink: 0;
     }
 
@@ -682,13 +706,13 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
     .avatar-box {
         width: 34px;
         height: 34px;
-        font-size: var(--fs-sm)--fs-sm);
+        font-size: var(--fs-sm);
     }
 
-    html[dir="rtl"] .main-wrapper,
-    html[dir="ltr"] .main-wrapper {
-        margin-right: 0;
-        margin-left: 0;
+    /* Bottom bar: no inline-start margin (the bar overlays the bottom edge,
+       not a side). */
+    .main-wrapper {
+        margin-inline-start: 0;
         width: 100%;
         padding-bottom: 58px;
     }
@@ -766,13 +790,13 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
     .user-profile-btn .avatar {
         width: 32px;
         height: 32px;
-        font-size: var(--fs-xs)--fs-xs);
+        font-size: var(--fs-xs);
     }
 
     .main-content {  }
 
     .nav-item {
         padding: 9px 12px;
-        font-size: var(--fs-lg)--fs-lg);
+        font-size: var(--fs-lg);
     }
 }

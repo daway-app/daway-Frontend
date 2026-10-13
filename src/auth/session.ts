@@ -2,7 +2,13 @@ import { createApiClient, type ApiClient } from '@/api/client';
 import { createAuthApi, type AuthApi } from '@/api/authApi';
 import { createPharmacyApi, type PharmacyApi } from '@/api/pharmacyApi';
 import { createAdminApi, type AdminApi } from '@/api/adminApi';
-import { browserAdminTokenStorage, createTokenManager, type TokenManager } from './tokenStorage';
+import {
+  browserAdminTokenStorage,
+  browserAdminUserStorage,
+  browserUserStorage,
+  createTokenManager,
+  type TokenManager,
+} from './tokenStorage';
 import type { AuthUser } from './authContract';
 import type { AdminUser } from '@/api/adminTypes';
 
@@ -27,7 +33,16 @@ export function createApiStack(options?: {
   const tokens: TokenManager = createTokenManager();
   const listeners = new Set<(snapshot: SessionSnapshot) => void>();
 
-  let user: AuthUser | null = null;
+  /*
+   * 🔴 HYDRATED, not `null`.
+   *
+   * Laravel renders the user block from `auth()->user()` on every request, so
+   * a page refresh never loses the name/avatar. In the SPA the user used to be
+   * memory-only, so an F5 with a valid token showed an empty name and a "؟"
+   * avatar while still looking signed in. Reading the persisted snapshot back
+   * makes the refresh behave like Blade's SSR render.
+   */
+  let user: AuthUser | null = browserUserStorage.get();
 
   function notify(): void {
     const snapshot: SessionSnapshot = {
@@ -49,11 +64,13 @@ export function createApiStack(options?: {
     clearToken: () => {
       tokens.clear();
       user = null;
+      browserUserStorage.clear();
       notify();
     },
     refresh: () => refreshImpl(),
     onSessionExpired: () => {
       user = null;
+      browserUserStorage.clear();
       notify();
       options?.onSessionExpired?.();
     },
@@ -86,6 +103,7 @@ export function createApiStack(options?: {
       });
       tokens.set(result.token);
       user = result.user;
+      browserUserStorage.set(result.user);
       notify();
       return result.user;
     },
@@ -97,6 +115,7 @@ export function createApiStack(options?: {
         // Always clear locally, even if the network call failed.
         tokens.clear();
         user = null;
+        browserUserStorage.clear();
         notify();
       }
     },
@@ -149,7 +168,8 @@ export function createAdminApiStack(options?: {
   const tokens: TokenManager = createTokenManager(browserAdminTokenStorage);
   const listeners = new Set<(snapshot: AdminSessionSnapshot) => void>();
 
-  let user: AdminUser | null = null;
+  /** Hydrated from storage — see the pharmacy stack's note above. */
+  let user: AdminUser | null = browserAdminUserStorage.get();
 
   function notify(): void {
     const snapshot: AdminSessionSnapshot = {
@@ -168,6 +188,7 @@ export function createAdminApiStack(options?: {
     clearToken: () => {
       tokens.clear();
       user = null;
+      browserAdminUserStorage.clear();
       notify();
     },
     // No refresh for the admin session — see the note above. Returning `null`
@@ -175,6 +196,7 @@ export function createAdminApiStack(options?: {
     refresh: async () => null,
     onSessionExpired: () => {
       user = null;
+      browserAdminUserStorage.clear();
       notify();
       options?.onSessionExpired?.();
     },
@@ -204,6 +226,7 @@ export function createAdminApiStack(options?: {
 
       tokens.set(payload.token);
       user = payload.user;
+      browserAdminUserStorage.set(payload.user);
       notify();
       return payload.user;
     },
@@ -216,6 +239,7 @@ export function createAdminApiStack(options?: {
       } finally {
         tokens.clear();
         user = null;
+        browserAdminUserStorage.clear();
         notify();
       }
     },

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AR } from '@/lib/i18n';
-import { AsyncBoundary, PageHeader } from '@/components/ui';
+import { AsyncBoundary, Btn, FormField, PageHeader } from '@/components/ui';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -25,6 +25,12 @@ import type { ApiCategory } from '@/api/pharmacyTypes';
  */
 
 const R = AR.pharmacy.medicines.request;
+
+/** Client-side script-rule messages, mirroring the backend's 422 validation. */
+const ERR = {
+  latin: 'الاسم اللاتيني يجب ألا يحتوي حروفاً عربية — استخدم الحقل العربي أدناه.',
+  arabic: 'الاسم العربي يجب أن يحتوي حروفاً عربية.',
+} as const;
 
 export function MedicineRequestPage() {
   const api = usePharmacyApi();
@@ -90,13 +96,13 @@ export function MedicineRequestPage() {
         loadingRows={3}
       >
         {done && (
-          <div className="ph-alt-notice" style={{ marginBlockEnd: 16 }}>
+          <div className="ph-alt-notice">
             <i className="fas fa-circle-check" aria-hidden="true" /> {R.submit} — تم الإرسال بنجاح
           </div>
         )}
 
         {request.error && (
-          <div className="ph-error" style={{ marginBlockEnd: 16 }}>
+          <div className="ph-error">
             <i className="fas fa-circle-exclamation" aria-hidden="true" />
             <p>{request.error.message}</p>
           </div>
@@ -104,71 +110,59 @@ export function MedicineRequestPage() {
 
         <form action="#" method="POST" className="premium-card" onSubmit={submit}>
           <div className="card-body">
+            {/* The two name fields mirror the backend's script rules. The error
+                is DERIVED state (no touched tracking), so `touched` is the flag
+                itself — FormField then shows exactly: neutral, or the message
+                with `aria-invalid`, which is what the old hand-rolled `.ph-hint`
+                paragraphs rendered. */}
             <div className="form-row">
-              <div className="fg">
-                <label className="fl" htmlFor="trade_name">
-                  {R.trade_name} <span className="req">*</span>
-                </label>
+              <FormField
+                label={R.trade_name}
+                id="trade_name"
+                required
+                touched={hasArabic}
+                error={hasArabic ? ERR.latin : null}
+              >
                 <input
                   className="fc"
                   type="text"
-                  id="trade_name"
                   name="trade_name"
                   dir="ltr"
                   value={tradeName}
                   onChange={(e) => setTradeName(e.target.value)}
                   required
-                  aria-invalid={hasArabic}
                 />
-                {hasArabic && (
-                  <p className="ph-hint" style={{ color: 'var(--ph-red)' }}>
-                    الاسم اللاتيني يجب ألا يحتوي حروفاً عربية — استخدم الحقل العربي أدناه.
-                  </p>
-                )}
-              </div>
-              <div className="fg">
-                <label className="fl" htmlFor="trade_name_ar">
-                  {R.trade_name_ar}
-                </label>
+              </FormField>
+              <FormField
+                label={R.trade_name_ar}
+                id="trade_name_ar"
+                touched={arLooksLatin}
+                error={arLooksLatin ? ERR.arabic : null}
+              >
                 <input
                   className="fc"
                   type="text"
-                  id="trade_name_ar"
                   name="trade_name_ar"
                   value={tradeNameAr}
                   onChange={(e) => setTradeNameAr(e.target.value)}
-                  aria-invalid={arLooksLatin}
                 />
-                {arLooksLatin && (
-                  <p className="ph-hint" style={{ color: 'var(--ph-red)' }}>
-                    الاسم العربي يجب أن يحتوي حروفاً عربية.
-                  </p>
-                )}
-              </div>
+              </FormField>
             </div>
 
             <div className="form-row">
-              <div className="fg">
-                <label className="fl" htmlFor="active_ingredient">
-                  {R.active_ingredient}
-                </label>
+              <FormField label={R.active_ingredient} id="active_ingredient">
                 <input
                   className="fc"
                   type="text"
-                  id="active_ingredient"
                   name="active_ingredient"
                   dir="ltr"
                   value={activeIngredient}
                   onChange={(e) => setActiveIngredient(e.target.value)}
                 />
-              </div>
-              <div className="fg">
-                <label className="fl" htmlFor="category_id">
-                  {R.category} <span className="req">*</span>
-                </label>
+              </FormField>
+              <FormField label={R.category} id="category_id" required>
                 <select
                   className="fc"
-                  id="category_id"
                   name="category_id"
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
@@ -181,12 +175,14 @@ export function MedicineRequestPage() {
                     </option>
                   ))}
                 </select>
-              </div>
+              </FormField>
             </div>
 
-            {/* الباركود — اختياري، لكنه أهمّ ما يوفّر وقت الإدارة عند الاعتماد. */}
+            {/* الباركود — اختياري، لكنه أهمّ ما يوفّر وقت الإدارة عند الاعتماد.
+                A composite field (icon + scan actions) with its own component —
+                deliberately NOT forced into `FormField`. `is-full` spans the row. */}
             <div className="form-row">
-              <div className="fg" style={{ gridColumn: '1 / -1' }}>
+              <div className="is-full">
                 <BarcodeField
                   id="request_barcode"
                   name="barcode"
@@ -200,12 +196,12 @@ export function MedicineRequestPage() {
           </div>
 
           <div className="card-foot">
-            <button type="submit" className="btn-submit" disabled={request.isPending || blocked}>
+            <Btn type="submit" variant="primary" disabled={request.isPending || blocked}>
               {R.submit}
-            </button>
-            <a href="/medicines" className="btn-cancel">
+            </Btn>
+            <Btn to="/medicines" variant="outline">
               {R.cancel}
-            </a>
+            </Btn>
           </div>
         </form>
       </AsyncBoundary>

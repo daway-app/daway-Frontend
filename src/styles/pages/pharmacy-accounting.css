@@ -313,7 +313,11 @@ a.ac-kpi:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2
 }
 .ac-barcode-input {
     width: 100%;
-    padding: 14px 14px 14px 44px;
+    /* Logical: the barcode glyph sits at the inline START in both directions
+       (was: physical padding + an html[dir='rtl'] override that mirrored it). */
+    padding-block: 14px;
+    padding-inline-start: 44px;
+    padding-inline-end: 14px;
     font-size: var(--fs-lg);
     font-weight: 700;
     font-family: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
@@ -325,7 +329,6 @@ a.ac-kpi:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2
     outline: none;
     transition: var(--ac-tr);
 }
-html[dir='rtl'] .ac-barcode-input { padding: 14px 44px 14px 14px; }
 .ac-barcode-input:focus {
     border-color: var(--focus-ring);
     box-shadow: 0 0 0 3px rgba(28, 114, 166, .15);
@@ -597,7 +600,7 @@ html[dir='rtl'] .ac-barcode-input { padding: 14px 44px 14px 14px; }
     .ac-kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .ac-kpi { padding: 14px; gap: 10px; }
     .ac-kpi-value { font-size: var(--fs-lg2)s-lg2); }
-    .ac-kpi-icon { width: 38px; height: 38px; font-size: var(--fs-lg)--fs-lg); }
+    .ac-kpi-icon { width: 38px; height: 38px; font-size: var(--fs-lg); }
     .ac-filter-bar { flex-direction: column; align-items: stretch; padding: 14px; }
     .ac-filter-bar .ac-filter-field { min-width: 0; }
     .ac-filter-bar .ac-filter-end { margin-inline-start: 0; }

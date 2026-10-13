@@ -1,5 +1,4 @@
 import { Outlet } from 'react-router-dom';
-import { CommandPalette } from '@/components/layout/CommandPalette';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import { Toaster } from '@/components/ui';
@@ -57,9 +56,14 @@ export function AppLayout() {
         </div>
       </div>
 
-      {/* Shell-level Ctrl+K palette. Mounted once so it is available on every
-          authenticated page and owns the global key listener. */}
-      <CommandPalette />
+      {/* 🔴 NO command palette — Blade parity.
+          Laravel's shell has no quick-navigation dialog and no Ctrl+K binding
+          (components/topbar.blade.php). This repo had added both: a `⌘K` chip in
+          the topbar plus a shell-level dialog with a global key listener. The
+          chip was removed first; the dialog is unmounted here so the shortcut
+          cannot open a surface that does not exist in the reference design.
+          The component file is kept (unmounted) rather than deleted, so the
+          work is not lost if the feature is ever wanted back. */}
 
       {/*
         Toast stack — mounted ONCE at the shell, not per screen.

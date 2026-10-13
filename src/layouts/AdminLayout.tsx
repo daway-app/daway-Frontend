@@ -1,10 +1,15 @@
 import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { Toaster } from '@/components/ui';
-import { AR } from '@/lib/i18n';
+import { AR, roleLabel } from '@/lib/i18n';
 import { initTheme, toggleTheme } from '@/lib/theme';
+import { topbarTitleFor } from '@/components/layout/routeTitles';
 import { IconMoon, IconSun } from '@/components/layout/icons';
+import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
+import { useApiQuery } from '@/api/useApiQuery';
+import { thumbUrl } from '@/lib/format';
+import type { AdminProfile } from '@/api/adminTypes';
 
 /**
  * Admin shell.
@@ -25,6 +30,23 @@ import { IconMoon, IconSun } from '@/components/layout/icons';
  * latter is what actually moves focus rather than just the scroll position.
  */
 export function AdminLayout() {
+  const api = useAdminApi();
+  const { user } = useAdminAuth();
+  const { pathname } = useLocation();
+  const heading = topbarTitleFor(pathname);
+
+  // الاسم والصورة بالشريط العلوي (طلب عبود). الصورة من بروفايل الأدمن
+  // الموجود أصلًا (`GET /api/admin/profile` → `avatar_url`) — نفس الاستدعاء
+  // الذي تستخدمه صفحة الملف الشخصي، فالـcache يتشارك. عند غيابه: الحرف الأول.
+  const profileQuery = useApiQuery<{ user: AdminProfile }>(
+    (signal) => api.admin.profile(signal),
+    [],
+    { isEmpty: () => false },
+  );
+  // مطابق لـBlade: thumbUrl(avatar, 84, 84) كخلفية دائرية لـ`.avatar`.
+  const avatarUrl = thumbUrl(profileQuery.data?.user?.avatar_url ?? null, 84, 84);
+  const initial = user?.name ? user.name.trim().charAt(0) : '؟';
+
   useEffect(() => {
     if (document.body.dataset.harness === 'theme') return;
     initTheme();
@@ -51,8 +73,8 @@ export function AdminLayout() {
         <div className="main-wrapper">
           <div className="topbar">
             <div className="topbar-title-group">
-              <h1>{AR.admin.nav.panel_title}</h1>
-              <p>{AR.admin.nav.panel_subtitle}</p>
+              <h1>{heading.title}</h1>
+              <p>{heading.subtitle}</p>
             </div>
             <div className="topbar-actions">
               <button
@@ -68,6 +90,20 @@ export function AdminLayout() {
                   <IconMoon />
                 </span>
               </button>
+
+              {/* الاسم والصورة بالشريط العلوي — زر الخروج مقره فوتر السايدبار */}
+              <div className="user-profile-btn" title={AR.layout.edit_profile_modal_title}>
+                <div
+                  className="avatar"
+                  style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : undefined}
+                >
+                  {avatarUrl ? '' : initial}
+                </div>
+                <div className="user-details">
+                  <span className="user-name">{user?.name ?? ''}</span>
+                  <span className="user-role">{roleLabel(user?.role ?? '')}</span>
+                </div>
+              </div>
             </div>
           </div>
 

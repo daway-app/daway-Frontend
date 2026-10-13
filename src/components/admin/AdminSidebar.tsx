@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { useAdminAuth } from '@/auth/adminContext';
+import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
+import { useApiQuery } from '@/api/useApiQuery';
+import { thumbUrl } from '@/lib/format';
+import type { AdminProfile } from '@/api/adminTypes';
 import { AR } from '@/lib/i18n';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import {
@@ -55,7 +58,18 @@ const SETTINGS_NAV: NavItem[] = [
 
 export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { user, logout } = useAdminAuth();
+  const api = useAdminApi();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // صورة المستخدم بفوتر السايدبار — مطابق لـBlade (`<img>` من
+  // `auth()->user()->avatar` عبر thumbUrl 84×84). `avatar_url` ببروفايل
+  // الأدمن هو نفس عمود users.avatar مُحلولًا من الخادم.
+  const profileQuery = useApiQuery<{ user: AdminProfile }>(
+    (signal) => api.admin.profile(signal),
+    [],
+    { isEmpty: () => false },
+  );
+  const avatarUrl = thumbUrl(profileQuery.data?.user?.avatar_url ?? null, 84, 84);
 
   const initial = user?.name ? user.name.trim().charAt(0) : '؟';
 
@@ -113,10 +127,25 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
         <div className="user-profile-footer">
           <div className="user-info-group">
-            <div className="avatar-box">{initial}</div>
+            <div className="avatar-box">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="User Avatar"
+                  width={42}
+                  height={42}
+                  loading="lazy"
+                  decoding="async"
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                />
+              ) : (
+                initial
+              )}
+            </div>
             <div>
               <div className="user-name">{user?.name ?? ''}</div>
-              <div className="user-role">{user?.email ?? 'مدير'}</div>
+              {/* مطابق لـBlade: الدور الخام (`auth()->user()->role ?? 'User'`). */}
+              <div className="user-role">{user?.role ?? 'User'}</div>
             </div>
           </div>
           <div

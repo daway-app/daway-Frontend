@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@/auth/authHooks';
-import { AR, roleLabel } from '@/lib/i18n';
+import { AR } from '@/lib/i18n';
 import { ROUTES } from '@/routes/paths';
 import { useSidebarCounts } from './useSidebarCounts';
 import {
@@ -159,7 +159,8 @@ export function Sidebar() {
             <div className="avatar-box">{initial}</div>
             <div>
               <div className="user-name">{user?.name ?? ''}</div>
-              <div className="user-role">{roleLabel(user?.role ?? '')}</div>
+              {/* مطابق لـBlade: الدور الخام (`auth()->user()->role ?? 'User'`). */}
+              <div className="user-role">{user?.role ?? 'User'}</div>
             </div>
           </div>
           <div

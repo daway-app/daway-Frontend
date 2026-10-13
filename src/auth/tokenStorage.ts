@@ -1,3 +1,6 @@
+import type { AdminUser } from '@/api/adminTypes';
+import type { AuthUser } from './authContract';
+
 /**
  * Token persistence.
  *
@@ -108,3 +111,66 @@ export function createTokenManager(storage: TokenStorage = browserTokenStorage) 
 }
 
 export type TokenManager = ReturnType<typeof createTokenManager>;
+
+/* ========================================================================== */
+/* Signed-in USER persistence                                                  */
+/* ========================================================================== */
+
+/**
+ * WHY THE USER OBJECT IS PERSISTED TOO (Blade parity).
+ *
+ * Laravel renders the topbar/sidebar user block server-side from
+ * `auth()->user()` — name, role and avatar are always present, on every page
+ * load. The SPA kept the user in MEMORY only (`session.ts`: `let user = null`),
+ * so a page refresh with a valid token restored the SESSION but not the USER:
+ * the topbar showed an empty name and a "؟" avatar until the next login, while
+ * the user still appeared signed in.
+ *
+ * Persisting the same JSON the login endpoint returned closes that gap and
+ * makes a refresh behave like Blade's SSR render. It is display data only
+ * (name/role/id) — no token, no secret — and it is cleared together with the
+ * token on logout, 401 and session expiry.
+ */
+const USER_KEY = 'daway.auth.user';
+const ADMIN_USER_KEY = 'daway.admin.user';
+
+/** Minimal user-storage contract, mirroring `TokenStorage`. */
+export interface UserStorage<T> {
+  get(): T | null;
+  set(user: T): void;
+  clear(): void;
+}
+
+/**
+ * JSON-backed user storage.
+ *
+ * A corrupt/absent value resolves to `null` rather than throwing: a bad parse
+ * must degrade to "no user yet" (the guards then re-login), never crash the
+ * app on boot.
+ */
+export function createUserStorage<T>(key: string): UserStorage<T> {
+  return {
+    get(): T | null {
+      const raw = safeGet(key);
+      if (!raw) return null;
+      try {
+        const parsed: unknown = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? (parsed as T) : null;
+      } catch {
+        return null;
+      }
+    },
+    set(user: T): void {
+      safeSet(key, JSON.stringify(user));
+    },
+    clear(): void {
+      safeRemove(key);
+    },
+  };
+}
+
+/** Browser-backed user storage for the pharmacy session. */
+export const browserUserStorage = createUserStorage<AuthUser>(USER_KEY);
+
+/** Browser-backed user storage for the admin session (separate key). */
+export const browserAdminUserStorage = createUserStorage<AdminUser>(ADMIN_USER_KEY);

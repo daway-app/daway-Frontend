@@ -56,7 +56,7 @@ body.dark-mode {
 
 /* Breadcrumb */
 .breadcrumb-nav {
-    
+    display: flex;
     align-items: center;
     gap: 6px;
     font-size: var(--fs-xs);
@@ -80,23 +80,26 @@ body.dark-mode .breadcrumb-nav a:hover { color: var(--teal-text); }
 
 /* Main content wrapper adjustments */
 /*
-  The sidebar is `position: fixed` (layout/sidebar.css), so it is OUT OF FLOW.
-  That means `.app-layout` (a flex row) contains exactly ONE in-flow child:
-  `.main-wrapper`. Blade nevertheless gave the wrapper BOTH `flex: 1` and an
-  inline-start margin equal to the sidebar width — so the wrapper tried to be
-  the full 1440px *and* carry 260px of offset, and the row overflowed by that
-  260px (visible as a page-level horizontal scroll on the 12-column sales table,
-  the first screen wide enough to expose it).
+  The sidebar is `position: fixed` (layout/sidebar.css), so it is OUT OF FLOW:
+  `.app-layout` (a flex row) contains exactly ONE in-flow child —
+  `.main-wrapper`. Leaving room for the sidebar is therefore the wrapper's
+  inline-start margin alone; `flex: 1 1 0%` + `min-width: 0` lets it shrink to
+  the remaining space. No `width` calc, no overflow.
 
-  Blades's intent was "leave room for the fixed sidebar". With a fixed sidebar
-  that is achieved by the margin alone, provided the flex item is allowed to
-  shrink — `flex: 1 1 0%` + `min-width: 0` does exactly that. No `width` calc.
+  🔴 REGRESSION NOTE (measured 2026-10-12, commit 6aa7cf4): this commit emptied
+  the directional margin rules, so above 1024px the wrapper spanned the FULL
+  viewport and 260px of every page slid UNDER the sidebar (page title hidden,
+  4th stat card and first table column clipped) with NO horizontal scrollbar to
+  reveal it. Measured: base 6aa7cf4^ → overlap 0px, main-content 1660px @1920;
+  HEAD and working tree → overlap 260px, main-content 1920px. The margin is the
+  fix — one LOGICAL rule instead of the old rtl/ltr pair.
 */
 .main-wrapper {
     flex: 1 1 0%;
     display: flex;
     flex-direction: column;
     min-width: 0;
+    margin-inline-start: var(--sidebar-width);
     transition: background-color 0.3s;
     font-size: 0;
 }
@@ -105,11 +108,8 @@ body.dark-mode .breadcrumb-nav a:hover { color: var(--teal-text); }
     font-size: var(--fs-lg);
 }
 
-html[dir="rtl"] .main-wrapper {  }
-html[dir="ltr"] .main-wrapper {  }
-
 .main-content {
-    
+    padding: 28px;
     flex: 1;
     min-width: 0;
 }

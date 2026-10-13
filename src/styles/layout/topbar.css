@@ -39,7 +39,7 @@ body.dark-mode {
 }
 
 .topbar {
-    
+    display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 16px 28px;
@@ -213,7 +213,7 @@ body.dark-mode .theme-toggle-btn .icon-3d {
 }
 .notification-item.unread:hover { background-color: var(--unread-notification-bg); }
 .notification-icon {
-    margin-right: 10px;
+    margin-inline-end: 10px;
     color: var(--teal-text);
 }
 .notification-content { flex-grow: 1; }
@@ -257,11 +257,9 @@ body.dark-mode .theme-toggle-btn .icon-3d {
     display: none;
     align-items: center;
     justify-content: center;
-    right: 4px;
+    /* Logical: sits at the inline-end corner in both directions. */
+    inset-inline-end: 4px;
 }
-
-html[dir="rtl"] .notification-badge { left: 4px; right: auto; }
-html[dir="ltr"] .notification-badge { right: 4px; left: auto; }
 
 .user-profile-btn {
     display: flex;
@@ -276,8 +274,12 @@ html[dir="ltr"] .notification-badge { right: 4px; left: auto; }
     flex-direction: row-reverse;
 }
 
-[dir="rtl"] .user-profile-btn { padding: 4px 6px 4px 14px; }
-[dir="ltr"] .user-profile-btn { padding: 4px 14px 4px 6px; }
+/* One logical rule replaces the rtl/ltr pair: tight padding on the inline
+   start (avatar side), roomier on the inline end. */
+.user-profile-btn {
+    padding-block: 4px;
+    padding-inline: 6px 14px;
+}
 
 .user-profile-btn:hover {
     background: var(--btn-hover);
@@ -333,8 +335,7 @@ html[dir="ltr"] .notification-badge { right: 4px; left: auto; }
     min-width: 0;
 }
 
-[dir="rtl"] .user-details { text-align: right; }
-[dir="ltr"] .user-details { text-align: left; }
+.user-details { text-align: start; }
 
 .user-name {
     font-size: var(--fs-sm);
@@ -391,10 +392,7 @@ body.dark-mode .logout-btn {
 
 .logout-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -443,10 +441,7 @@ body.dark-mode .logout-btn {
 
 .profile-modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;
     background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(6px);
     display: flex;

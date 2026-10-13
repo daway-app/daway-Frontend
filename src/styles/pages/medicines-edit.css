@@ -66,15 +66,16 @@
     gap: 16px;
     margin-bottom: 16px;
 }
-.fg {
-    
+/* One field spanning the whole row — the barcode composite. Replaces the
+   inline `style={{ gridColumn: '1 / -1' }}` the request page used. */
+.form-row .is-full {
+    grid-column: 1 / -1;
 }
-.fl {
-    
-    
-    
-    
-    
+/* Feedback blocks above the form (success notice / submit error). Replaces
+   inline `style={{ marginBlockEnd: 16 }}` on the request page. */
+.edit-medicine-page-wrapper .ph-alt-notice,
+.edit-medicine-page-wrapper .ph-error {
+    margin-block-end: 16px;
 }
 .req {
     color: var(--danger-text);

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { AR } from '@/lib/i18n';
+import { Btn } from '@/components/ui';
 
 /**
  * Pharmacy password change — port of `resources/views/auth/password-change.blade.php` (B4).
@@ -154,10 +155,14 @@ export function PasswordChangePage() {
         {errors.confirm ? <div className="error-message">{errors.confirm}</div> : null}
       </div>
 
+      {/* 7A: the one-system primary button replaces the auth-only `.btn-p`.
+          The FIELD wrappers stay in the auth system (`.fg`/`.fc-wrapper`) —
+          the password eye toggles need that wrapper's layout slot; converting
+          them is BarcodeField-class work and needs the visual protocol. */}
       <div className="fg" style={{ marginTop: 24 }}>
-        <button type="submit" className="btn-p">
+        <Btn type="submit" variant="primary">
           {copy.submit}
-        </button>
+        </Btn>
       </div>
 
       <div className="auth-footer">

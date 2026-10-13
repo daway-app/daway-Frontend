@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/authHooks';
 import { useAdminAuth } from '@/auth/adminContext';
 import { ApiError } from '@/api/errors';
+import { Btn } from '@/components/ui';
 import { AR } from '@/lib/i18n';
 import { ROUTES } from '@/routes/paths';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
@@ -292,13 +293,14 @@ export function LoginPage() {
             <span className="forgot-hint">{L.forgot}</span>
           </div>
 
-          <button type="submit" className="btn-p" id="submitBtn" disabled={isSubmitting}>
+          {/* 7A: one-system primary button (was the auth-only `.btn-p`). */}
+          <Btn type="submit" variant="primary" id="submitBtn" disabled={isSubmitting}>
             {isSubmitting
               ? L.submitting
               : isAdmin
                 ? L.submit_admin
                 : L.submit_pharmacy}
-          </button>
+          </Btn>
         </form>
 
         <div className="auth-footer">{L.no_account}</div>

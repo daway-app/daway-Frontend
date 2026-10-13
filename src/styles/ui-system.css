@@ -631,7 +631,7 @@ textarea.ph-control {
     padding: var(--sp-8) var(--sp-5);
     color: var(--ph-ink-faint);
 }
-.ph-empty i {
+.ph-empty > i {
     font-size: 2rem;
     color: var(--line-strong);
     display: block;
@@ -650,7 +650,7 @@ textarea.ph-control {
 
 /* A failure-flavoured empty state (data could not be produced, not merely
    absent) tints its icon so the two read differently at a glance. */
-.ph-empty.is-danger i {
+.ph-empty.is-danger > i {
     color: var(--ph-red);
 }
 

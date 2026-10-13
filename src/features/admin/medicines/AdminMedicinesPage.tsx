@@ -130,7 +130,12 @@ export function AdminMedicinesPage() {
           <p>{M.main_description}</p>
         </div>
         <div className="header-actions">
-          <Btn to={ADMIN_ROUTES.medicineCreate} icon="fas fa-plus" className="btn-add-pharmacy">
+          {/* `variant="primary"` — Blade's `.btn-add-pharmacy` is a FILLED
+              gradient button (backend `medicines.css:138`). The class name was
+              never carried into this repo (see `admin-shell.css` §3), so the
+              button rendered as bare text while the pharmacies screen — which
+              passes `variant="primary"` — rendered filled. One button system. */}
+          <Btn to={ADMIN_ROUTES.medicineCreate} variant="primary" icon="fas fa-plus">
             {M.add_button}
           </Btn>
         </div>

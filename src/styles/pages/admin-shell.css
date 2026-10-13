@@ -358,7 +358,7 @@ body.dark-mode .admin-page .header-title-section h1 {
 .admin-page .custom-table {
     width: 100%;
     border-collapse: collapse;
-    text-align: right;
+    text-align: start; /* was `right` — identical in RTL, correct in LTR */
     /* Matches `.ph-table`, which sets the same size on the <table>. The cells
        used to carry their own 13px, so this one table read a size smaller than
        every `DataTable` on the same screens. */
@@ -1255,7 +1255,9 @@ body.dark-mode .admin-page .legend-row:hover {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 10px 6px 12px;
+    /* Logical: tight on the inline start (icon side), roomier at the end. */
+    padding-block: 6px;
+    padding-inline: 10px 12px;
     border: 1px solid var(--line-strong);
     border-radius: var(--ph-r-sm);
     background: var(--canvas);

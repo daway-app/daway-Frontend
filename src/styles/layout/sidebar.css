@@ -145,6 +145,52 @@ body.dark-mode .sidebar-pro {
 }
 
 /* ==========================================
+   بطاقة المستخدم — أعلى السايدبار (تحت الشعار)
+   ========================================== */
+.sidebar-user-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    margin-bottom: 26px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: var(--ph-r-lg);
+    cursor: pointer;
+    animation: sidebarSlideIn 0.55s var(--ease-smooth) both;
+    transition: background-color 0.25s var(--ease-smooth);
+}
+
+.sidebar-user-card:hover {
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.sidebar-user-card:hover .avatar-box { transform: scale(1.06); }
+
+.sidebar-user-card .avatar-box {
+    width: 44px;
+    height: 44px;
+    font-size: var(--fs-lg);
+}
+
+.sidebar-user-card .user-meta {
+    flex: 1;
+    min-width: 0; /* يسمح للاسم الطويل بالقصّ بنقاط بدل ما يكسر البطاقة */
+}
+
+.sidebar-user-card .user-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-user-card .user-role {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ==========================================
    مجمّعات التنقل والروابط
    ========================================== */
 .nav-section {
@@ -242,7 +288,9 @@ body.dark-mode .section-label { color: var(--ink-faint); }
 .user-profile-footer {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    /* بيانات المستخدم صارت في البطاقة أعلى السايدبار — الفوتر صار صفّ خروج
+       واحد، فيُحاذى للطرف الداخلي (inline-end) بدل space-between. */
+    justify-content: flex-end;
     padding: 12px 8px;
     margin-top: auto;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -293,17 +341,31 @@ body.dark-mode .section-label { color: var(--ink-faint); }
  * `.user-name` (0,1,0) on specificity alone, and `.topbar .user-name` no longer
  * competes because the contexts no longer overlap.
  */
-.sidebar .user-name {
+/*
+ * AUDIT B-9 FIX (مُصحَّح) — الهدف كان عزل أسماء السايدبار عن تسريب القاعدة
+ * الكشوفة `.user-name` في topbar.css. لكن المحدِّد القديم كان `.sidebar .user-name`
+ * والمحدِّد لا يطابق `.sidebar-pro` (كلاس مختلف!) — فما تطابق شي أبدًا، وكان
+ * الاسم يأخذ تنسيق الـtopbar المسرَّب (لون غامق + fs-sm + max-width:160px)
+ * → نص ضعيف/خفي على خلفية السايدبار الغامقة.
+ * المحدِّد الصحيح هو `.sidebar-pro .user-name` — specificity (0,2,0) يتغلب
+ * على التسريب الكشوف (0,1,0) بغضّ النظر عن ترتيب الملفات.
+ */
+.sidebar-pro .user-name {
     font-size: var(--fs-md);
     font-weight: 700;
     color: #ffffff;
     line-height: 1.2;
+    max-width: none;
 }
 
-.sidebar .user-role {
+.sidebar-pro .user-role {
     font-size: var(--fs-2xs);
+    font-weight: 600;
     color: var(--text-muted);
     margin-top: 2px;
+    background: none;
+    border: none;
+    padding: 0;
 }
 
 .more-options-btn {
@@ -560,6 +622,7 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
      */
     html[dir] .sidebar-logo-header,
     html[dir] .nav-section,
+    html[dir] .sidebar-user-card,
     .user-profile-footer {
         animation: none;
     }
@@ -599,6 +662,17 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
     .user-info-group {
         display: none;
     }
+
+    /* وضع الأيقونات فقط: البطاقة تنكمش لأفاتار في المنتصف */
+    .sidebar-user-card {
+        justify-content: center;
+        padding: 6px;
+        margin-bottom: 20px;
+        border: none;
+        background: transparent;
+    }
+
+    .sidebar-user-card .user-meta { display: none; }
 
     .nav-item {
         justify-content: center;
@@ -668,6 +742,9 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
     }
 
     .sidebar-logo-header { display: none; }
+
+    /* الشريط السفلي: بطاقة المستخدم مخفية (المساحة لا تتسع لها) */
+    .sidebar-user-card { display: none; }
 
     .nav-section {
         display: flex;

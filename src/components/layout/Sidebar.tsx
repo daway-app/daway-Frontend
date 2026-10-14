@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { preloadRoute } from '@/lib/routePreload';
 import { useAuth } from '@/auth/authHooks';
-import { AR } from '@/lib/i18n';
+import { AR, roleLabel } from '@/lib/i18n';
 import { ROUTES } from '@/routes/paths';
 import { useSidebarCounts } from './useSidebarCounts';
 import {
@@ -122,6 +123,18 @@ export function Sidebar() {
             </div>
           </div>
 
+          {/* بطاقة المستخدم — أعلى السايدبار مباشرة تحت الشعار (طلب عبود):
+              الصورة والاسم والدور جنب بعض بشكل واضح ومرتب. جلسة الصيدلية
+              بالـSPA لا تحمل صورة مستخدم (نفس سلوك Blade)، فيُعرض الحرف
+              الأول داخل الأفاتار المتدرّج. */}
+          <div className="sidebar-user-card" title={AR.layout.edit_profile_modal_title}>
+            <div className="avatar-box">{initial}</div>
+            <div className="user-meta">
+              <div className="user-name">{user?.name ?? ''}</div>
+              <div className="user-role">{roleLabel(user?.role ?? '')}</div>
+            </div>
+          </div>
+
           {/* Pharmacy navigation */}
           <div className="nav-section">
             <div className="section-label">{AR.pharmacy.sidebar.section_title}</div>
@@ -131,6 +144,8 @@ export function Sidebar() {
                 to={item.to}
                 end={!item.activePrefix}
                 className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+                onMouseEnter={() => preloadRoute(item.to)}
+                onFocus={() => preloadRoute(item.to)}
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-text">{item.label}</span>
@@ -153,16 +168,9 @@ export function Sidebar() {
           <AccountingNav />
         </div>
 
-        {/* User profile footer */}
+        {/* Footer — زر الخروج فقط؛ بيانات المستخدم صارت في البطاقة أعلى
+            السايدبار بدل التكرار أسفل. */}
         <div className="user-profile-footer">
-          <div className="user-info-group" title={AR.layout.edit_profile_modal_title}>
-            <div className="avatar-box">{initial}</div>
-            <div>
-              <div className="user-name">{user?.name ?? ''}</div>
-              {/* مطابق لـBlade: الدور الخام (`auth()->user()->role ?? 'User'`). */}
-              <div className="user-role">{user?.role ?? 'User'}</div>
-            </div>
-          </div>
           <div
             className="more-options-btn"
             role="button"
@@ -318,6 +326,8 @@ function AccountingNav() {
               to={item.to}
               end={item.to === ROUTES.accounting}
               className={({ isActive }) => `nav-subitem${isActive ? ' active' : ''}`}
+              onMouseEnter={() => preloadRoute(item.to)}
+              onFocus={() => preloadRoute(item.to)}
             >
               <span className="sub-dot" aria-hidden="true" />
               <span>{item.label}</span>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
+import { preloadRoute } from '@/lib/routePreload';
 import { useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
 import type { AdminProfile } from '@/api/adminTypes';
@@ -95,6 +96,30 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
             </div>
           </div>
 
+          {/* بطاقة المستخدم — أعلى السايدبار مباشرة تحت الشعار (طلب عبود).
+              الصورة الحقيقية من `avatar_url` عند توفّرها، وإلا الحرف الأول. */}
+          <div className="sidebar-user-card" title={AR.layout.edit_profile_modal_title}>
+            <div className="avatar-box">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="User Avatar"
+                  width={44}
+                  height={44}
+                  loading="lazy"
+                  decoding="async"
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                />
+              ) : (
+                initial
+              )}
+            </div>
+            <div className="user-meta">
+              <div className="user-name">{user?.name ?? ''}</div>
+              <div className="user-role">{user?.role ?? 'User'}</div>
+            </div>
+          </div>
+
           <div className="nav-section">
             <div className="section-label">{A.main_section}</div>
             <NavLink
@@ -102,6 +127,8 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
               end
               className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
               onClick={onNavigate}
+              onMouseEnter={() => preloadRoute(ADMIN_ROUTES.dashboard)}
+              onFocus={() => preloadRoute(ADMIN_ROUTES.dashboard)}
             >
               <span className="nav-icon">
                 <IconDashboard />
@@ -125,29 +152,8 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
           </div>
         </div>
 
+        {/* Footer — زر الخروج فقط؛ بيانات المستخدم صارت في البطاقة أعلى. */}
         <div className="user-profile-footer">
-          <div className="user-info-group">
-            <div className="avatar-box">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="User Avatar"
-                  width={42}
-                  height={42}
-                  loading="lazy"
-                  decoding="async"
-                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-                />
-              ) : (
-                initial
-              )}
-            </div>
-            <div>
-              <div className="user-name">{user?.name ?? ''}</div>
-              {/* مطابق لـBlade: الدور الخام (`auth()->user()->role ?? 'User'`). */}
-              <div className="user-role">{user?.role ?? 'User'}</div>
-            </div>
-          </div>
           <div
             className="more-options-btn"
             role="button"
@@ -202,6 +208,8 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
       end={!item.activePrefix}
       className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
       onClick={onNavigate}
+      onMouseEnter={() => preloadRoute(item.to)}
+      onFocus={() => preloadRoute(item.to)}
     >
       <span className="nav-icon">{item.icon}</span>
       <span className="nav-text">{item.label}</span>

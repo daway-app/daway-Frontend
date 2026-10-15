@@ -145,52 +145,6 @@ body.dark-mode .sidebar-pro {
 }
 
 /* ==========================================
-   بطاقة المستخدم — أعلى السايدبار (تحت الشعار)
-   ========================================== */
-.sidebar-user-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    margin-bottom: 26px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: var(--ph-r-lg);
-    cursor: pointer;
-    animation: sidebarSlideIn 0.55s var(--ease-smooth) both;
-    transition: background-color 0.25s var(--ease-smooth);
-}
-
-.sidebar-user-card:hover {
-    background: rgba(255, 255, 255, 0.10);
-}
-
-.sidebar-user-card:hover .avatar-box { transform: scale(1.06); }
-
-.sidebar-user-card .avatar-box {
-    width: 44px;
-    height: 44px;
-    font-size: var(--fs-lg);
-}
-
-.sidebar-user-card .user-meta {
-    flex: 1;
-    min-width: 0; /* يسمح للاسم الطويل بالقصّ بنقاط بدل ما يكسر البطاقة */
-}
-
-.sidebar-user-card .user-name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.sidebar-user-card .user-role {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* ==========================================
    مجمّعات التنقل والروابط
    ========================================== */
 .nav-section {
@@ -288,9 +242,10 @@ body.dark-mode .section-label { color: var(--ink-faint); }
 .user-profile-footer {
     display: flex;
     align-items: center;
-    /* بيانات المستخدم صارت في البطاقة أعلى السايدبار — الفوتر صار صفّ خروج
-       واحد، فيُحاذى للطرف الداخلي (inline-end) بدل space-between. */
-    justify-content: flex-end;
+    /* الهوية على طرف البداية (اليمين في RTL) وزر الخروج على طرف النهاية
+       (الشمال في RTL): الاسم والصورة على يمين زر الخروج كما طُلب. */
+    justify-content: space-between;
+    gap: 10px;
     padding: 12px 8px;
     margin-top: auto;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -300,17 +255,28 @@ body.dark-mode .section-label { color: var(--ink-faint); }
     cursor: pointer;
 }
 
-.user-profile-footer .more-options-btn { order: 2; }
 .user-profile-footer .user-info-group { order: 1; }
+.user-profile-footer .more-options-btn { order: 2; }
 
 .user-info-group {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex: 1;
+    min-width: 0;
 }
 
-.user-info-group > div:first-child { order: 1; }
-.user-info-group > div:last-child { order: 2; }
+.user-info-group .user-text {
+    flex: 1;
+    min-width: 0; /* يسمح للاسم الطويل بالقصّ بنقاط بدل ما يكسر الفوتر */
+}
+
+.user-info-group .user-name,
+.user-info-group .user-role {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
 .avatar-box {
     width: 42px;
@@ -493,104 +459,10 @@ body.dark-mode .confirm-modal-actions .modal-btn {
 body.dark-mode .confirm-modal-actions .modal-btn:hover { background: var(--teal-mist); }
 
 /* ==========================================
-   محاسبة الصيدلية — قسم قابل للفتح/الطيّ
+   محاسبة الصيدلية — روابط مسطحة (بدون طيّ).
+   القسم السابق القابل للطيّ حُذف: 4 روابط `.nav-item` عادية تحت
+   `.nav-section`، بلا `nav-toggle` وبلا عناصر «قريبًا».
    ========================================== */
-.nav-group { margin-bottom: 6px; }
-
-.nav-toggle {
-    width: 100%;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    font-family: inherit;
-    text-align: start;
-}
-
-.nav-toggle .nav-caret {
-    font-size: var(--fs-2xs);
-    opacity: .7;
-    transition: transform .25s var(--ease-smooth);
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-}
-
-.nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate(-90deg); }
-
-html[dir="ltr"] .nav-toggle .nav-caret { transform: rotate(0deg); }
-html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate(90deg); }
-
-.nav-toggle:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
-}
-
-.nav-submenu {
-    list-style: none;
-    margin: 2px 0 8px;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    overflow: hidden;
-}
-
-.nav-submenu[hidden] { display: none; }
-
-.nav-submenu .nav-subitem {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 14px;
-    font-size: var(--fs-sm);
-    font-weight: 600;
-    color: rgba(255, 255, 255, .72);
-    text-decoration: none;
-    border-radius: var(--ph-r-sm);
-    transition: all .2s var(--ease-smooth);
-    margin-inline-start: 14px;
-}
-
-.nav-submenu .nav-subitem:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, .06);
-}
-
-.nav-submenu .nav-subitem.active {
-    color: #ffffff;
-    background: linear-gradient(90deg, rgba(28, 114, 166, .22), rgba(28, 114, 166, 0));
-    border-inline-start: 3px solid #4A9BD4;
-}
-
-.nav-submenu .nav-subitem .sub-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    opacity: .55;
-    flex-shrink: 0;
-}
-
-.nav-submenu .nav-subitem:focus-visible {
-    outline: 2px solid var(--focus-ring);
-    outline-offset: 2px;
-}
-
-.nav-soon {
-    margin-inline-start: auto;
-    font-size: var(--fs-2xs);
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: var(--ph-r-sm);
-    background: rgba(255, 255, 255, .10);
-    color: rgba(255, 255, 255, .60);
-    white-space: nowrap;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .nav-toggle .nav-caret,
-    .nav-submenu .nav-subitem { transition: none; }
-}
 
 /*
  * 🔴 ENTRANCE ANIMATIONS MUST BE DISABLE-ABLE.
@@ -622,7 +494,6 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
      */
     html[dir] .sidebar-logo-header,
     html[dir] .nav-section,
-    html[dir] .sidebar-user-card,
     .user-profile-footer {
         animation: none;
     }
@@ -662,17 +533,6 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
     .user-info-group {
         display: none;
     }
-
-    /* وضع الأيقونات فقط: البطاقة تنكمش لأفاتار في المنتصف */
-    .sidebar-user-card {
-        justify-content: center;
-        padding: 6px;
-        margin-bottom: 20px;
-        border: none;
-        background: transparent;
-    }
-
-    .sidebar-user-card .user-meta { display: none; }
 
     .nav-item {
         justify-content: center;
@@ -742,9 +602,6 @@ html[dir="ltr"] .nav-toggle[aria-expanded="true"] .nav-caret { transform: rotate
     }
 
     .sidebar-logo-header { display: none; }
-
-    /* الشريط السفلي: بطاقة المستخدم مخفية (المساحة لا تتسع لها) */
-    .sidebar-user-card { display: none; }
 
     .nav-section {
         display: flex;

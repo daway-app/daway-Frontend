@@ -436,6 +436,11 @@ export const AR = {
       logo_label: 'شعار الصيدلية',
       logo_change: 'تغيير الشعار',
       choose_image: 'اختيار صورة',
+      logo_pick_hint: 'اختر صورة من جهازك (JPG/PNG/WebP حتى 2MB) — تُرفع وتُحفظ مع الشعار.',
+      logo_type_error: 'نوع الملف غير مدعوم — JPG أو PNG أو WebP فقط.',
+      logo_size_error: 'حجم الصورة كبير — الحد الأقصى 2MB.',
+      logo_uploading: 'جاري رفع الشعار…',
+      logo_or_url: 'أو الصق رابط صورة جاهز',
       location_change: 'تعديل الموقع',
       hours_change: 'تعديل الساعات',
       save_button: 'حفظ التغييرات',
@@ -1776,11 +1781,11 @@ export const AR = {
 } as const;
 
 /** Map a backend role key to its Arabic label (`users.role_*`). */
-export function roleLabel(role: string): string {
+export function roleLabel(role: string, STR: typeof AR = AR): string {
   const map: Record<string, string> = {
-    admin: AR.users.role_admin,
-    pharmacy: AR.users.role_pharmacy,
-    patient: AR.users.role_patient,
+    admin: STR.users.role_admin,
+    pharmacy: STR.users.role_pharmacy,
+    patient: STR.users.role_patient,
   };
   return map[role] ?? role;
 }

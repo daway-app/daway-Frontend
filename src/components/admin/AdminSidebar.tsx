@@ -8,6 +8,8 @@ import { adminKeys } from '@/api/queryKeys';
 import { PRESET_STALE_TIMES } from '@/api/queryClient';
 import type { AdminProfile } from '@/api/adminTypes';
 import { AR } from '@/lib/i18n';
+void AR;
+import { useLang } from '@/lib/lang/LanguageContext';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import {
   IconBox,
@@ -30,23 +32,22 @@ import {
 
 interface NavItem {
   to: string;
-  label: string;
+  /** Key inside `STR.admin.nav`, resolved per render. */
+  labelKey: string;
   icon: React.ReactNode;
   /** Match nested routes as active. */
   activePrefix?: boolean;
 }
 
-const A = AR.admin.nav;
-
 /** Management group (layout.php: management_section). */
 const MANAGEMENT_NAV: NavItem[] = [
-  { to: ADMIN_ROUTES.pharmacies, label: A.pharmacies, icon: <IconBox />, activePrefix: true },
-  { to: ADMIN_ROUTES.medicines, label: A.medicines, icon: <IconCapsule />, activePrefix: true },
-  { to: ADMIN_ROUTES.categories, label: A.categories, icon: <IconFolder />, activePrefix: true },
-  { to: ADMIN_ROUTES.users, label: A.users, icon: <IconUsers />, activePrefix: true },
+  { to: ADMIN_ROUTES.pharmacies, labelKey: 'pharmacies', icon: <IconBox />, activePrefix: true },
+  { to: ADMIN_ROUTES.medicines, labelKey: 'medicines', icon: <IconCapsule />, activePrefix: true },
+  { to: ADMIN_ROUTES.categories, labelKey: 'categories', icon: <IconFolder />, activePrefix: true },
+  { to: ADMIN_ROUTES.users, labelKey: 'users', icon: <IconUsers />, activePrefix: true },
   {
     to: ADMIN_ROUTES.medicineRequests,
-    label: A.medicine_requests,
+    labelKey: 'medicine_requests',
     icon: <IconClipboard />,
     activePrefix: true,
   },
@@ -54,12 +55,14 @@ const MANAGEMENT_NAV: NavItem[] = [
 
 /** Settings group (layout.php: settings_section). */
 const SETTINGS_NAV: NavItem[] = [
-  { to: ADMIN_ROUTES.settings, label: A.system_settings, icon: <IconSettings />, activePrefix: true },
-  { to: ADMIN_ROUTES.logs, label: A.activity_log, icon: <IconList />, activePrefix: true },
-  { to: ADMIN_ROUTES.profile, label: A.profile, icon: <IconUser />, activePrefix: true },
+  { to: ADMIN_ROUTES.settings, labelKey: 'system_settings', icon: <IconSettings />, activePrefix: true },
+  { to: ADMIN_ROUTES.logs, labelKey: 'activity_log', icon: <IconList />, activePrefix: true },
+  { to: ADMIN_ROUTES.profile, labelKey: 'profile', icon: <IconUser />, activePrefix: true },
 ];
 
 export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const { STR } = useLang();
+  const A = STR.admin.nav;
   const { user, logout } = useAdminAuth();
   const api = useAdminApi();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -106,7 +109,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
           {/* بطاقة المستخدم — أعلى السايدبار مباشرة تحت الشعار (طلب عبود).
               الصورة الحقيقية من `avatar_url` عند توفّرها، وإلا الحرف الأول. */}
-          <div className="sidebar-user-card" title={AR.layout.edit_profile_modal_title}>
+          <div className="sidebar-user-card" title={STR.layout.edit_profile_modal_title}>
             <div className="avatar-box">
               {avatarUrl ? (
                 <img
@@ -148,14 +151,14 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
           <div className="nav-section">
             <div className="section-label">{A.management_section}</div>
             {MANAGEMENT_NAV.map((item) => (
-              <NavItemLink key={item.to} item={item} onNavigate={onNavigate} />
+              <NavItemLink key={item.to} item={item} nav={A} onNavigate={onNavigate} />
             ))}
           </div>
 
           <div className="nav-section">
             <div className="section-label">{A.settings_section}</div>
             {SETTINGS_NAV.map((item) => (
-              <NavItemLink key={item.to} item={item} onNavigate={onNavigate} />
+              <NavItemLink key={item.to} item={item} nav={A} onNavigate={onNavigate} />
             ))}
           </div>
         </div>
@@ -181,15 +184,15 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
         <div className="confirm-modal-overlay active" role="dialog" aria-modal="true">
           <div className="confirm-modal-card">
             <div className="confirm-modal-icon">!</div>
-            <h3>{AR.layout.logout_confirm_title}</h3>
-            <p>{AR.layout.logout_confirm_message}</p>
+            <h3>{STR.layout.logout_confirm_title}</h3>
+            <p>{STR.layout.logout_confirm_message}</p>
             <div className="confirm-modal-actions">
               <button
                 type="button"
                 className="modal-btn"
                 onClick={() => setShowLogoutConfirm(false)}
               >
-                {AR.layout.cancel_button}
+                {STR.layout.cancel_button}
               </button>
               <button
                 type="button"
@@ -199,7 +202,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
                   void logout();
                 }}
               >
-                {AR.layout.logout_confirm_yes}
+                {STR.layout.logout_confirm_yes}
               </button>
             </div>
           </div>
@@ -209,7 +212,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
+function NavItemLink({ item, nav, onNavigate }: { item: NavItem; nav: Record<string, string>; onNavigate?: () => void }) {
   return (
     <NavLink
       to={item.to}
@@ -220,7 +223,7 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
       onFocus={() => preloadRoute(item.to)}
     >
       <span className="nav-icon">{item.icon}</span>
-      <span className="nav-text">{item.label}</span>
+      <span className="nav-text">{nav[item.labelKey] ?? item.labelKey}</span>
     </NavLink>
   );
 }

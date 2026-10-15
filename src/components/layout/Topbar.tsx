@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAuth } from '@/auth/authHooks';
-import { AR, roleLabel } from '@/lib/i18n';
+import { useAuth, usePharmacyApi } from '@/auth/authHooks';
+import { roleLabel } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
+import { useApiQuery } from '@/api/useApiQuery';
+import { pharmacyKeys, PRESET_STALE_TIMES } from '@/api/queryKeys';
+import type { ApiPharmacyProfile } from '@/api/pharmacyTypes';
+import { thumbUrl } from '@/lib/format';
 import { initTheme, toggleTheme } from '@/lib/theme';
 import { topbarTitleFor } from './routeTitles';
 import { IconBell, IconMoon, IconSun } from './icons';
@@ -16,20 +21,20 @@ import { IconBell, IconMoon, IconSun } from './icons';
  *     button.icon-btn.theme-toggle-btn > span.icon-3d.sun-icon / .moon-icon
  *     .user-profile-btn > .avatar + .user-details
  *
- * Avatar parity with Blade: Laravel renders `auth()->user()->avatar` (thumbUrl
- * 84×84) or the name's first letter when null. The SPA session payload
- * (`/api/login/pharmacy`) carries NO avatar field and the pharmacy profile
- * endpoint has none either — so the React topbar shows the initial, which is
- * exactly what Blade renders for a pharmacy account without an avatar. (Do NOT
- * substitute the pharmacy logo here — the topbar shows the USER, not the store.)
+ * Avatar display (read-only): the pharmacy `logo_url` from the shared profile
+ * query (thumbUrl 84×84), or the name's first letter when null. The backend
+ * syncs `users.avatar` with the uploaded logo, so the store logo IS the
+ * account picture here — matching the web profile page behaviour.
  *
  * Notifications are MOCK/static (API integration is out of scope for this
  * phase) — the dropdown renders Blade's empty-state text.
  */
 export function Topbar() {
   const { user } = useAuth();
+  const api = usePharmacyApi();
+  const { lang, STR, toggleLang } = useLang();
   const { pathname } = useLocation();
-  const heading = topbarTitleFor(pathname);
+  const heading = topbarTitleFor(pathname, STR);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -52,6 +57,19 @@ export function Topbar() {
   }, []);
 
   const initial = user?.name ? user.name.trim().charAt(0) : '؟';
+  /**
+   * عرض فقط: شعار الصيدلية المرفوع (thumbUrl يطبق تحويل Cloudinary)،
+   * أو الحرف الأول كبديل. نفس مفتاح البروفايل المشترك — بلا طلب إضافي.
+   */
+  const profileQuery = useApiQuery<ApiPharmacyProfile>(
+    (signal) => api.profile(signal),
+    [user?.id],
+    {
+      queryKey: pharmacyKeys(user?.id ?? 'anon').profile,
+      staleTime: PRESET_STALE_TIMES.settings,
+    },
+  );
+  const logoSrc = thumbUrl(profileQuery.data?.logo_url ?? null, 84, 84);
   return (
     <div className="topbar">
       <div className="topbar-title-group">
@@ -60,14 +78,18 @@ export function Topbar() {
       </div>
 
       <div className="topbar-actions">
-        {/* Language switch — static label "EN" (Blade shows the other locale) */}
+        {/* Language switch — shows the OTHER locale (Blade parity):
+            Arabic UI offers "EN", English UI offers "عربي". */}
         <a
           href="#"
           className="icon-btn lang-switch-btn"
-          title={AR.layout.switch_language_tooltip}
-          onClick={(e) => e.preventDefault()}
+          title={STR.layout.switch_language_tooltip}
+          onClick={(e) => {
+            e.preventDefault();
+            toggleLang();
+          }}
         >
-          <span className="lang-label">EN</span>
+          <span className="lang-label">{lang === 'ar' ? 'EN' : 'عربي'}</span>
         </a>
 
         {/* Notifications */}
@@ -75,7 +97,7 @@ export function Topbar() {
           <button
             className="icon-btn"
             id="notificationBtn"
-            title={AR.layout.notifications_tooltip}
+            title={STR.layout.notifications_tooltip}
             onClick={() => setNotificationsOpen((v) => !v)}
           >
             <IconBell />
@@ -83,15 +105,15 @@ export function Topbar() {
           </button>
           <div className={`notifications-dropdown${notificationsOpen ? ' active' : ''}`}>
             <div className="notifications-header">
-              <h3>{AR.layout.notifications_title}</h3>
-              <button className="clear-all-btn">{AR.layout.mark_all_as_read}</button>
+              <h3>{STR.layout.notifications_title}</h3>
+              <button className="clear-all-btn">{STR.layout.mark_all_as_read}</button>
             </div>
             <div className="notifications-list">
-              <p className="no-notifications">{AR.layout.no_new_notifications}</p>
+              <p className="no-notifications">{STR.layout.no_new_notifications}</p>
             </div>
             <div className="notifications-footer">
               <a href="#" onClick={(e) => e.preventDefault()}>
-                {AR.layout.view_all_notifications}
+                {STR.layout.view_all_notifications}
               </a>
             </div>
           </div>
@@ -100,7 +122,7 @@ export function Topbar() {
         {/* Theme toggle */}
         <button
           className="icon-btn theme-toggle-btn"
-          title={AR.layout.dark_mode_tooltip}
+          title={STR.layout.dark_mode_tooltip}
           onClick={() => toggleTheme()}
         >
           <span className="icon-3d sun-icon">
@@ -115,11 +137,25 @@ export function Topbar() {
             الخروج مقره فوتر السايدبار أسفل. مطابق لـBlade: صورة المستخدم
             من `auth()->user()->avatar` — غير متاحة لجلسة الصيدلية بالـSPA،
             فيُعرض الحرف الأول كما يفعل Blade عندما تكون null. */}
-        <div className="user-profile-btn" title={AR.layout.edit_profile_modal_title}>
-          <div className="avatar">{initial}</div>
+        <div className="user-profile-btn" title={STR.layout.edit_profile_modal_title}>
+          <div className="avatar">
+            {logoSrc ? (
+              <img
+                src={logoSrc}
+                alt=""
+                width={36}
+                height={36}
+                loading="lazy"
+                decoding="async"
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+              />
+            ) : (
+              initial
+            )}
+          </div>
           <div className="user-details">
             <span className="user-name">{user?.name ?? ''}</span>
-            <span className="user-role">{roleLabel(user?.role ?? '')}</span>
+            <span className="user-role">{roleLabel(user?.role ?? '', STR)}</span>
           </div>
         </div>
       </div>

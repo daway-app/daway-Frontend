@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { Btn } from '@/components/ui';
 
 /**
@@ -17,11 +18,16 @@ import { Btn } from '@/components/ui';
  *   screen is self-contained with no API (B3: no integration this phase).
  */
 
-const copy = AR.pharmacy.password.change;
+/** Module-level AR snapshot kept for reference — the component uses STR. */
+const copyRef = AR.pharmacy.password.change;
+void copyRef;
 
 type FieldErrors = Partial<Record<'current' | 'next' | 'confirm', string>>;
 
 export function PasswordChangePage() {
+  const { STR } = useLang();
+  const copy = STR.pharmacy.password.change;
+  void AR;
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');

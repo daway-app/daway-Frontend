@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { Btn } from '@/components/ui';
 import { ApiError } from '@/api/errors';
 import { useApi } from '@/auth/authHooks';
@@ -37,10 +38,14 @@ import { ROUTES } from '@/routes/paths';
  */
 
 /**
- * `register` sits at the TOP level of `AR`, alongside `users` and `accounting`
- * — not nested under `pharmacy`. Those feature blocks that grew large were
- * promoted to top level, and this one is an auth flow rather than a pharmacy
- * screen, so it follows them instead of inventing a third convention.
+ * `register` sits at the TOP level of the dictionary, alongside `users` and
+ * `accounting` — not nested under `pharmacy`. Those feature blocks that grew
+ * large were promoted to top level, and this one is an auth flow rather than
+ * a pharmacy screen, so it follows them instead of inventing a third
+ * convention.
+ *
+ * NOTE: `R`/`BRAND` below are module-level AR snapshots kept for reference —
+ * the component reads `STR` (current language) at render time.
  */
 const R = AR.register;
 
@@ -57,6 +62,11 @@ type FieldName = 'pharmacy_name' | 'phone' | 'region' | 'password' | 'password_c
 type FieldErrors = Partial<Record<FieldName, string>>;
 
 export function RegisterPage() {
+  const { STR } = useLang();
+  const Rt = STR.register;
+  const brandTag = STR.admin.unified.brand_tag;
+  void R;
+  void BRAND;
   const api = useApi();
 
   const [pharmacyName, setPharmacyName] = useState('');
@@ -74,18 +84,18 @@ export function RegisterPage() {
   function validate(): FieldErrors {
     const found: FieldErrors = {};
 
-    if (!pharmacyName.trim()) found.pharmacy_name = R.err_name_required;
-    if (!phone.trim()) found.phone = R.err_phone_required;
+    if (!pharmacyName.trim()) found.pharmacy_name = Rt.err_name_required;
+    if (!phone.trim()) found.phone = Rt.err_phone_required;
     // Loose on purpose: the backend only caps the length, and phone formats
     // vary. A strict pattern here would reject valid numbers the API accepts.
-    else if (phone.replace(/\D/g, '').length < 9) found.phone = R.err_phone_invalid;
+    else if (phone.replace(/\D/g, '').length < 9) found.phone = Rt.err_phone_invalid;
 
-    if (!region.trim()) found.region = R.err_region_required;
+    if (!region.trim()) found.region = Rt.err_region_required;
 
-    if (!password) found.password = R.err_password_required;
-    else if (password.length < 8) found.password = R.err_password_short;
+    if (!password) found.password = Rt.err_password_required;
+    else if (password.length < 8) found.password = Rt.err_password_short;
 
-    if (confirm !== password) found.password_confirm = R.err_confirm_mismatch;
+    if (confirm !== password) found.password_confirm = Rt.err_confirm_mismatch;
 
     return found;
   }
@@ -108,7 +118,7 @@ export function RegisterPage() {
     }
 
     setBanner(
-      caught instanceof ApiError && caught.message ? caught.message : R.err_generic,
+      caught instanceof ApiError && caught.message ? caught.message : Rt.err_generic,
     );
   }
 
@@ -141,18 +151,18 @@ export function RegisterPage() {
     return (
       <div className="auth-container">
         <div className="auth-form-side">
-          <h1 className="form-title">{R.success_title}</h1>
-          <p className="form-subtitle">{R.success_body}</p>
+          <h1 className="form-title">{Rt.success_title}</h1>
+          <p className="form-subtitle">{Rt.success_body}</p>
 
           {/* The load-bearing sentence. Without it the user goes and tries to
               log in immediately and reports the app as broken. */}
           <div className="info-hint info-hint--success" role="status">
-            ℹ️ {R.success_note}
+            ℹ️ {Rt.success_note}
           </div>
 
           <div className="fg" style={{ marginTop: 24 }}>
             <Btn to={ROUTES.login} variant="primary" className="auth-submit">
-              {R.success_go_login}
+              {Rt.success_go_login}
             </Btn>
           </div>
         </div>
@@ -166,13 +176,13 @@ export function RegisterPage() {
                 sizes="92px"
                 width={92}
                 height={92}
-                alt={`شعار ${BRAND}`}
+                alt={`شعار ${brandTag}`}
                 className="brand-logo-img"
               />
             </div>
-            <span className="hero-subtitle-tag">{BRAND}</span>
-            <h2 className="hero-title">{R.hero_title}</h2>
-            <p className="hero-desc">{R.hero_desc}</p>
+            <span className="hero-subtitle-tag">{brandTag}</span>
+            <h2 className="hero-title">{Rt.hero_title}</h2>
+            <p className="hero-desc">{Rt.hero_desc}</p>
           </div>
         </div>
       </div>
@@ -182,13 +192,13 @@ export function RegisterPage() {
   return (
     <div className="auth-container">
       <div className="auth-form-side">
-        <h1 className="form-title">{R.heading}</h1>
-        <p className="form-subtitle">{R.subtitle}</p>
+        <h1 className="form-title">{Rt.heading}</h1>
+        <p className="form-subtitle">{Rt.subtitle}</p>
 
         <form id="registerForm" onSubmit={handleSubmit} noValidate>
           <div className="fg">
             <label className="fl" htmlFor="pharmacyNameInput">
-              {R.name_label}
+              {Rt.name_label}
             </label>
             <div className="fc-wrapper">
               <input
@@ -198,7 +208,7 @@ export function RegisterPage() {
                 name="pharmacy_name"
                 value={pharmacyName}
                 onChange={(e) => setPharmacyName(e.target.value)}
-                placeholder={R.name_placeholder}
+                placeholder={Rt.name_placeholder}
                 autoComplete="organization"
                 maxLength={150}
                 aria-invalid={errors.pharmacy_name ? true : undefined}
@@ -216,7 +226,7 @@ export function RegisterPage() {
 
           <div className="fg">
             <label className="fl" htmlFor="registerPhoneInput">
-              {R.phone_label}
+              {Rt.phone_label}
             </label>
             <div className="fc-wrapper">
               <input
@@ -226,7 +236,7 @@ export function RegisterPage() {
                 name="phone"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder={R.phone_placeholder}
+                placeholder={Rt.phone_placeholder}
                 autoComplete="tel"
                 inputMode="tel"
                 dir="ltr"
@@ -238,7 +248,7 @@ export function RegisterPage() {
               />
             </div>
             <div className="info-hint" role="note">
-              💡 {R.phone_hint}
+              💡 {Rt.phone_hint}
             </div>
             {errors.phone ? (
               <div className="error-message" id="registerPhoneError" role="alert">
@@ -249,7 +259,7 @@ export function RegisterPage() {
 
           <div className="fg">
             <label className="fl" htmlFor="regionInput">
-              {R.region_label}
+              {Rt.region_label}
             </label>
             <div className="fc-wrapper">
               <input
@@ -259,7 +269,7 @@ export function RegisterPage() {
                 name="region"
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
-                placeholder={R.region_placeholder}
+                placeholder={Rt.region_placeholder}
                 autoComplete="address-level2"
                 maxLength={150}
                 aria-invalid={errors.region ? true : undefined}
@@ -277,7 +287,7 @@ export function RegisterPage() {
 
           <div className="fg">
             <label className="fl" htmlFor="registerPasswordInput">
-              {R.password_label}
+              {Rt.password_label}
             </label>
             <div className="fc-wrapper">
               <input
@@ -300,13 +310,13 @@ export function RegisterPage() {
                 className="toggle-btn"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-controls="registerPasswordInput"
-                aria-label={showPassword ? R.hide_password : R.show_password}
+                aria-label={showPassword ? Rt.hide_password : Rt.show_password}
               >
-                {showPassword ? R.hide : R.show}
+                {showPassword ? Rt.hide : Rt.show}
               </button>
             </div>
             <div className="info-hint" role="note">
-              💡 {R.rules}
+              💡 {Rt.rules}
             </div>
             {errors.password ? (
               <div className="error-message" id="registerPasswordError" role="alert">
@@ -317,7 +327,7 @@ export function RegisterPage() {
 
           <div className="fg">
             <label className="fl" htmlFor="registerConfirmInput">
-              {R.confirm_label}
+              {Rt.confirm_label}
             </label>
             <div className="fc-wrapper">
               <input
@@ -357,15 +367,15 @@ export function RegisterPage() {
               className="auth-submit"
               disabled={submitting}
             >
-              {submitting ? R.submitting : R.submit}
+              {submitting ? Rt.submitting : Rt.submit}
             </Btn>
           </div>
         </form>
 
         <div className="auth-footer">
-          {R.have_account}{' '}
+          {Rt.have_account}{' '}
           <Link to={ROUTES.login} className="auth-footer__link">
-            {R.login_link}
+            {Rt.login_link}
           </Link>
         </div>
       </div>
@@ -379,13 +389,13 @@ export function RegisterPage() {
               sizes="92px"
               width={92}
               height={92}
-              alt={`شعار ${BRAND}`}
+              alt={`شعار ${brandTag}`}
               className="brand-logo-img"
             />
           </div>
-          <span className="hero-subtitle-tag">{BRAND}</span>
-          <h2 className="hero-title">{R.hero_title}</h2>
-          <p className="hero-desc">{R.hero_desc}</p>
+          <span className="hero-subtitle-tag">{brandTag}</span>
+          <h2 className="hero-title">{Rt.hero_title}</h2>
+          <p className="hero-desc">{Rt.hero_desc}</p>
         </div>
       </div>
     </div>

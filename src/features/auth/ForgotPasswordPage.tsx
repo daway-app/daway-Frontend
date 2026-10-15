@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { Btn } from '@/components/ui';
 import { useApi } from '@/auth/authHooks';
 import { ROUTES } from '@/routes/paths';
@@ -42,6 +43,11 @@ type FieldName = 'pharmacy_id' | 'phone';
 type FieldErrors = Partial<Record<FieldName, string>>;
 
 export function ForgotPasswordPage() {
+  const { STR } = useLang();
+  const Rt = STR.forgot_password;
+  const brandTag = STR.admin.unified.brand_tag;
+  void R;
+  void BRAND;
   const api = useApi();
 
   const [pharmacyId, setPharmacyId] = useState('');
@@ -53,8 +59,8 @@ export function ForgotPasswordPage() {
 
   function validate(): FieldErrors {
     const found: FieldErrors = {};
-    if (!pharmacyId.trim()) found.pharmacy_id = R.err_pharmacy_id_required;
-    if (!phone.trim()) found.phone = R.err_phone_required;
+    if (!pharmacyId.trim()) found.pharmacy_id = Rt.err_pharmacy_id_required;
+    if (!phone.trim()) found.phone = Rt.err_phone_required;
     return found;
   }
 
@@ -77,7 +83,7 @@ export function ForgotPasswordPage() {
       // See the header comment: any failure is transport-level. The backend's
       // anti-enumeration contract means a "wrong details" answer does not
       // exist — surfacing one here would leak information it withholds.
-      setBanner(R.err_generic);
+      setBanner(Rt.err_generic);
     } finally {
       setSubmitting(false);
     }
@@ -88,20 +94,20 @@ export function ForgotPasswordPage() {
     return (
       <div className="auth-container">
         <div className="auth-form-side">
-          <h1 className="form-title">{R.success_title}</h1>
-          <p className="form-subtitle">{R.success_body}</p>
+          <h1 className="form-title">{Rt.success_title}</h1>
+          <p className="form-subtitle">{Rt.success_body}</p>
 
           {/* The load-bearing sentence: what happens next, and that the current
               password keeps working until an admin approves. Without it the
               user either waits for a code that will never come, or assumes the
               account was cut off immediately. */}
           <div className="info-hint info-hint--success" role="status">
-            ℹ️ {R.success_note}
+            ℹ️ {Rt.success_note}
           </div>
 
           <div className="fg" style={{ marginTop: 24 }}>
             <Btn to={ROUTES.login} variant="primary" className="auth-submit">
-              {R.success_go_login}
+              {Rt.success_go_login}
             </Btn>
           </div>
         </div>
@@ -115,13 +121,13 @@ export function ForgotPasswordPage() {
                 sizes="92px"
                 width={92}
                 height={92}
-                alt={`شعار ${BRAND}`}
+                alt={`شعار ${brandTag}`}
                 className="brand-logo-img"
               />
             </div>
-            <span className="hero-subtitle-tag">{BRAND}</span>
-            <h2 className="hero-title">{R.hero_title}</h2>
-            <p className="hero-desc">{R.hero_desc}</p>
+            <span className="hero-subtitle-tag">{brandTag}</span>
+            <h2 className="hero-title">{Rt.hero_title}</h2>
+            <p className="hero-desc">{Rt.hero_desc}</p>
           </div>
         </div>
       </div>
@@ -131,13 +137,13 @@ export function ForgotPasswordPage() {
   return (
     <div className="auth-container">
       <div className="auth-form-side">
-        <h1 className="form-title">{R.heading}</h1>
-        <p className="form-subtitle">{R.subtitle}</p>
+        <h1 className="form-title">{Rt.heading}</h1>
+        <p className="form-subtitle">{Rt.subtitle}</p>
 
         <form id="forgotPasswordForm" onSubmit={handleSubmit} noValidate>
           <div className="fg">
             <label className="fl" htmlFor="forgotPharmacyIdInput">
-              {R.pharmacy_id_label}
+              {Rt.pharmacy_id_label}
             </label>
             <div className="fc-wrapper">
               <input
@@ -147,7 +153,7 @@ export function ForgotPasswordPage() {
                 name="pharmacy_id"
                 value={pharmacyId}
                 onChange={(e) => setPharmacyId(e.target.value)}
-                placeholder={R.pharmacy_id_placeholder}
+                placeholder={Rt.pharmacy_id_placeholder}
                 autoComplete="username"
                 autoCapitalize="characters"
                 spellCheck={false}
@@ -160,7 +166,7 @@ export function ForgotPasswordPage() {
               />
             </div>
             <div className="info-hint" role="note">
-              💡 {R.pharmacy_id_hint}
+              💡 {Rt.pharmacy_id_hint}
             </div>
             {errors.pharmacy_id ? (
               <div className="error-message" id="forgotPharmacyIdError" role="alert">
@@ -171,7 +177,7 @@ export function ForgotPasswordPage() {
 
           <div className="fg">
             <label className="fl" htmlFor="forgotPhoneInput">
-              {R.phone_label}
+              {Rt.phone_label}
             </label>
             <div className="fc-wrapper">
               <input
@@ -192,7 +198,7 @@ export function ForgotPasswordPage() {
               />
             </div>
             <div className="info-hint" role="note">
-              💡 {R.phone_hint}
+              💡 {Rt.phone_hint}
             </div>
             {errors.phone ? (
               <div className="error-message" id="forgotPhoneError" role="alert">
@@ -215,15 +221,15 @@ export function ForgotPasswordPage() {
               className="auth-submit"
               disabled={submitting}
             >
-              {submitting ? R.submitting : R.submit}
+              {submitting ? Rt.submitting : Rt.submit}
             </Btn>
           </div>
         </form>
 
         <div className="auth-footer">
-          {R.have_account}{' '}
+          {Rt.have_account}{' '}
           <Link to={ROUTES.login} className="auth-footer__link">
-            {R.login_link}
+            {Rt.login_link}
           </Link>
         </div>
       </div>
@@ -237,13 +243,13 @@ export function ForgotPasswordPage() {
               sizes="92px"
               width={92}
               height={92}
-              alt={`شعار ${BRAND}`}
+              alt={`شعار ${brandTag}`}
               className="brand-logo-img"
             />
           </div>
-          <span className="hero-subtitle-tag">{BRAND}</span>
-          <h2 className="hero-title">{R.hero_title}</h2>
-          <p className="hero-desc">{R.hero_desc}</p>
+          <span className="hero-subtitle-tag">{brandTag}</span>
+          <h2 className="hero-title">{Rt.hero_title}</h2>
+          <p className="hero-desc">{Rt.hero_desc}</p>
         </div>
       </div>
     </div>

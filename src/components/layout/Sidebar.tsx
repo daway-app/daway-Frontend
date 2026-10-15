@@ -1,9 +1,13 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { preloadRoute } from '@/lib/routePreload';
-import { useAuth } from '@/auth/authHooks';
+import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { roleLabel } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
+import { useApiQuery } from '@/api/useApiQuery';
+import { pharmacyKeys, PRESET_STALE_TIMES } from '@/api/queryKeys';
+import type { ApiPharmacyProfile } from '@/api/pharmacyTypes';
+import { thumbUrl } from '@/lib/format';
 import { ROUTES } from '@/routes/paths';
 import { useSidebarCounts } from './useSidebarCounts';
 import {
@@ -101,10 +105,25 @@ function NavBadge({ count, label }: { count: number; label: string }) {
 export function Sidebar() {
   const { STR } = useLang();
   const { user, logout } = useAuth();
+  const api = usePharmacyApi();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const counts = useSidebarCounts();
 
   const initial = user?.name ? user.name.trim().charAt(0) : '؟';
+  /**
+   * عرض فقط: شعار الصيدلية المرفوع من صفحة البروفايل، أو الحرف الأول
+   * كبديل. نفس مفتاح `pharmacyKeys().profile` الذي تستعمله الشاشات —
+   * TanStack يوحد الطلب فلا يطلق استدعاءً إضافيًا.
+   */
+  const profileQuery = useApiQuery<ApiPharmacyProfile>(
+    (signal) => api.profile(signal),
+    [user?.id],
+    {
+      queryKey: pharmacyKeys(user?.id ?? 'anon').profile,
+      staleTime: PRESET_STALE_TIMES.settings,
+    },
+  );
+  const logoSrc = thumbUrl(profileQuery.data?.logo_url ?? null, 84, 84);
   /** Resolve a `PHARMACY_NAV` label key against the current dictionary. */
   const navLabel = (key: string): string =>
     (STR.pharmacy.sidebar as Record<string, string>)[key] ?? key;
@@ -180,7 +199,21 @@ export function Sidebar() {
             مستخدم، فيُعرض الحرف الأول داخل الأفاتار المتدرّج. */}
         <div className="user-profile-footer">
           <div className="user-info-group" title={STR.layout.edit_profile_modal_title}>
-            <div className="avatar-box" aria-hidden="true">{initial}</div>
+            <div className="avatar-box" aria-hidden="true">
+              {logoSrc ? (
+                <img
+                  src={logoSrc}
+                  alt=""
+                  width={42}
+                  height={42}
+                  loading="lazy"
+                  decoding="async"
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                />
+              ) : (
+                initial
+              )}
+            </div>
             <div className="user-text">
               <div className="user-name">{user?.name ?? ''}</div>
               <div className="user-role">{roleLabel(user?.role ?? '', STR)}</div>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/ui';
 import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { useAuth } from '@/auth/authHooks';
@@ -24,8 +25,11 @@ import type { ApiInventoryItem, ApiSearchableMedicine } from '@/api/pharmacyType
  * Submitting now PERSISTS via `POST /api/pharmacy/alternatives`.
  */
 const C = AR.pharmacy.alternatives.create;
+void C; // module AR snapshot — component uses STR below
 
 export function AlternativeCreatePage() {
+  const { STR } = useLang();
+  const C = STR.pharmacy.alternatives.create;
   const api = usePharmacyApi();
   const { user } = useAuth();
 

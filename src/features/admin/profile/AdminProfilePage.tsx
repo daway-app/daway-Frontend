@@ -3,6 +3,7 @@ import { AsyncBoundary, Badge, Btn, PageHeader } from '@/components/ui';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { thumbUrl } from '@/lib/format';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import type { AdminProfile } from '@/api/adminTypes';
@@ -44,6 +45,7 @@ import type { AdminProfile } from '@/api/adminTypes';
  * This is a documented gap, and the note under the actions says so.
  */
 const P = AR.admin.profile;
+void P; // module AR snapshot — component uses STR below
 
 /** First letter of the name — the avatar fallback (mirrors the sidebar). */
 function initial(name: string): string {
@@ -51,6 +53,8 @@ function initial(name: string): string {
 }
 
 export function AdminProfilePage() {
+  const { STR } = useLang();
+  const P = STR.admin.profile;
   const api = useAdminApi();
 
   const query = useApiQuery<{ user: AdminProfile }>(

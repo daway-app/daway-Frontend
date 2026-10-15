@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, FormField, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
@@ -26,6 +27,7 @@ import {
   type DayState,
   type HoursState,
 } from './hours';
+import { validateLogoFile } from './logoUpload';
 
 /**
  * Pharmacy profile — live against `GET/POST /api/profile/pharmacy`.
@@ -52,13 +54,17 @@ import {
  *
  * GAPS (backend-side, reported not patched):
  *  - GAP-1: `region` is accepted + persisted but never returned by `payload()`.
- *  - GAP-8: `logo` is a URL string (`SecureImageUrl` rule), NOT a file upload —
- *    so the logo modal takes a URL instead of a file picker.
+ *  - GAP-8: CLOSED — the API now accepts `logo_file` (multipart, beats
+ *    `logo_url`) and syncs `users.avatar`. The logo modal offers a file
+ *    picker with instant preview; the URL field stays as an alternative.
  *  - GAP-9: the payload has no `email`, and `updateProfile` never writes one, so
  *    the field is read-only.
  */
 const P = AR.pharmacy.profile;
-const HQ = P.hours_quick;
+void P;
+/** Module-level snapshot — the component resolves `STR.pharmacy.profile` live. */
+const HQ_REF = AR.pharmacy.profile.hours_quick;
+void HQ_REF;
 
 /** The fields this screen validates, in DOM order (used for focus-on-error). */
 type Field = 'pharmacy_name' | 'phone_number' | 'address' | 'region' | 'latitude' | 'longitude' | 'logo';
@@ -73,6 +79,9 @@ const FIELDS: readonly Field[] = [
 ];
 
 export function ProfilePage() {
+  const { STR } = useLang();
+  const P = STR.pharmacy.profile;
+  const HQ = P.hours_quick;
   const api = usePharmacyApi();
   const { user } = useAuth();
 
@@ -91,6 +100,11 @@ export function ProfilePage() {
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
   const [logo, setLogo] = useState('');
+  /** الملف المختار للرفع (لم يُرفع بعد) + معاينته المحلية الفورية. */
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFileError, setLogoFileError] = useState<string | null>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [hours, setHours] = useState<HoursState>(() => initHours(null));
   const [modal, setModal] = useState<null | 'password' | 'logo' | 'location' | 'hours'>(null);
   /** True once the password changed — the session is over and needs a re-login. */
@@ -149,6 +163,62 @@ export function ProfilePage() {
   }, [profile]);
 
   const save = useApiMutation((body: Record<string, unknown>) => api.updateProfile(body));
+  const upload = useApiMutation((file: File) => api.uploadLogo(file));
+
+  /** تحرير رابط المعاينة المحلية عند استبداله أو إغلاق المودال. */
+  useEffect(() => {
+    return () => {
+      if (logoPreview) URL.revokeObjectURL(logoPreview);
+    };
+  }, [logoPreview]);
+
+  function clearLogoPick() {
+    if (logoPreview) URL.revokeObjectURL(logoPreview);
+    setLogoPreview(null);
+    setLogoFile(null);
+    setLogoFileError(null);
+    if (logoInputRef.current) logoInputRef.current.value = '';
+  }
+
+  /** اختيار ملف: تحقق محلي أولًا ثم معاينة فورية (بلا أي طلب شبكة). */
+  function pickLogo(file: File | undefined) {
+    if (!file) return;
+    const problem = validateLogoFile(file);
+    if (problem === 'type') {
+      setLogoFileError(P.logo_type_error);
+      return;
+    }
+    if (problem === 'size') {
+      setLogoFileError(P.logo_size_error);
+      return;
+    }
+    if (logoPreview) URL.revokeObjectURL(logoPreview);
+    setLogoFileError(null);
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  }
+
+  /**
+   * حفظ المودال: إن وُجد ملف مختار يُرفع أولًا إلى
+   * `POST /api/profile/pharmacy` (حقل `logo_file`) ويُؤخذ `logo_url`
+   * الراجع، ثم يسير الحفظ العادي (JSON) بنفس `handleSave`.
+   */
+  async function handleLogoSave() {
+    if (logoFile) {
+      try {
+        const updated = await upload.run(logoFile);
+        const freshUrl = updated.logo_url ?? '';
+        setLogo(freshUrl);
+        clearLogoPick();
+        await handleSave(freshUrl);
+        return;
+      } catch {
+        toast.error(upload.error?.message || AR.pharmacy.toast.save_failed);
+        return;
+      }
+    }
+    await handleSave();
+  }
   const changePassword = useApiMutation((body: { password: string; password_confirmation: string }) =>
     api.changePassword(body),
   );
@@ -199,7 +269,12 @@ export function ProfilePage() {
     return buildHoursPayload(hours);
   }
 
-  async function handleSave() {
+  /**
+   * @param logoOverride رابط الشعار بعد رفع ملف للتو — يُستخدم بدل state
+   * `logo` الذي لم يتحدث بعد (setState غير فوري).
+   */
+  async function handleSave(logoOverride?: string) {
+    const logoValue = logoOverride ?? logo;
     /*
      * Validate BEFORE the request. `markAllTouched` first so every error is
      * visible at once (not just the ones the user happened to blur), then scroll
@@ -222,7 +297,7 @@ export function ProfilePage() {
       region: () => requiredText(form.region, P.complete.region_label),
       latitude: () => ruleLatitude(lat),
       longitude: () => ruleLongitude(lng),
-      logo: () => optionalUrl(logo, P.logo_label),
+      logo: () => optionalUrl(logoValue, P.logo_label),
     });
 
     if (!ok) {
@@ -261,7 +336,7 @@ export function ProfilePage() {
         region: form.region,
         latitude: lat === '' ? null : Number(lat),
         longitude: lng === '' ? null : Number(lng),
-        logo_url: logo || null,
+        logo_url: logoValue || null,
         working_hours: buildPayload(),
       });
       /*
@@ -658,23 +733,33 @@ export function ProfilePage() {
         </div>
       </Modal>
 
-      {/* ── Logo (GAP-8: URL, not a file upload) ───────────────────── */}
+      {/* ── Logo: file picker with instant preview, URL as alternative ── */}
       <Modal
         open={modal === 'logo'}
         title={P.logo_label}
-        onClose={() => setModal(null)}
+        onClose={() => {
+          clearLogoPick();
+          setModal(null);
+        }}
         footer={
           <>
-            <button type="button" className="ph-btn ghost" onClick={() => setModal(null)}>
+            <button
+              type="button"
+              className="ph-btn ghost"
+              onClick={() => {
+                clearLogoPick();
+                setModal(null);
+              }}
+            >
               {P.cancel_button}
             </button>
             <button
               type="button"
               className="ph-btn primary"
-              disabled={save.isPending}
-              onClick={() => void handleSave()}
+              disabled={save.isPending || upload.isPending}
+              onClick={() => void handleLogoSave()}
             >
-              {P.save_button}
+              {upload.isPending ? P.logo_uploading : P.save_button}
             </button>
           </>
         }
@@ -692,7 +777,13 @@ export function ProfilePage() {
               overflow: 'hidden',
             }}
           >
-            {avatarSrc ? (
+            {logoPreview ? (
+              <img
+                src={logoPreview}
+                alt={form.pharmacy_name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : avatarSrc ? (
               <img
                 src={avatarSrc}
                 alt={form.pharmacy_name}
@@ -703,7 +794,36 @@ export function ProfilePage() {
             )}
           </div>
           <p className="ph-hint" style={{ marginBlock: '12px 8px' }}>
-            الواجهة البرمجية تستقبل رابط صورة، لا ملفاً مرفوعاً.
+            {P.logo_pick_hint}
+          </p>
+          <input
+            ref={logoInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            hidden
+            aria-label={P.choose_image}
+            onChange={(e) => pickLogo(e.target.files?.[0])}
+          />
+          <button
+            type="button"
+            className="ph-btn outline"
+            style={{ marginBlockEnd: 6 }}
+            onClick={() => logoInputRef.current?.click()}
+          >
+            <i className="fas fa-camera" /> {P.choose_image}
+          </button>
+          {logoFileError && (
+            <p className="ph-error" style={{ marginBlock: '8px 0', padding: '10px 14px' }}>
+              {logoFileError}
+            </p>
+          )}
+          {logoFile && !logoFileError && (
+            <p className="ph-hint" style={{ marginBlock: '8px 0' }}>
+              {logoFile.name}
+            </p>
+          )}
+          <p className="ph-hint" style={{ marginBlock: '12px 8px' }}>
+            {P.logo_or_url}
           </p>
           <FormField
             label={P.logo_label}

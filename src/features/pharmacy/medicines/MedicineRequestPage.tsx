@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, Btn, FormField, PageHeader } from '@/components/ui';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
@@ -25,6 +26,7 @@ import type { ApiCategory } from '@/api/pharmacyTypes';
  */
 
 const R = AR.pharmacy.medicines.request;
+void R; // module AR snapshot — component uses STR below
 
 /** Client-side script-rule messages, mirroring the backend's 422 validation. */
 const ERR = {
@@ -33,6 +35,8 @@ const ERR = {
 } as const;
 
 export function MedicineRequestPage() {
+  const { STR } = useLang();
+  const R = STR.pharmacy.medicines.request;
   const api = usePharmacyApi();
   const { user } = useAuth();
 

@@ -1,5 +1,6 @@
 import type { Pagination } from '@/api/adminTypes';
 import { AR } from '@/lib/i18n';
+import type { Strings } from '@/lib/lang/LanguageContext';
 
 /**
  * Small shared helpers for admin screens.
@@ -87,7 +88,7 @@ export function tpl(template: string, values: Record<string, string | number>): 
  * Returns `null` for `from`/`to` when the page is empty, so the caller can show
  * "0 results" rather than a nonsensical "showing 51–50 of 50".
  */
-export function pageInfo(pagination: Pagination): {
+export function pageInfo(pagination: Pagination, STR: Strings = AR): {
   from: number;
   to: number;
   total: number;
@@ -95,7 +96,7 @@ export function pageInfo(pagination: Pagination): {
 } {
   const { current_page, per_page, total } = pagination;
   if (total === 0) {
-    return { from: 0, to: 0, total: 0, label: AR.admin.common.results.replace('{count}', '0') };
+    return { from: 0, to: 0, total: 0, label: STR.admin.common.results.replace('{count}', '0') };
   }
   const from = (current_page - 1) * per_page + 1;
   const to = Math.min(current_page * per_page, total);
@@ -103,7 +104,7 @@ export function pageInfo(pagination: Pagination): {
     from,
     to,
     total,
-    label: tpl(AR.admin.common.showing, { from, to, total }),
+    label: tpl(STR.admin.common.showing, { from, to, total }),
   };
 }
 

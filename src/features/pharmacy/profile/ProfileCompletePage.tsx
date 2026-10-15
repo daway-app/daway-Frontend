@@ -6,6 +6,7 @@ import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
 import type { ApiDayKey, ApiPharmacyProfile } from '@/api/pharmacyTypes';
 import { API_DAYS, buildHoursPayload, isDayOpen, type DayState } from './hours';
+import { validateLogoFile } from './logoUpload';
 
 /**
  * Pharmacy profile — complete. Live against `GET/POST /api/profile/pharmacy`.
@@ -61,8 +62,37 @@ export function ProfileCompletePage() {
   const [saved, setSaved] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConf, setShowConf] = useState(false);
+  /** الملف المختار للشعار + معاينته الفورية + خطأ التحقق المحلي. */
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoFileError, setLogoFileError] = useState<string | null>(null);
 
   const save = useApiMutation((body: Record<string, unknown>) => api.updateProfile(body));
+  const upload = useApiMutation((file: File) => api.uploadLogo(file));
+
+  useEffect(() => {
+    return () => {
+      if (logoPreview) URL.revokeObjectURL(logoPreview);
+    };
+  }, [logoPreview]);
+
+  /** اختيار ملف: تحقق محلي أولًا ثم معاينة فورية (بلا أي طلب شبكة). */
+  function pickLogo(file: File | undefined) {
+    if (!file) return;
+    const problem = validateLogoFile(file);
+    if (problem === 'type') {
+      setLogoFileError(P.logo_type_error);
+      return;
+    }
+    if (problem === 'size') {
+      setLogoFileError(P.logo_size_error);
+      return;
+    }
+    if (logoPreview) URL.revokeObjectURL(logoPreview);
+    setLogoFileError(null);
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  }
 
   // Hydrate once the profile lands (and re-sync after a successful save).
   useEffect(() => {
@@ -115,6 +145,23 @@ export function ProfileCompletePage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaved(false);
+
+    // ملف مختار؟ يُرفع أولًا ويُؤخذ الرابط الراجع بدل حقل logo النصي.
+    let logoValue = logo || null;
+    if (logoFile) {
+      try {
+        const updated = await upload.run(logoFile);
+        logoValue = updated.logo_url ?? null;
+        setLogo(logoValue ?? '');
+        if (logoPreview) URL.revokeObjectURL(logoPreview);
+        setLogoPreview(null);
+        setLogoFile(null);
+      } catch {
+        // `upload.error` يُعرض أسفل النموذج مع باقي الأخطاء.
+        return;
+      }
+    }
+
     try {
       await save.run({
         /**
@@ -130,7 +177,7 @@ export function ProfileCompletePage() {
         region: form.region,
         latitude: lat === '' ? null : Number(lat),
         longitude: lng === '' ? null : Number(lng),
-        logo_url: logo || null,
+        logo_url: logoValue,
         // FULL REPLACE — all seven days, or untouched days become closed.
         working_hours: buildHoursPayload(
           Object.fromEntries(
@@ -211,14 +258,14 @@ export function ProfileCompletePage() {
               </div>
             )}
 
-            {save.error && (
+            {(save.error || upload.error) && (
               <div className="ph-error" style={{ marginBlockEnd: 14 }}>
                 <i className="fas fa-circle-exclamation" aria-hidden="true" />
-                <p>{save.error.message}</p>
+                <p>{(save.error ?? upload.error)?.message}</p>
               </div>
             )}
 
-            <form action="#" method="POST" onSubmit={submit}>
+            <form id="complete-profile-form" action="#" method="POST" onSubmit={submit}>
               <div className="form-group">
                 <label>
                   {P.phone_label} <span>*</span>
@@ -329,30 +376,51 @@ export function ProfileCompletePage() {
                       boxShadow: '0 2px 8px rgba(28,114,166,.15)',
                     }}
                   >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="22"
-                      height="22"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                    </svg>
+                    {logoPreview ? (
+                      <img
+                        src={logoPreview}
+                        alt={form.pharmacy_name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : avatarSrc ? (
+                      <img
+                        src={avatarSrc}
+                        alt={form.pharmacy_name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                      </svg>
+                    )}
                   </div>
                   <div style={{ flex: 1 }}>
                     <input
                       type="file"
                       name="logo"
                       id="logoInput"
-                      accept=".jpg,.jpeg,.png,.webp"
+                      accept="image/jpeg,image/png,image/webp"
                       className="form-control"
                       style={{ padding: '9px 12px' }}
+                      onChange={(e) => pickLogo(e.target.files?.[0])}
                     />
                     <p className="hint-under">{C.logo_hint}</p>
+                    {upload.isPending && <p className="hint-under">{P.logo_uploading}</p>}
+                    {logoFileError && (
+                      <p className="hint-under" style={{ color: 'var(--danger-text, #b42318)' }}>
+                        {logoFileError}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -659,8 +727,16 @@ export function ProfileCompletePage() {
             </div>
 
             <div className="complete-footer">
-              <button type="submit" className="btn-submit" disabled={save.isPending}>
-                <i className="fas fa-save" /> {C.save_button}
+              {/* الزر خارج الـ form (عمود ثانٍ) — سمة form تربطه به،
+                  وإلا فزر submit خارج النموذج لا يفعل شيئًا. */}
+              <button
+                type="submit"
+                form="complete-profile-form"
+                className="btn-submit"
+                disabled={save.isPending || upload.isPending}
+              >
+                <i className="fas fa-save" />{' '}
+                {upload.isPending ? P.logo_uploading : C.save_button}
               </button>
             </div>
           </div>

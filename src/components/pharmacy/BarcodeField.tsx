@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { Modal } from '@/components/ui';
 
 /**
@@ -21,12 +21,10 @@ import { Modal } from '@/components/ui';
 
 export type BarcodeStatus = 'unknown' | 'pending' | 'verified' | 'conflict';
 
-const B = AR.accounting.barcode;
-
 export function BarcodeField({
   id,
   name = 'barcode',
-  label = B.field_label,
+  label,
   value,
   onValueChange,
   showStatus = true,
@@ -40,6 +38,9 @@ export function BarcodeField({
   showStatus?: boolean;
   required?: boolean;
 }) {
+  const { STR } = useLang();
+  const B = STR.accounting.barcode;
+  const resolvedLabel = label ?? B.field_label;
   const [phoneOpen, setPhoneOpen] = useState(false);
   const inputEl = () => document.getElementById(id) as HTMLInputElement | null;
 
@@ -47,7 +48,7 @@ export function BarcodeField({
     <>
       <div className={`ac-field ${showStatus ? 'has-status' : ''}`}>
         <label htmlFor={id} className="ac-field-label">
-          {label}
+          {resolvedLabel}
           {required && (
             <span className="ac-req" aria-hidden="true">
               *
@@ -153,7 +154,7 @@ export function BarcodeField({
               <path d="M9 8h1M11 8h1M13 8h1M9 11h1M11 11h1M13 11h1" />
             </svg>
           </span>
-          <span className="ac-phone-scan-text">{AR.accounting.scanner.button}</span>
+          <span className="ac-phone-scan-text">{STR.accounting.scanner.button}</span>
           <span className="ac-phone-scan-dot" data-phone-scanner-dot hidden aria-hidden="true" />
         </button>
       </div>
@@ -166,16 +167,16 @@ export function BarcodeField({
       {phoneOpen && (
         <Modal
           open
-          title={AR.accounting.scanner.modal_title}
+          title={STR.accounting.scanner.modal_title}
           onClose={() => setPhoneOpen(false)}
         >
           <p style={{ marginTop: 0, color: 'var(--ink-soft)' }}>
-            {AR.accounting.scanner.modal_sub}
+            {STR.accounting.scanner.modal_sub}
           </p>
           <ol style={{ margin: 0, paddingInlineStart: '1.2em', color: 'var(--ink-soft)' }}>
-            <li>{AR.accounting.scanner.step_1}</li>
-            <li>{AR.accounting.scanner.step_2}</li>
-            <li>{AR.accounting.scanner.step_3}</li>
+            <li>{STR.accounting.scanner.step_1}</li>
+            <li>{STR.accounting.scanner.step_2}</li>
+            <li>{STR.accounting.scanner.step_3}</li>
           </ol>
         </Modal>
       )}

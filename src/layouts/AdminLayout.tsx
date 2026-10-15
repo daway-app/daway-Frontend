@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { Toaster } from '@/components/ui';
-import { AR, roleLabel } from '@/lib/i18n';
+import { roleLabel } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { initTheme, toggleTheme } from '@/lib/theme';
 import { topbarTitleFor } from '@/components/layout/routeTitles';
 import { IconMoon, IconSun } from '@/components/layout/icons';
@@ -32,10 +33,11 @@ import type { AdminProfile } from '@/api/adminTypes';
  * latter is what actually moves focus rather than just the scroll position.
  */
 export function AdminLayout() {
+  const { STR, lang } = useLang();
   const api = useAdminApi();
   const { user } = useAdminAuth();
   const { pathname } = useLocation();
-  const heading = topbarTitleFor(pathname);
+  const heading = topbarTitleFor(pathname, STR);
 
   // الاسم والصورة بالشريط العلوي (طلب عبود). الصورة من بروفايل الأدمن
   // الموجود أصلًا (`GET /api/admin/profile` → `avatar_url`) — نفس الاستدعاء
@@ -63,7 +65,7 @@ export function AdminLayout() {
       <div className="bg-anim-layer" aria-hidden="true" />
 
       <a href="#admin-main-content" className="skip-to-content">
-        تخطَّ إلى المحتوى الرئيسي
+        {lang === 'ar' ? 'تخطَّ إلى المحتوى الرئيسي' : 'Skip to main content'}
       </a>
 
       <div className="app-layout">
@@ -86,7 +88,7 @@ export function AdminLayout() {
               <button
                 type="button"
                 className="icon-btn theme-toggle-btn"
-                title={AR.layout.dark_mode_tooltip}
+                title={STR.layout.dark_mode_tooltip}
                 onClick={() => toggleTheme()}
               >
                 <span className="icon-3d sun-icon">
@@ -98,7 +100,7 @@ export function AdminLayout() {
               </button>
 
               {/* الاسم والصورة بالشريط العلوي — زر الخروج مقره فوتر السايدبار */}
-              <div className="user-profile-btn" title={AR.layout.edit_profile_modal_title}>
+              <div className="user-profile-btn" title={STR.layout.edit_profile_modal_title}>
                 <div
                   className="avatar"
                   style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : undefined}
@@ -107,7 +109,7 @@ export function AdminLayout() {
                 </div>
                 <div className="user-details">
                   <span className="user-name">{user?.name ?? ''}</span>
-                  <span className="user-role">{roleLabel(user?.role ?? '')}</span>
+                  <span className="user-role">{roleLabel(user?.role ?? '', STR)}</span>
                 </div>
               </div>
             </div>

@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/api/queryClient';
 import { ApiProvider, AuthProvider } from '@/auth/AuthContext';
 import { AdminApiProvider, AdminAuthProvider } from '@/auth/adminAuth';
+import { LanguageProvider } from '@/lib/lang/LanguageContext';
 import { router } from '@/routes/router';
 
 /**
@@ -38,15 +39,17 @@ export function App() {
     // QueryClientProvider sits ABOVE ApiProvider/AuthProvider so the query
     // cache outlives auth churn but can still be cleared at logout/login.
     <QueryClientProvider client={queryClient}>
-      <ApiProvider>
-        <AuthProvider>
-          <AdminApiProvider>
-            <AdminAuthProvider>
-              <RouterProvider router={router} />
-            </AdminAuthProvider>
-          </AdminApiProvider>
-        </AuthProvider>
-      </ApiProvider>
+      <LanguageProvider>
+        <ApiProvider>
+          <AuthProvider>
+            <AdminApiProvider>
+              <AdminAuthProvider>
+                <RouterProvider router={router} />
+              </AdminAuthProvider>
+            </AdminApiProvider>
+          </AuthProvider>
+        </ApiProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

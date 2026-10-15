@@ -4,7 +4,7 @@ import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useAdminAuth } from '@/auth/adminContext';
 import { ApiError } from '@/api/errors';
 import { Btn } from '@/components/ui';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { ROUTES } from '@/routes/paths';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import { preloadRoute } from '@/lib/routePreload';
@@ -78,6 +78,7 @@ type Role = 'pharmacy' | 'admin';
 const LOGIN_TIMEOUT_MS = 30_000;
 
 export function LoginPage() {
+  const { STR } = useLang();
   const pharmacyAuth = useAuth();
   const adminAuth = useAdminAuth();
   const pharmacyApi = usePharmacyApi();
@@ -105,7 +106,7 @@ export function LoginPage() {
   // aborts it cleanly.
   const pendingPrepareRef = useRef<Promise<void> | null>(null);
 
-  const L = AR.admin.unified;
+  const L = STR.admin.unified;
   const isAdmin = role === 'admin';
 
   const redirectTo =

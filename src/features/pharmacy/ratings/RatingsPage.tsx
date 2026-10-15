@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary } from '@/components/ui';
 import { usePharmacyApi, useAuth } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -21,9 +22,13 @@ import type { ApiRating } from '@/api/pharmacyTypes';
  * Both facts are recorded in `docs/API-CONTRACT-MAP.md` → GAP-2.
  */
 const R = AR.pharmacy.ratings;
+void R;
 
 /** Blade `$unitLabel = fn($stars) => $stars == 1 ? star : stars`. */
-const unitLabel = (stars: number) => (stars === 1 ? R.star : R.stars);
+function unitLabel(stars: number, STR: typeof AR): string {
+  const r = STR.pharmacy.ratings;
+  return stars === 1 ? r.star : r.stars;
+}
 
 interface Distribution {
   stars: number;
@@ -32,6 +37,8 @@ interface Distribution {
 }
 
 export function RatingsPage() {
+  const { STR } = useLang();
+  const R = STR.pharmacy.ratings;
   const api = usePharmacyApi();
   const { user } = useAuth();
 
@@ -144,7 +151,7 @@ export function RatingsPage() {
                     style={{ display: 'flex', alignItems: 'center', gap: 10, marginBlockEnd: 10 }}
                   >
                     <span style={{ width: 56, fontSize: '.85rem', color: 'var(--ph-ink-soft)' }}>
-                      {item.stars} {unitLabel(item.stars)}
+                      {item.stars} {unitLabel(item.stars, STR)}
                     </span>
                     <div
                       style={{

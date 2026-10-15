@@ -1,4 +1,5 @@
 import { AR } from '@/lib/i18n';
+import type { Strings } from '@/lib/lang/LanguageContext';
 import { ROUTES } from '@/routes/paths';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 
@@ -20,28 +21,6 @@ import { ADMIN_ROUTES } from '@/routes/adminPaths';
 
 type Entry = { path: string; title: string };
 
-const ADMIN_ENTRIES: Entry[] = [
-  { path: ADMIN_ROUTES.dashboard, title: AR.admin.nav.dashboard },
-  { path: ADMIN_ROUTES.pharmacies, title: AR.admin.nav.pharmacies },
-  { path: ADMIN_ROUTES.medicines, title: AR.admin.nav.medicines },
-  { path: ADMIN_ROUTES.medicineRequests, title: AR.admin.nav.medicine_requests },
-  { path: ADMIN_ROUTES.categories, title: AR.admin.nav.categories },
-  { path: ADMIN_ROUTES.users, title: AR.admin.nav.users },
-  { path: ADMIN_ROUTES.logs, title: AR.admin.nav.activity_log },
-  { path: ADMIN_ROUTES.settings, title: AR.admin.nav.system_settings },
-  { path: ADMIN_ROUTES.profile, title: AR.admin.nav.profile },
-];
-
-const PHARMACY_ENTRIES: Entry[] = [
-  { path: ROUTES.inventory, title: AR.pharmacy.sidebar.inventory },
-  { path: ROUTES.medicines, title: AR.pharmacy.sidebar.manage_medicines },
-  { path: ROUTES.inquiries, title: AR.pharmacy.sidebar.inquiries },
-  { path: ROUTES.alternatives, title: AR.pharmacy.sidebar.manage_alternatives },
-  { path: ROUTES.ratings, title: AR.pharmacy.sidebar.ratings },
-  { path: ROUTES.profile, title: AR.pharmacy.sidebar.pharmacy_profile },
-  { path: ROUTES.accounting, title: AR.accounting.sidebar.section_title },
-];
-
 export interface TopbarTitle {
   title: string;
   subtitle: string;
@@ -60,21 +39,43 @@ function match(entries: Entry[], pathname: string): string | null {
  * Title + subtitle for the topbar. Falls back to the Blade pair when the route
  * has no entry (the dashboard, or any screen added later).
  */
-export function topbarTitleFor(pathname: string): TopbarTitle {
+export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle {
+  const ADMIN_ENTRIES: Entry[] = [
+    { path: ADMIN_ROUTES.dashboard, title: STR.admin.nav.dashboard },
+    { path: ADMIN_ROUTES.pharmacies, title: STR.admin.nav.pharmacies },
+    { path: ADMIN_ROUTES.medicines, title: STR.admin.nav.medicines },
+    { path: ADMIN_ROUTES.medicineRequests, title: STR.admin.nav.medicine_requests },
+    { path: ADMIN_ROUTES.categories, title: STR.admin.nav.categories },
+    { path: ADMIN_ROUTES.users, title: STR.admin.nav.users },
+    { path: ADMIN_ROUTES.logs, title: STR.admin.nav.activity_log },
+    { path: ADMIN_ROUTES.settings, title: STR.admin.nav.system_settings },
+    { path: ADMIN_ROUTES.profile, title: STR.admin.nav.profile },
+  ];
+
+  const PHARMACY_ENTRIES: Entry[] = [
+    { path: ROUTES.inventory, title: STR.pharmacy.sidebar.inventory },
+    { path: ROUTES.medicines, title: STR.pharmacy.sidebar.manage_medicines },
+    { path: ROUTES.inquiries, title: STR.pharmacy.sidebar.inquiries },
+    { path: ROUTES.alternatives, title: STR.pharmacy.sidebar.manage_alternatives },
+    { path: ROUTES.ratings, title: STR.pharmacy.sidebar.ratings },
+    { path: ROUTES.profile, title: STR.pharmacy.sidebar.pharmacy_profile },
+    { path: ROUTES.accounting, title: STR.accounting.sidebar.section_title },
+  ];
+
   if (pathname === ADMIN_ROUTES.login) {
-    return { title: AR.admin.login.title, subtitle: AR.admin.login.subtitle };
+    return { title: STR.admin.login.title, subtitle: STR.admin.login.subtitle };
   }
   if (pathname.startsWith('/admin')) {
     return {
-      title: match(ADMIN_ENTRIES, pathname) ?? AR.admin.nav.dashboard,
-      subtitle: AR.admin.nav.panel_subtitle,
+      title: match(ADMIN_ENTRIES, pathname) ?? STR.admin.nav.dashboard,
+      subtitle: STR.admin.nav.panel_subtitle,
     };
   }
   return {
-    title: match(PHARMACY_ENTRIES, pathname) ?? AR.topbar.dashboard_title,
+    title: match(PHARMACY_ENTRIES, pathname) ?? STR.topbar.dashboard_title,
     subtitle:
       pathname === ROUTES.dashboard
-        ? AR.topbar.dashboard_subtitle
-        : AR.pharmacy.sidebar.section_title,
+        ? STR.topbar.dashboard_subtitle
+        : STR.pharmacy.sidebar.section_title,
   };
 }

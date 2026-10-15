@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import {
   dismissPushBanner,
   shouldShowPushBanner,
@@ -37,6 +37,7 @@ import {
  * exist.
  */
 export function PushPermissionBanner() {
+  const { STR } = useLang();
   const [visible, setVisible] = useState(false);
   const [granted, setGranted] = useState(false);
 
@@ -51,7 +52,7 @@ export function PushPermissionBanner() {
 
   if (!visible) return null;
 
-  const t = AR.push_banner;
+  const t = STR.push_banner;
 
   const onEnable = () => {
     // The ONLY place the prompt is requested — a user gesture, never on mount.

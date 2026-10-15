@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useBlocker } from 'react-router-dom';
 import { Btn, Modal } from '@/components/ui';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 
 /**
  * Blocks in-app navigation — and warns on tab close / hard reload — while a
@@ -28,6 +28,7 @@ import { AR } from '@/lib/i18n';
  * Requires a data router (`createBrowserRouter`) — satisfied in `routes/router.tsx`.
  */
 export function UnsavedChangesGuard({ when }: { when: boolean | (() => boolean) }) {
+  const { STR } = useLang();
   const blocker = useBlocker(when);
 
   // The unload listener is not a Router navigation, so it needs a concrete
@@ -48,20 +49,20 @@ export function UnsavedChangesGuard({ when }: { when: boolean | (() => boolean) 
   return (
     <Modal
       open={blocker.state === 'blocked'}
-      title={AR.admin.common.unsaved_title}
+      title={STR.admin.common.unsaved_title}
       onClose={() => blocker.reset?.()}
       footer={
         <>
           <Btn variant="ghost" onClick={() => blocker.reset?.()}>
-            {AR.admin.common.unsaved_stay}
+            {STR.admin.common.unsaved_stay}
           </Btn>
           <Btn variant="danger" onClick={() => blocker.proceed?.()}>
-            {AR.admin.common.unsaved_leave}
+            {STR.admin.common.unsaved_leave}
           </Btn>
         </>
       }
     >
-      <p>{AR.admin.common.unsaved_message}</p>
+      <p>{STR.admin.common.unsaved_message}</p>
     </Modal>
   );
 }

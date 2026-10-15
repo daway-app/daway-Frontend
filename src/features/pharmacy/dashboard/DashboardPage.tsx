@@ -3,6 +3,7 @@ import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary, Card, SetupChecklist, StatCard } from '@/components/ui';
 import type { SetupStep } from '@/components/ui';
 import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { usePharmacyApi, useAuth } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { pharmacyKeys } from '@/api/queryKeys';
@@ -22,9 +23,14 @@ import type { ApiDashboardStats, ApiPharmacyProfile, ApiSalesList } from '@/api/
  * API does provide.
  */
 const D = AR.pharmacy.dashboard;
+void D; // module AR snapshot — component uses STR below
 const S = AR.pharmacy.status;
+void S; // module AR snapshot — component uses STR below
 
 export function DashboardPage() {
+  const { STR } = useLang();
+  const D = STR.pharmacy.dashboard;
+  const S = STR.pharmacy.status;
   const api = usePharmacyApi();
   const { user } = useAuth();
   const keys = pharmacyKeys(user?.id ?? 'anon');

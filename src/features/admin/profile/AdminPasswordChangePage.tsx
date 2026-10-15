@@ -4,6 +4,7 @@ import { Btn, Card, Modal, PageHeader } from '@/components/ui';
 import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
 import { useApiMutation } from '@/api/useApiQuery';
 import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 
 /**
@@ -37,11 +38,14 @@ import { ADMIN_ROUTES } from '@/routes/adminPaths';
  * message always wins when it disagrees.
  */
 const P = AR.admin.profile.password;
+void P; // module AR snapshot — component uses STR below
 
 type FieldKey = 'current' | 'next' | 'confirm';
 type FieldErrors = Partial<Record<FieldKey, string>>;
 
 export function AdminPasswordChangePage() {
+  const { STR } = useLang();
+  const P = STR.admin.profile.password;
   const api = useAdminApi();
   const navigate = useNavigate();
   const { logout } = useAdminAuth();

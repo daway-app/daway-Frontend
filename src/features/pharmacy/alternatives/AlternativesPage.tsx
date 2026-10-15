@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { AsyncBoundary, Btn, EmptyState, Modal, Notice } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
@@ -30,8 +31,11 @@ import type { ApiAlternativeBlock, ApiAlternativeRef } from '@/api/pharmacyTypes
  * Link / unlink now PERSIST (`POST` / `DELETE`) instead of mutating local state.
  */
 const A = AR.pharmacy.alternatives.index;
+void A; // module AR snapshot — component uses STR below
 
 export function AlternativesPage() {
+  const { STR } = useLang();
+  const A = STR.pharmacy.alternatives.index;
   const api = usePharmacyApi();
 
   // Phase 3: the search term lives in the URL (shareable, back/forward-safe).

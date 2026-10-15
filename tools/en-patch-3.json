@@ -1,0 +1,9 @@
+{
+  "register.err_region_required": "Please enter the region.",
+  "register.success_note": "You cannot log in yet: login credentials (Pharmacy ID and password) are created after admin approval and sent to the phone number you entered.",
+  "register.success_go_login": "Back to login",
+  "register.hero_title": "Join Daway",
+  "register.hero_desc": "Show your medicines and stock to patients searching for a nearby medicine — before they move.",
+  "push_banner.dismiss": "Later",
+  "push_banner.granted": "Notifications enabled on this device."
+}

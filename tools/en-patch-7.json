@@ -1,0 +1,20 @@
+{
+  "admin.nav.panel_title": "Daway admin panel",
+  "admin.patients.col_email": "Email",
+  "admin.patients.col_phone": "Phone",
+  "admin.patients.empty": "No matching patients",
+  "admin.patients.empty_hint": "No registered patient matched the search.",
+  "admin.inventory.empty_hint": "Inventory is built automatically from approved pharmacy medicines.",
+  "admin.categories.btn_classify": "Symptom filters",
+  "admin.categories.btn_sync": "Sync catalog",
+  "admin.categories.classify_confirm": "Classify symptom/vitamin filters across the whole catalog (main links are untouched). Takes several minutes — are you sure?",
+  "admin.categories.sync_confirm": "Catalog categories will be synced with medicines (18,330 links). Syncing takes minutes — are you sure?",
+  "admin.categories.searching": "Searching...",
+  "admin.categories.col_image": "Image",
+  "admin.categories.col_links": "Linked medicines",
+  "admin.categories.action_toggle": "Toggle status",
+  "admin.categories.tooltip_review": "View links pending review",
+  "admin.categories.empty_hint": "No category matched the search — try part of the name.",
+  "admin.categories.links_title": "Category medicines",
+  "admin.categories.link_approved_msg": "Link approved"
+}

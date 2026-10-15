@@ -1,0 +1,22 @@
+{
+  "forgot_password.heading": "Recover your password",
+  "forgot_password.subtitle": "Enter your pharmacy ID and registered phone number, and we will review your request.",
+  "forgot_password.pharmacy_id_label": "Pharmacy ID",
+  "forgot_password.pharmacy_id_placeholder": "PH-0000",
+  "forgot_password.pharmacy_id_hint": "The ID given to you by the platform team at activation.",
+  "forgot_password.phone_label": "Registered phone number",
+  "forgot_password.phone_hint": "The same number registered on the pharmacy account.",
+  "forgot_password.submit": "Submit recovery request",
+  "forgot_password.submitting": "Submitting request…",
+  "forgot_password.have_account": "Remembered your password?",
+  "forgot_password.login_link": "Log in to your account",
+  "forgot_password.err_pharmacy_id_required": "Please enter the Pharmacy ID.",
+  "forgot_password.err_phone_required": "Please enter the phone number.",
+  "forgot_password.err_generic": "Could not submit the request right now. Please try again later.",
+  "forgot_password.success_title": "Your request was sent",
+  "forgot_password.success_body": "If the pharmacy details match, the recovery request will be reviewed by the team.",
+  "forgot_password.success_note": "After approval a new password is generated and sent to you through the platform approved channel. The current password keeps working until approval.",
+  "forgot_password.success_go_login": "Back to login",
+  "forgot_password.hero_title": "Restore access to your pharmacy",
+  "forgot_password.hero_desc": "Request a password reset and we will contact you after the team review."
+}

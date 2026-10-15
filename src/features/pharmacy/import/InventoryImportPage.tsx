@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { useApi, usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation } from '@/api/useApiQuery';
 import type { ApiImportSession } from '@/api/pharmacyTypes';
@@ -32,7 +32,6 @@ import type { ApiImportSession } from '@/api/pharmacyTypes';
  * error message if the `throttle:inventory-import` limiter rejects the upload.
  */
 
-const P = AR.pharmacyImport;
 
 /** Column guide — the canonical list from the import service. */
 const IMPORT_COLUMNS = [
@@ -50,26 +49,26 @@ type ImportColumn = (typeof IMPORT_COLUMNS)[number];
 
 const IMPORT_REQUIRED_COLUMNS: readonly ImportColumn[] = ['trade_name', 'price', 'quantity'];
 
-/** `$columnDescriptions` — only the required flag matters for the `*` marker. */
-const COLUMN_DESCRIPTIONS: Record<ImportColumn, string> = {
-  trade_name: P.col_trade_name,
-  trade_name_ar: P.col_trade_name_ar,
-  active_ingredient: P.col_active_ingredient,
-  price: P.col_price,
-  quantity: P.col_quantity,
-  barcode: P.col_barcode,
-  min_stock: P.col_min_stock,
-  is_available: P.col_is_available,
-};
-
-const STEPS: Array<{ no: number; label: string; active: boolean }> = [
-  { no: 1, label: P.step_download, active: true },
-  { no: 2, label: P.step_upload, active: true },
-  { no: 3, label: P.step_review, active: false },
-  { no: 4, label: P.step_confirm, active: false },
-];
-
 export function InventoryImportPage() {
+  const { STR } = useLang();
+  const P = STR.pharmacyImport;
+  /** `$columnDescriptions` — only the required flag matters for the `*` marker. */
+  const COLUMN_DESCRIPTIONS: Record<ImportColumn, string> = {
+    trade_name: P.col_trade_name,
+    trade_name_ar: P.col_trade_name_ar,
+    active_ingredient: P.col_active_ingredient,
+    price: P.col_price,
+    quantity: P.col_quantity,
+    barcode: P.col_barcode,
+    min_stock: P.col_min_stock,
+    is_available: P.col_is_available,
+  };
+  const STEPS: Array<{ no: number; label: string; active: boolean }> = [
+    { no: 1, label: P.step_download, active: true },
+    { no: 2, label: P.step_upload, active: true },
+    { no: 3, label: P.step_review, active: false },
+    { no: 4, label: P.step_confirm, active: false },
+  ];
   const api = usePharmacyApi();
   const { client } = useApi();
 

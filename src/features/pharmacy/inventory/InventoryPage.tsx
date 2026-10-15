@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary, Card, Btn, DataTable, EmptyState, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { ROUTES } from '@/routes/paths';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useAuth } from '@/auth/authHooks';
@@ -44,21 +44,21 @@ import type { ApiInventoryItem, ApiInventoryStats } from '@/api/pharmacyTypes';
  * The trend chart (GAP-3) is still shown but is honest about its source: the
  * API has no inventory-trend endpoint, so it is omitted rather than faked.
  */
-const I = AR.pharmacy.inventory;
 /** Only for the empty-state CTA label — reuses an existing string. */
-const M = AR.pharmacy.medicines.index;
-const D = AR.pharmacy.dashboard;
-const S = AR.pharmacy.status;
 
 type Tab = 'all' | 'ok' | 'low' | 'out';
 
-const STATUS_TEXT: Record<'ok' | 'low' | 'out', string> = {
-  ok: I.status_available,
-  low: I.status_low,
-  out: I.status_out,
-};
-
 export function InventoryPage() {
+  const { STR } = useLang();
+  const I = STR.pharmacy.inventory;
+  const M = STR.pharmacy.medicines.index;
+  const D = STR.pharmacy.dashboard;
+  const S = STR.pharmacy.status;
+  const STATUS_TEXT: Record<'ok' | 'low' | 'out', string> = {
+    ok: I.status_available,
+    low: I.status_low,
+    out: I.status_out,
+  };
   const api = usePharmacyApi();
   const { user } = useAuth();
   const keys = pharmacyKeys(user?.id ?? 'anon');
@@ -318,7 +318,7 @@ export function InventoryPage() {
         </div>
         <div className="ph-actions">
           <a href="/inventory/import" className="ph-btn outline">
-            <i className="fas fa-file-import" /> {AR.pharmacy.sidebar.bulk_import}
+            <i className="fas fa-file-import" /> {STR.pharmacy.sidebar.bulk_import}
           </a>
         </div>
       </div>
@@ -685,7 +685,7 @@ export function InventoryPage() {
               onClick={() => setConfirmBulk(false)}
               disabled={bulkApply.isPending}
             >
-              {AR.accounting.common.cancel}
+              {STR.accounting.common.cancel}
             </button>
             <button
               type="button"

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, Notice } from '@/components/ui';
 import { usePharmacyApi, useAuth } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -32,7 +32,6 @@ import type { ApiInquiry, ApiInquiryMessage } from '@/api/pharmacyTypes';
  * tab-visibility change, matching the Blade behaviour that matters.
  */
 
-const I = AR.pharmacy.inquiries;
 
 const BADGE_CLASS: Record<string, string> = {
   new: 'new',
@@ -40,13 +39,14 @@ const BADGE_CLASS: Record<string, string> = {
   closed: 'closed',
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  new: I.status_new,
-  answered: I.status_answered,
-  closed: I.status_closed,
-};
-
 export function InquiryChatPage() {
+  const { STR } = useLang();
+  const I = STR.pharmacy.inquiries;
+  const STATUS_LABEL: Record<string, string> = {
+    new: I.status_new,
+    answered: I.status_answered,
+    closed: I.status_closed,
+  };
   const { id } = useParams<{ id: string }>();
   const api = usePharmacyApi();
   const { user } = useAuth();

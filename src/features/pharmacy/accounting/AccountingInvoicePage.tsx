@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, Modal } from '@/components/ui';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -26,9 +26,10 @@ import { ROUTES } from '@/routes/paths';
  * does not open two dialogs.
  */
 
-const A = AR.accounting;
 
 export function AccountingInvoicePage() {
+  const { STR } = useLang();
+  const A = STR.accounting;
   const { number } = useParams<{ number: string }>();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();

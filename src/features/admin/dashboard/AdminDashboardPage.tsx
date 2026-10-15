@@ -3,7 +3,7 @@ import { AsyncBoundary, Badge, Card, PageHeader, StatCard } from '@/components/u
 import { Chart } from '@/components/ui/Chart';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { timeAgo, tpl } from '../shared';
 import type { AdminDashboardResponse } from '@/api/adminTypes';
 
@@ -28,6 +28,7 @@ import type { AdminDashboardResponse } from '@/api/adminTypes';
  *     canvases.
  */
 export function AdminDashboardPage() {
+  const { STR } = useLang();
   const api = useAdminApi();
   const [filter, setFilter] = useState<'all' | 'searches' | 'patients' | 'pharmacies'>('all');
 
@@ -38,7 +39,7 @@ export function AdminDashboardPage() {
 
   const data = query.data;
   const stats = data?.stats;
-  const D = AR.admin.dashboard;
+  const D = STR.admin.dashboard;
 
   const dataset = stats?.chartData.datasets[filter];
 
@@ -135,7 +136,7 @@ export function AdminDashboardPage() {
                     </div>
                     <div className="ph-chart-summary">
                       <span>
-                        {AR.admin.common.results.replace('{count}', String(dataset.total))}
+                        {STR.admin.common.results.replace('{count}', String(dataset.total))}
                       </span>
                       {dataset.change !== null && (
                         <Badge variant={dataset.change >= 0 ? 'ok' : 'out'}>

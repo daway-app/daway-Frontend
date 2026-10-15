@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, Modal } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -32,9 +32,10 @@ import { ROUTES } from '@/routes/paths';
  * real.
  */
 
-const A = AR.accounting;
 
 export function AccountingRefundCreatePage() {
+  const { STR } = useLang();
+  const A = STR.accounting;
   const { saleNumber } = useParams<{ saleNumber: string }>();
   const api = usePharmacyApi();
 

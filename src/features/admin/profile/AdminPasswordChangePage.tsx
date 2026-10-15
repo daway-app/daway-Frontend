@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Btn, Card, Modal, PageHeader } from '@/components/ui';
 import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
 import { useApiMutation } from '@/api/useApiQuery';
-import { AR } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 
@@ -37,9 +36,6 @@ import { ADMIN_ROUTES } from '@/routes/adminPaths';
  * The client checks are a convenience; the server is the authority and its
  * message always wins when it disagrees.
  */
-const P = AR.admin.profile.password;
-void P; // module AR snapshot — component uses STR below
-
 type FieldKey = 'current' | 'next' | 'confirm';
 type FieldErrors = Partial<Record<FieldKey, string>>;
 

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, Modal } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -33,7 +33,6 @@ import { ROUTES } from '@/routes/paths';
  * (the same "silently all" semantics the Blade page documents).
  */
 
-const A = AR.accounting;
 
 const RANGES = ['all', 'today', '7d', '30d', 'month'] as const;
 const METHODS = ['all', 'cash', 'card', 'bank_transfer', 'credit'] as const;
@@ -43,31 +42,6 @@ type RangeKey = (typeof RANGES)[number];
 type MethodKey = (typeof METHODS)[number];
 type StatusKey = (typeof STATUSES)[number];
 
-const RANGE_LABELS: Record<RangeKey, string> = {
-  all: A.common.all,
-  today: A.common.today,
-  '7d': A.common.last_7_days,
-  '30d': A.common.last_30_days,
-  month: A.common.this_month,
-};
-
-const METHOD_LABELS: Record<MethodKey, string> = {
-  all: A.common.all,
-  cash: A.payment_methods.cash,
-  card: A.payment_methods.card,
-  bank_transfer: A.payment_methods.bank_transfer,
-  credit: A.payment_methods.credit,
-};
-
-const STATUS_LABELS: Record<StatusKey, string> = {
-  all: A.common.all,
-  paid: A.statuses.paid,
-  partially_paid: A.statuses.partially_paid,
-  unpaid: A.statuses.unpaid,
-  refunded: A.statuses.refunded,
-  cancelled: A.statuses.cancelled,
-};
-
 const PER_PAGE = 25;
 
 /** `all` must not be sent — the server treats an unknown value as "no filter". */
@@ -76,6 +50,30 @@ function filterValue(value: string): string | undefined {
 }
 
 export function AccountingSalesPage() {
+  const { STR } = useLang();
+  const A = STR.accounting;
+  const RANGE_LABELS: Record<RangeKey, string> = {
+    all: A.common.all,
+    today: A.common.today,
+    '7d': A.common.last_7_days,
+    '30d': A.common.last_30_days,
+    month: A.common.this_month,
+  };
+  const METHOD_LABELS: Record<MethodKey, string> = {
+    all: A.common.all,
+    cash: A.payment_methods.cash,
+    card: A.payment_methods.card,
+    bank_transfer: A.payment_methods.bank_transfer,
+    credit: A.payment_methods.credit,
+  };
+  const STATUS_LABELS: Record<StatusKey, string> = {
+    all: A.common.all,
+    paid: A.statuses.paid,
+    partially_paid: A.statuses.partially_paid,
+    unpaid: A.statuses.unpaid,
+    refunded: A.statuses.refunded,
+    cancelled: A.statuses.cancelled,
+  };
   const api = usePharmacyApi();
 
   /*

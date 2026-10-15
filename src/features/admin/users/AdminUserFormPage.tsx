@@ -4,7 +4,7 @@ import { Btn, FormField, LoadingState, Notice } from '@/components/ui';
 import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { toast } from '@/lib/toast';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import { thumbUrl } from '@/lib/format';
@@ -44,11 +44,12 @@ import type { AdminUserDetail } from '@/api/adminTypes';
  * such guard, so the honest move is to let the server answer.
  */
 export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
+  const { STR } = useLang();
   const api = useAdminApi();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = mode === 'edit';
-  const F = AR.admin.users.form;
+  const F = STR.admin.users.form;
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -240,7 +241,7 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
           <div className="card-header-modern">
             <div className="header-title-area">
               <h2>{isEdit ? F.edit_title.replace('{name}', currentName || '…') : F.create_title}</h2>
-              <p>{AR.admin.users.main_description}</p>
+              <p>{STR.admin.users.main_description}</p>
             </div>
             {/* On edit the header carries the account's own avatar, matching
                 `users/edit.blade.php`; on create it carries the users icon. */}
@@ -341,9 +342,9 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
                     onChange={(e) => setRole(e.target.value as typeof role)}
                     disabled={roleLocked}
                   >
-                    <option value="admin">{AR.users.role_admin}</option>
-                    <option value="pharmacy">{AR.users.role_pharmacy}</option>
-                    <option value="patient">{AR.users.role_patient}</option>
+                    <option value="admin">{STR.users.role_admin}</option>
+                    <option value="pharmacy">{STR.users.role_pharmacy}</option>
+                    <option value="patient">{STR.users.role_patient}</option>
                   </select>
                 </FormField>
 
@@ -354,8 +355,8 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
                       value={status ? '1' : '0'}
                       onChange={(e) => setStatus(e.target.value === '1')}
                     >
-                      <option value="1">{AR.admin.users.status_active}</option>
-                      <option value="0">{AR.admin.users.status_inactive}</option>
+                      <option value="1">{STR.admin.users.status_active}</option>
+                      <option value="0">{STR.admin.users.status_inactive}</option>
                     </select>
                   </FormField>
                 )}
@@ -383,8 +384,8 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
                           type="button"
                           className="toggle-password"
                           onClick={() => setShowPassword((s) => !s)}
-                          aria-label={showPassword ? AR.admin.profile.password.hide : AR.admin.profile.password.show}
-                          title={showPassword ? AR.admin.profile.password.hide : AR.admin.profile.password.show}
+                          aria-label={showPassword ? STR.admin.profile.password.hide : STR.admin.profile.password.show}
+                          title={showPassword ? STR.admin.profile.password.hide : STR.admin.profile.password.show}
                         >
                           <i
                             className={showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'}
@@ -421,7 +422,7 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
                 {F.cancel}
               </Link>
               <button type="submit" className="btn-submit" disabled={saving}>
-                {saving ? AR.admin.common.loading : isEdit ? F.edit_submit : F.create_submit}
+                {saving ? STR.admin.common.loading : isEdit ? F.edit_submit : F.create_submit}
               </button>
             </div>
           </form>

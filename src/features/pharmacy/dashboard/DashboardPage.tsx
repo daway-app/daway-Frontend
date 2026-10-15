@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary, Card, SetupChecklist, StatCard } from '@/components/ui';
 import type { SetupStep } from '@/components/ui';
-import { AR } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { usePharmacyApi, useAuth } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -22,11 +21,6 @@ import type { ApiDashboardStats, ApiPharmacyProfile, ApiSalesList } from '@/api/
  * here — the two charts below are derived from the live stock counts, which the
  * API does provide.
  */
-const D = AR.pharmacy.dashboard;
-void D; // module AR snapshot — component uses STR below
-const S = AR.pharmacy.status;
-void S; // module AR snapshot — component uses STR below
-
 export function DashboardPage() {
   const { STR } = useLang();
   const D = STR.pharmacy.dashboard;
@@ -184,11 +178,6 @@ export function DashboardPage() {
         <div className="ph-page-title">
           <h1>{D.heading}</h1>
           <p>{D.subtitle.replace(':pharmacy', user?.name ?? '')}</p>
-        </div>
-        <div className="ph-actions">
-          <a href="/inventory" className="ph-btn outline">
-            <i className="fas fa-rotate" /> {D.update_inventory}
-          </a>
         </div>
       </div>
 

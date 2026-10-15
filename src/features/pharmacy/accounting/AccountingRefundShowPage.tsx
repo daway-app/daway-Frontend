@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -28,9 +28,10 @@ import { ROUTES } from '@/routes/paths';
  *    rather than showing a wrong or blank value.
  */
 
-const A = AR.accounting;
 
 export function AccountingRefundShowPage() {
+  const { STR } = useLang();
+  const A = STR.accounting;
   const { id } = useParams<{ id: string }>();
   const api = usePharmacyApi();
 

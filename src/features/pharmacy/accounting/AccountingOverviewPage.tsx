@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AR, labelOf } from '@/lib/i18n';
+import { labelOf } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary } from '@/components/ui';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
@@ -33,7 +34,6 @@ import { ROUTES } from '@/routes/paths';
  *     in a `<Link>` would navigate the user out of the SPA.
  */
 
-const A = AR.accounting;
 const RANGE_KEYS: readonly AccountingRange[] = ['today', '7d', '30d', 'month'] as const;
 
 /** Blade `$expenseChartColors` — CSS custom-property names, resolved by the browser. */
@@ -47,14 +47,15 @@ const EXPENSE_COLORS = [
   '--ink-faint',
 ];
 
-const RANGE_LABELS: Record<AccountingRange, string> = {
-  today: A.common.today,
-  '7d': A.common.last_7_days,
-  '30d': A.common.last_30_days,
-  month: A.common.this_month,
-};
-
 export function AccountingOverviewPage() {
+  const { STR } = useLang();
+  const A = STR.accounting;
+  const RANGE_LABELS: Record<AccountingRange, string> = {
+    today: A.common.today,
+    '7d': A.common.last_7_days,
+    '30d': A.common.last_30_days,
+    month: A.common.this_month,
+  };
   const api = usePharmacyApi();
   const { user } = useAuth();
 

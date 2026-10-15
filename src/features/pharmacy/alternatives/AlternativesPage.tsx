@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { AR } from '@/lib/i18n';
+import { Link } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { AsyncBoundary, Btn, EmptyState, Modal, Notice } from '@/components/ui';
@@ -30,9 +30,6 @@ import type { ApiAlternativeBlock, ApiAlternativeRef } from '@/api/pharmacyTypes
  *
  * Link / unlink now PERSIST (`POST` / `DELETE`) instead of mutating local state.
  */
-const A = AR.pharmacy.alternatives.index;
-void A; // module AR snapshot — component uses STR below
-
 export function AlternativesPage() {
   const { STR } = useLang();
   const A = STR.pharmacy.alternatives.index;
@@ -145,9 +142,9 @@ export function AlternativesPage() {
           <p>{A.subtitle}</p>
         </div>
         <div className="ph-actions">
-          <a href="/alternatives/create" className="ph-btn primary">
+          <Link to="/alternatives/create" className="ph-btn primary">
             <i className="fas fa-plus" /> {A.add_button}
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -201,7 +198,7 @@ export function AlternativesPage() {
           </div>
           {q !== '' && (
             <button type="button" className="ph-btn ghost" onClick={() => setQ('')}>
-              <i className="fas fa-xmark" /> {AR.pharmacy.inventory.clear_filters}
+              <i className="fas fa-xmark" /> {STR.pharmacy.inventory.clear_filters}
             </button>
           )}
         </form>
@@ -347,7 +344,7 @@ export function AlternativesPage() {
                                 void runSearch(b.id);
                               }
                             }}
-                            placeholder={AR.pharmacy.alternatives.create.alternative_placeholder}
+                            placeholder={STR.pharmacy.alternatives.create.alternative_placeholder}
                             autoComplete="off"
                           />
                         </div>
@@ -404,7 +401,7 @@ export function AlternativesPage() {
             title={A.empty_medicines}
             action={
               <Btn variant="primary" to="/medicines/request">
-                <i className="fas fa-plus" /> {AR.pharmacy.medicines.index.add_medicine}
+                <i className="fas fa-plus" /> {STR.pharmacy.medicines.index.add_medicine}
               </Btn>
             }
           />

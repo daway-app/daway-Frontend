@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Modal, Btn } from '@/components/ui';
 import type { DeliveredCredentials } from '@/api/adminTypes';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 
 /**
  * One-time credentials dialog.
@@ -33,8 +33,9 @@ export function CredentialsModal({
   credentials: DeliveredCredentials | null;
   onClose: () => void;
 }) {
+  const { STR } = useLang();
   const [copied, setCopied] = useState<'id' | 'password' | null>(null);
-  const C = AR.admin.pharmacies;
+  const C = STR.admin.pharmacies;
 
   if (!open || !credentials) return null;
 

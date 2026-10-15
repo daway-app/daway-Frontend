@@ -10,7 +10,8 @@ import {
 } from '@/components/ui';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
-import { AR, labelOf } from '@/lib/i18n';
+import { labelOf } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { ariaSort, useSort } from '@/lib/sort';
 import { formatDateTime, pageInfo } from '../shared';
@@ -58,8 +59,9 @@ export function AdminLogsPage() {
     set({ page: typeof value === 'function' ? value(page) : value });
   };
 
-  const L = AR.admin.logs;
-  const C = AR.admin.common;
+  const { STR } = useLang();
+  const L = STR.admin.logs;
+  const C = STR.admin.common;
 
   // Debounce the search — commit only when the term changed (see AdminMedicinesPage).
   useEffect(() => {
@@ -149,7 +151,7 @@ export function AdminLogsPage() {
 
   return (
     <>
-      <PageHeader title={L.title} subtitle={AR.admin.nav.activity_log} icon="fas fa-clock-rotate-left" />
+      <PageHeader title={L.title} subtitle={STR.admin.nav.activity_log} icon="fas fa-clock-rotate-left" />
 
       <AsyncBoundary
         isLoading={query.isLoading}

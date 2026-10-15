@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -30,19 +30,19 @@ import type { ApiInventoryItem } from '@/api/pharmacyTypes';
  *     deleting a medicine is a write the patient-facing catalogue depends on,
  *     and is out of scope for this wiring pass.
  */
-const M = AR.pharmacy.medicines.index;
-const S = AR.pharmacy.status;
-const D = AR.pharmacy.dashboard;
 
 type Tab = 'all' | 'out' | 'low' | 'ok';
 
-const STATUS_TEXT: Record<'ok' | 'low' | 'out', string> = {
-  ok: S.available,
-  low: S.low,
-  out: S.out,
-};
-
 export function MedicinesPage() {
+  const { STR } = useLang();
+  const M = STR.pharmacy.medicines.index;
+  const S = STR.pharmacy.status;
+  const D = STR.pharmacy.dashboard;
+  const STATUS_TEXT: Record<'ok' | 'low' | 'out', string> = {
+    ok: S.available,
+    low: S.low,
+    out: S.out,
+  };
   const api = usePharmacyApi();
 
   // Phase 3: tab + committed search live in the URL (shareable, back/forward-safe).
@@ -198,7 +198,7 @@ export function MedicinesPage() {
                 setStatus('all');
               }}
             >
-              <i className="fas fa-xmark" /> {AR.pharmacy.inventory.clear_filters}
+              <i className="fas fa-xmark" /> {STR.pharmacy.inventory.clear_filters}
             </button>
           )}
         </form>
@@ -304,7 +304,7 @@ export function MedicinesPage() {
                       {hasFilters ? (
                         <div className="ph-empty">
                           <i className="fas fa-magnifying-glass" />
-                          <h3>{AR.pharmacy.inventory.no_results}</h3>
+                          <h3>{STR.pharmacy.inventory.no_results}</h3>
                         </div>
                       ) : (
                         <EmptyState

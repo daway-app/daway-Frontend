@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { AR } from '@/lib/i18n';
 import { AsyncBoundary } from '@/components/ui';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
@@ -21,10 +21,6 @@ import { validateLogoFile } from './logoUpload';
  * Hours use the shared contract in `./hours.ts`: short day keys, `null` times
  * meaning closed, and a FULL-REPLACE save that must send all seven days.
  */
-const P = AR.pharmacy.profile;
-const C = P.complete;
-const HQ = P.hours_quick;
-
 type Row = { closed: boolean; open: string; close: string };
 
 function initRows(profile: ApiPharmacyProfile | null): Record<ApiDayKey, Row> {
@@ -41,6 +37,10 @@ function initRows(profile: ApiPharmacyProfile | null): Record<ApiDayKey, Row> {
 }
 
 export function ProfileCompletePage() {
+  const { STR } = useLang();
+  const P = STR.pharmacy.profile;
+  const C = P.complete;
+  const HQ = P.hours_quick;
   const api = usePharmacyApi();
   const { user } = useAuth();
 

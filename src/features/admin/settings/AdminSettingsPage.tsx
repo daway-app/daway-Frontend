@@ -4,7 +4,8 @@ import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 import { toast } from '@/lib/toast';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
-import { AR } from '@/lib/i18n';
+import type { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { num } from '../shared';
 import type { AdminSettingsResponse } from '@/api/adminTypes';
 
@@ -45,7 +46,7 @@ type FieldKind = 'text' | 'textarea' | 'email' | 'tel' | 'number' | 'select' | '
 
 interface FieldSpec {
   key: string;
-  /** The i18n leaf key under `AR.admin.settings`, resolved at render time. */
+  /** The i18n leaf key under `admin.settings` (AR/EN identical shape), resolved at render time. */
   labelKey: keyof typeof AR.admin.settings;
   kind: FieldKind;
   /** Which tab the field appears on. */
@@ -95,8 +96,9 @@ const TABS: { key: SettingsTab; labelKey: keyof typeof AR.admin.settings }[] = [
 ];
 
 export function AdminSettingsPage() {
+  const { STR } = useLang();
   const api = useAdminApi();
-  const S = AR.admin.settings;
+  const S = STR.admin.settings;
 
   const [tab, setTab] = useState<SettingsTab>('general');
   const [draft, setDraft] = useState<Record<string, string | boolean>>({});
@@ -172,7 +174,7 @@ export function AdminSettingsPage() {
       <UnsavedChangesGuard when={dirty} />
       <PageHeader
         title={S.title}
-        subtitle={AR.admin.nav.system_settings}
+        subtitle={STR.admin.nav.system_settings}
         icon="fas fa-gear"
         actions={
           <Btn variant="primary" onClick={handleSave} disabled={saveMutation.isPending}>

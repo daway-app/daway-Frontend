@@ -10,7 +10,7 @@ import {
 } from '@/components/ui';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { money, num, pageInfo, tpl } from '../shared';
 import { thumbUrl } from '@/lib/format';
@@ -39,6 +39,7 @@ import type { AdminMedicinesResponse, AdminMedicine } from '@/api/adminTypes';
  * `sort` parameter the endpoint does not accept.
  */
 export function AdminMedicinesPage() {
+  const { STR } = useLang();
   const api = useAdminApi();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
@@ -60,7 +61,7 @@ export function AdminMedicinesPage() {
   const [pendingDelete, setPendingDelete] = useState<AdminMedicine | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const M = AR.admin.medicines;
+  const M = STR.admin.medicines;
 
   // Commit the live input to the URL after a pause, and reset to page 1 — but
   // only when the term actually changed, so a deep link (`?q=…&page=3`) is not
@@ -289,10 +290,10 @@ export function AdminMedicinesPage() {
                 <input
                   type="search"
                   className="filter-input"
-                  placeholder={AR.admin.common.search}
+                  placeholder={STR.admin.common.search}
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  aria-label={AR.admin.common.search}
+                  aria-label={STR.admin.common.search}
                   autoComplete="off"
                 />
                 <select
@@ -325,12 +326,12 @@ export function AdminMedicinesPage() {
                   <EmptyState
                     icon="fas fa-pills"
                     title={M.empty}
-                    description={isFiltered ? AR.admin.common.empty_filtered_hint : M.empty_hint}
+                    description={isFiltered ? STR.admin.common.empty_filtered_hint : M.empty_hint}
                     action={
                       isFiltered ? (
                         <Btn size="sm" variant="outline" onClick={clearFilters}>
                           <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
-                          {AR.admin.common.clear_filters}
+                          {STR.admin.common.clear_filters}
                         </Btn>
                       ) : undefined
                     }
@@ -449,7 +450,7 @@ export function AdminMedicinesPage() {
                     disabled={pagination.current_page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
-                    {AR.admin.common.previous}
+                    {STR.admin.common.previous}
                   </Btn>
                   <span className="page-meta">{info?.label}</span>
                   <Btn
@@ -458,7 +459,7 @@ export function AdminMedicinesPage() {
                     disabled={pagination.current_page >= pagination.last_page}
                     onClick={() => setPage((p) => p + 1)}
                   >
-                    {AR.admin.common.next}
+                    {STR.admin.common.next}
                   </Btn>
                 </div>
               )}
@@ -477,10 +478,10 @@ export function AdminMedicinesPage() {
         footer={
           <>
             <Btn variant="outline" onClick={() => setPendingDelete(null)} disabled={deleting}>
-              {AR.admin.common.cancel}
+              {STR.admin.common.cancel}
             </Btn>
             <Btn variant="danger" onClick={confirmDelete} disabled={deleting}>
-              {deleting ? AR.admin.common.loading : AR.admin.common.confirm}
+              {deleting ? STR.admin.common.loading : STR.admin.common.confirm}
             </Btn>
           </>
         }

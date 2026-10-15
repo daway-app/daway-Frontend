@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { AR } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, Btn, FormField, PageHeader } from '@/components/ui';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
@@ -24,9 +23,6 @@ import type { ApiCategory } from '@/api/pharmacyTypes';
  *    ⇒ kept `dir="ltr"` and labelled as the Latin name;
  *  - `trade_name_ar`, when supplied, MUST contain Arabic.
  */
-
-const R = AR.pharmacy.medicines.request;
-void R; // module AR snapshot — component uses STR below
 
 /** Client-side script-rule messages, mirroring the backend's 422 validation. */
 const ERR = {

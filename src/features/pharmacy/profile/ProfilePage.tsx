@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AR } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, FormField, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
@@ -60,12 +59,6 @@ import { validateLogoFile } from './logoUpload';
  *  - GAP-9: the payload has no `email`, and `updateProfile` never writes one, so
  *    the field is read-only.
  */
-const P = AR.pharmacy.profile;
-void P;
-/** Module-level snapshot — the component resolves `STR.pharmacy.profile` live. */
-const HQ_REF = AR.pharmacy.profile.hours_quick;
-void HQ_REF;
-
 /** The fields this screen validates, in DOM order (used for focus-on-error). */
 type Field = 'pharmacy_name' | 'phone_number' | 'address' | 'region' | 'latitude' | 'longitude' | 'logo';
 const FIELDS: readonly Field[] = [
@@ -213,7 +206,7 @@ export function ProfilePage() {
         await handleSave(freshUrl);
         return;
       } catch {
-        toast.error(upload.error?.message || AR.pharmacy.toast.save_failed);
+        toast.error(upload.error?.message || STR.pharmacy.toast.save_failed);
         return;
       }
     }
@@ -351,7 +344,7 @@ export function ProfilePage() {
     } catch {
       // Server message wins (Laravel localises); the generic line is the fallback
       // so a failure can never render as nothing — the bug `Notice` fixed.
-      toast.error(save.error?.message || AR.pharmacy.toast.save_failed);
+      toast.error(save.error?.message || STR.pharmacy.toast.save_failed);
     }
   }
 

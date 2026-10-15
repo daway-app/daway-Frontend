@@ -4,7 +4,7 @@ import { AsyncBoundary, Btn, EmptyState, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import { num, pageInfo } from '../shared';
 import { thumbUrl } from '@/lib/format';
@@ -65,7 +65,8 @@ function StatusPill({ active, disabled, onClick, title }: {
   onClick: () => void;
   title: string;
 }) {
-  const C = AR.admin.categories;
+  const { STR } = useLang();
+  const C = STR.admin.categories;
   return (
     <button
       type="button"
@@ -80,6 +81,7 @@ function StatusPill({ active, disabled, onClick, title }: {
 }
 
 export function AdminCategoriesPage() {
+  const { STR } = useLang();
   const api = useAdminApi();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -98,7 +100,7 @@ export function AdminCategoriesPage() {
   const [debouncedQ, setDebouncedQ] = useState(seeded ?? '');
   const [openCategory, setOpenCategory] = useState<AdminCategory | null>(null);
 
-  const C = AR.admin.categories;
+  const C = STR.admin.categories;
 
   /** True while a keystroke is still waiting out the debounce — drives the
    *  Blade page's inline «بحث...» spinner. */
@@ -161,7 +163,7 @@ export function AdminCategoriesPage() {
   async function handleToggle(category: AdminCategory) {
     try {
       await toggleMutation.run(category.id);
-      toast.success(AR.admin.common.save);
+      toast.success(STR.admin.common.save);
       query.refetch();
     } catch {
       toast.error('تعذّر تحديث حالة القسم، حاول مرة أخرى.');
@@ -265,12 +267,12 @@ export function AdminCategoriesPage() {
                   <EmptyState
                     icon="fas fa-layer-group"
                     title={C.empty}
-                    description={isFiltered ? AR.admin.common.empty_filtered_hint : C.empty_hint}
+                    description={isFiltered ? STR.admin.common.empty_filtered_hint : C.empty_hint}
                     action={
                       isFiltered ? (
                         <Btn size="sm" variant="outline" onClick={clearFilters}>
                           <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
-                          {AR.admin.common.clear_filters}
+                          {STR.admin.common.clear_filters}
                         </Btn>
                       ) : undefined
                     }
@@ -315,7 +317,7 @@ export function AdminCategoriesPage() {
                     disabled={pagination.current_page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
-                    {AR.admin.common.previous}
+                    {STR.admin.common.previous}
                   </Btn>
                   <span className="page-meta">{info?.label}</span>
                   <Btn
@@ -324,7 +326,7 @@ export function AdminCategoriesPage() {
                     disabled={pagination.current_page >= pagination.last_page}
                     onClick={() => setPage((p) => p + 1)}
                   >
-                    {AR.admin.common.next}
+                    {STR.admin.common.next}
                   </Btn>
                 </div>
               )}
@@ -361,7 +363,8 @@ function CategoryRow({
   onToggle: () => void;
   onManageLinks: () => void;
 }) {
-  const C = AR.admin.categories;
+  const { STR } = useLang();
+  const C = STR.admin.categories;
   const reviewCount = num(category.needs_review_count);
   const linkCount = num(category.category_medicine_links_count);
   // Blade: `Image::thumbUrl($category->image, 84, 84)` displayed at 42×42. The
@@ -487,11 +490,12 @@ function CategoryLinksModalInner({
   onClose: () => void;
   onChanged: () => void;
 }) {
+  const { STR } = useLang();
   const api = useAdminApi();
   const [page, setPage] = useState(1);
   const [confirmDetach, setConfirmDetach] = useState<AdminCategoryLink | null>(null);
 
-  const C = AR.admin.categories;
+  const C = STR.admin.categories;
 
   const query = useApiQuery<AdminCategoryLinksResponse>(
     (signal) => api.admin.categoryLinks(category.id, { page, per_page: 50 }, signal),
@@ -544,7 +548,7 @@ function CategoryLinksModalInner({
         onClose={onClose}
         footer={
           <Btn variant="outline" onClick={onClose}>
-            {AR.admin.common.close}
+            {STR.admin.common.close}
           </Btn>
         }
       >
@@ -625,7 +629,7 @@ function CategoryLinksModalInner({
                 disabled={pagination.current_page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
               >
-                {AR.admin.common.previous}
+                {STR.admin.common.previous}
               </Btn>
               <span>{info?.label}</span>
               <Btn
@@ -634,7 +638,7 @@ function CategoryLinksModalInner({
                 disabled={pagination.current_page >= pagination.last_page}
                 onClick={() => setPage((p) => p + 1)}
               >
-                {AR.admin.common.next}
+                {STR.admin.common.next}
               </Btn>
             </div>
           )}
@@ -649,10 +653,10 @@ function CategoryLinksModalInner({
         footer={
           <>
             <Btn variant="outline" onClick={() => setConfirmDetach(null)}>
-              {AR.admin.common.cancel}
+              {STR.admin.common.cancel}
             </Btn>
             <Btn variant="danger" onClick={handleDetach} disabled={isPending}>
-              {AR.admin.common.confirm}
+              {STR.admin.common.confirm}
             </Btn>
           </>
         }

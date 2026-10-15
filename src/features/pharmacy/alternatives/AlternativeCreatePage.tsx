@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { PageHeader } from '@/components/ui';
-import { AR } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -24,9 +24,6 @@ import type { ApiInventoryItem, ApiSearchableMedicine } from '@/api/pharmacyType
  *
  * Submitting now PERSISTS via `POST /api/pharmacy/alternatives`.
  */
-const C = AR.pharmacy.alternatives.create;
-void C; // module AR snapshot — component uses STR below
-
 export function AlternativeCreatePage() {
   const { STR } = useLang();
   const C = STR.pharmacy.alternatives.create;
@@ -223,9 +220,9 @@ export function AlternativeCreatePage() {
             </div>
 
             <div className="form-actions">
-              <a href="/alternatives" className="btn-cancel">
+              <Link to="/alternatives" className="btn-cancel">
                 {C.cancel_button}
-              </a>
+              </Link>
               <button
                 type="submit"
                 className="btn-submit"

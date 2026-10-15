@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
@@ -45,7 +45,6 @@ import { buildSalePayload, type CartLine, type SalePayload } from './salePayload
  * server-side. Reported, not hidden.
  */
 
-const A = AR.accounting;
 
 /**
  * The backend validates `per_page` with `max:100`, so this is the largest page
@@ -53,14 +52,6 @@ const A = AR.accounting;
  * which is exactly how this screen was broken before.
  */
 const INVENTORY_PAGE_SIZE = 100;
-
-/** Backend `payment_method` enum: `cash,card,bank_transfer,credit`. */
-const PAYMENT_METHODS: ReadonlyArray<{ key: PaymentMethod; label: string }> = [
-  { key: 'cash', label: A.payment_methods.cash },
-  { key: 'card', label: A.payment_methods.card },
-  { key: 'bank_transfer', label: A.payment_methods.bank_transfer },
-  { key: 'credit', label: A.payment_methods.credit },
-];
 
 /** A sellable line — carries the ids the create-sale payload requires. */
 interface CatalogItem {
@@ -74,6 +65,15 @@ interface CatalogItem {
 }
 
 export function AccountingSaleCreatePage() {
+  const { STR } = useLang();
+  const A = STR.accounting;
+  /** Backend `payment_method` enum: `cash,card,bank_transfer,credit`. */
+  const PAYMENT_METHODS: ReadonlyArray<{ key: PaymentMethod; label: string }> = [
+    { key: 'cash', label: A.payment_methods.cash },
+    { key: 'card', label: A.payment_methods.card },
+    { key: 'bank_transfer', label: A.payment_methods.bank_transfer },
+    { key: 'credit', label: A.payment_methods.credit },
+  ];
   const api = usePharmacyApi();
   const { user } = useAuth();
   const keys = pharmacyKeys(user?.id ?? 'anon');

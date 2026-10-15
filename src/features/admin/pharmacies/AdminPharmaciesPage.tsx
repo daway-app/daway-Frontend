@@ -11,7 +11,7 @@ import {
 import { toast } from '@/lib/toast';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { num, pageInfo, timeAgo } from '../shared';
 import { CredentialsModal } from './CredentialsModal';
@@ -68,6 +68,7 @@ function hasCoords(lat: number | string | null, lng: number | string | null): bo
  * the component. The grid keeps Blade's shape and the CSS that styles it.
  */
 export function AdminPharmaciesPage() {
+  const { STR } = useLang();
   const api = useAdminApi();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
@@ -125,7 +126,7 @@ export function AdminPharmaciesPage() {
     }
   }
 
-  const C = AR.admin.pharmacies;
+  const C = STR.admin.pharmacies;
 
   // Debounce the search so typing does not fire a request per keystroke — and
   // only commit when the term changed, so a deep link is not rewritten on mount.
@@ -253,7 +254,7 @@ export function AdminPharmaciesPage() {
     <>
       <PageHeader
         title={C.title}
-        subtitle={AR.admin.nav.pharmacies}
+        subtitle={STR.admin.nav.pharmacies}
         icon="fas fa-store"
         actions={
           <Btn variant="primary" onClick={() => setCreateOpen(true)}>
@@ -360,10 +361,10 @@ export function AdminPharmaciesPage() {
                   <input
                     type="search"
                     className="admin-search"
-                    placeholder={AR.admin.common.search}
+                    placeholder={STR.admin.common.search}
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    aria-label={AR.admin.common.search}
+                    aria-label={STR.admin.common.search}
                   />
                   <div className="ph-pills">
                     {(['all', 'active', 'disabled'] as const).map((key) => (
@@ -388,12 +389,12 @@ export function AdminPharmaciesPage() {
                 <EmptyState
                   icon="fas fa-store"
                   title={C.empty}
-                  description={isFiltered ? AR.admin.common.empty_filtered_hint : C.empty_hint}
+                  description={isFiltered ? STR.admin.common.empty_filtered_hint : C.empty_hint}
                   action={
                     isFiltered ? (
                       <Btn size="sm" variant="outline" onClick={clearFilters}>
                         <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
-                        {AR.admin.common.clear_filters}
+                        {STR.admin.common.clear_filters}
                       </Btn>
                     ) : undefined
                   }
@@ -609,7 +610,7 @@ export function AdminPharmaciesPage() {
                     disabled={pagination.current_page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
-                    {AR.admin.common.previous}
+                    {STR.admin.common.previous}
                   </Btn>
                   <span>{info?.label}</span>
                   <Btn
@@ -618,7 +619,7 @@ export function AdminPharmaciesPage() {
                     disabled={pagination.current_page >= pagination.last_page}
                     onClick={() => setPage((p) => p + 1)}
                   >
-                    {AR.admin.common.next}
+                    {STR.admin.common.next}
                   </Btn>
                 </div>
               )}
@@ -635,14 +636,14 @@ export function AdminPharmaciesPage() {
         footer={
           <>
             <Btn variant="outline" onClick={() => setCreateOpen(false)}>
-              {AR.admin.common.cancel}
+              {STR.admin.common.cancel}
             </Btn>
             <Btn
               variant="primary"
               onClick={handleCreate}
               disabled={createMutation.isPending || !newName.trim()}
             >
-              {AR.admin.common.save}
+              {STR.admin.common.save}
             </Btn>
           </>
         }
@@ -674,14 +675,14 @@ export function AdminPharmaciesPage() {
         footer={
           <>
             <Btn variant="outline" onClick={() => setConfirmAction(null)}>
-              {AR.admin.common.cancel}
+              {STR.admin.common.cancel}
             </Btn>
             <Btn
               variant={confirmAction?.kind === 'delete' ? 'danger' : 'primary'}
               onClick={handleConfirmedAction}
               disabled={isPending}
             >
-              {AR.admin.common.confirm}
+              {STR.admin.common.confirm}
             </Btn>
           </>
         }
@@ -704,7 +705,7 @@ export function AdminPharmaciesPage() {
         footer={
           <>
             <Btn variant="outline" onClick={() => setMapTarget(null)}>
-              {AR.admin.common.close}
+              {STR.admin.common.close}
             </Btn>
             {mapTarget && (
               <a

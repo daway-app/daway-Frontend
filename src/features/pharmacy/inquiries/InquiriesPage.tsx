@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AsyncBoundary, Notice } from '@/components/ui';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
@@ -20,15 +21,8 @@ import type { ApiInquiry, ApiInquiryCounts, ApiInquiryStatus } from '@/api/pharm
  * filtering the loaded page keeps the visible rows consistent with the counts
  * the server returned for that page.
  */
-const I = AR.pharmacy.inquiries;
 
 type Tab = 'all' | ApiInquiryStatus;
-
-const STATUS_TEXT: Record<ApiInquiryStatus, string> = {
-  new: I.status_new,
-  answered: I.status_answered,
-  closed: I.status_closed,
-};
 
 /** Blade maps status → badge modifier class. */
 const BADGE_CLASS: Record<ApiInquiryStatus, string> = {
@@ -38,6 +32,13 @@ const BADGE_CLASS: Record<ApiInquiryStatus, string> = {
 };
 
 export function InquiriesPage() {
+  const { STR } = useLang();
+  const I = STR.pharmacy.inquiries;
+  const STATUS_TEXT: Record<ApiInquiryStatus, string> = {
+    new: I.status_new,
+    answered: I.status_answered,
+    closed: I.status_closed,
+  };
   const api = usePharmacyApi();
 
   // Phase 3: status tab + search in the URL (shareable, back/forward-safe).
@@ -206,7 +207,7 @@ export function InquiriesPage() {
                 setStatus('all');
               }}
             >
-              <i className="fas fa-xmark" /> {AR.pharmacy.inventory.clear_filters}
+              <i className="fas fa-xmark" /> {STR.pharmacy.inventory.clear_filters}
             </button>
           )}
         </form>
@@ -274,8 +275,8 @@ export function InquiriesPage() {
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: 8 }}>
-                            <a
-                              href={`/inquiries/${r.id}/chat`}
+                            <Link
+                              to={`/inquiries/${r.id}/chat`}
                               className="ph-btn sm"
                               style={{
                                 background: 'var(--ph-teal-mist)',
@@ -284,7 +285,7 @@ export function InquiriesPage() {
                               }}
                             >
                               <i className="fas fa-comment" /> {I.open_chat}
-                            </a>
+                            </Link>
                             {r.status === 'new' && (
                               <>
                                 <button

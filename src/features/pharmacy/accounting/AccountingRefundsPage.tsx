@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -25,17 +25,9 @@ import { ROUTES } from '@/routes/paths';
  *    column renders a dash here rather than inventing a value.
  */
 
-const A = AR.accounting;
 
 const STATUSES = ['all', 'completed', 'pending', 'cancelled'] as const;
 type StatusKey = (typeof STATUSES)[number];
-
-const STATUS_LABELS: Record<StatusKey, string> = {
-  all: A.common.all,
-  completed: A.refunds.status.completed,
-  pending: A.refunds.status.pending,
-  cancelled: A.refunds.status.cancelled,
-};
 
 /** Blade maps status → badge modifier. */
 function badgeClass(status: RefundStatus): string {
@@ -52,6 +44,14 @@ function badgeClass(status: RefundStatus): string {
 const PER_PAGE = 25;
 
 export function AccountingRefundsPage() {
+  const { STR } = useLang();
+  const A = STR.accounting;
+  const STATUS_LABELS: Record<StatusKey, string> = {
+    all: A.common.all,
+    completed: A.refunds.status.completed,
+    pending: A.refunds.status.pending,
+    cancelled: A.refunds.status.cancelled,
+  };
   const api = usePharmacyApi();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).

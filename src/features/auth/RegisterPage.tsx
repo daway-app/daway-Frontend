@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { AR } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { Btn } from '@/components/ui';
 import { ApiError } from '@/api/errors';
@@ -43,11 +42,7 @@ import { ROUTES } from '@/routes/paths';
  * large were promoted to top level, and this one is an auth flow rather than
  * a pharmacy screen, so it follows them instead of inventing a third
  * convention.
- *
- * NOTE: `R`/`BRAND` below are module-level AR snapshots kept for reference —
- * the component reads `STR` (current language) at render time.
  */
-const R = AR.register;
 
 /**
  * The brand tag is read from the unified-login block on purpose: there is ONE
@@ -56,7 +51,6 @@ const R = AR.register;
  * and it is what stops the brand name drifting between screens (it already did
  * once: the login hero said "دوائي" while the admin panel said "دواك").
  */
-const BRAND = AR.admin.unified.brand_tag;
 
 type FieldName = 'pharmacy_name' | 'phone' | 'region' | 'password' | 'password_confirm';
 type FieldErrors = Partial<Record<FieldName, string>>;
@@ -65,8 +59,6 @@ export function RegisterPage() {
   const { STR } = useLang();
   const Rt = STR.register;
   const brandTag = STR.admin.unified.brand_tag;
-  void R;
-  void BRAND;
   const api = useApi();
 
   const [pharmacyName, setPharmacyName] = useState('');

@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { AR } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { Btn } from '@/components/ui';
 import { useApi } from '@/auth/authHooks';
@@ -30,14 +29,11 @@ import { ROUTES } from '@/routes/paths';
  * the backend deliberately refuses to make.
  */
 
-const R = AR.forgot_password;
-
 /**
  * Same source-of-truth pattern as `RegisterPage`: the brand tag lives in the
  * unified-login block because that screen serves both roles — reading it here
  * is deliberate, and it keeps the brand from drifting between screens.
  */
-const BRAND = AR.admin.unified.brand_tag;
 
 type FieldName = 'pharmacy_id' | 'phone';
 type FieldErrors = Partial<Record<FieldName, string>>;
@@ -46,8 +42,6 @@ export function ForgotPasswordPage() {
   const { STR } = useLang();
   const Rt = STR.forgot_password;
   const brandTag = STR.admin.unified.brand_tag;
-  void R;
-  void BRAND;
   const api = useApi();
 
   const [pharmacyId, setPharmacyId] = useState('');

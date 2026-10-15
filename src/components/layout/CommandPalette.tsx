@@ -11,7 +11,8 @@ import {
   shortcutLabel,
   useCommandKOpen,
 } from '@/lib/commandPalette';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
+import type { Strings } from '@/lib/lang/LanguageContext';
 import { ROUTES } from '@/routes/paths';
 import { IconAlertTriangle, IconBox, IconCapsule, IconChat, IconDashboard, IconStar, IconUser } from './icons';
 
@@ -75,21 +76,25 @@ interface PaletteCommand {
  * Latin synonym, which is what makes the palette usable without an Arabic
  * keyboard.
  */
-function buildCommands(): PaletteCommand[] {
+/**
+ * The registry is built from the LIVE dictionary (STR passed in), not the
+ * static Arabic one — so Ctrl+K labels follow the language toggle.
+ */
+function buildCommands(STR: Strings): PaletteCommand[] {
   const destinations: PaletteCommand[] = [
-    { id: 'dashboard', label: AR.pharmacy.sidebar.dashboard, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.dashboard} home dashboard`, icon: <IconDashboard />, to: ROUTES.dashboard },
-    { id: 'medicines', label: AR.pharmacy.sidebar.manage_medicines, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.medicines} medicines meds`, icon: <IconCapsule />, to: ROUTES.medicines },
-    { id: 'inquiries', label: AR.pharmacy.sidebar.inquiries, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.inquiries} inquiries chat`, icon: <IconChat />, to: ROUTES.inquiries },
-    { id: 'alternatives', label: AR.pharmacy.sidebar.manage_alternatives, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.alternatives} alternatives substitutes`, icon: <IconAlertTriangle />, to: ROUTES.alternatives },
-    { id: 'profile', label: AR.pharmacy.sidebar.pharmacy_profile, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.profile} profile settings`, icon: <IconUser />, to: ROUTES.profile },
-    { id: 'ratings', label: AR.pharmacy.sidebar.ratings, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.ratings} ratings reviews stars`, icon: <IconStar />, to: ROUTES.ratings },
+    { id: 'dashboard', label: STR.pharmacy.sidebar.dashboard, group: STR.commandPalette.group_destinations, keywords: `${ROUTES.dashboard} home dashboard`, icon: <IconDashboard />, to: ROUTES.dashboard },
+    { id: 'medicines', label: STR.pharmacy.sidebar.manage_medicines, group: STR.commandPalette.group_destinations, keywords: `${ROUTES.medicines} medicines meds`, icon: <IconCapsule />, to: ROUTES.medicines },
+    { id: 'inquiries', label: STR.pharmacy.sidebar.inquiries, group: STR.commandPalette.group_destinations, keywords: `${ROUTES.inquiries} inquiries chat`, icon: <IconChat />, to: ROUTES.inquiries },
+    { id: 'alternatives', label: STR.pharmacy.sidebar.manage_alternatives, group: STR.commandPalette.group_destinations, keywords: `${ROUTES.alternatives} alternatives substitutes`, icon: <IconAlertTriangle />, to: ROUTES.alternatives },
+    { id: 'profile', label: STR.pharmacy.sidebar.pharmacy_profile, group: STR.commandPalette.group_destinations, keywords: `${ROUTES.profile} profile settings`, icon: <IconUser />, to: ROUTES.profile },
+    { id: 'ratings', label: STR.pharmacy.sidebar.ratings, group: STR.commandPalette.group_destinations, keywords: `${ROUTES.ratings} ratings reviews stars`, icon: <IconStar />, to: ROUTES.ratings },
   ];
 
   const accounting: PaletteCommand[] = [
-    { id: 'acc-overview', label: AR.accounting.sidebar.overview, group: AR.commandPalette.group_accounting, keywords: `${ROUTES.accounting} accounting overview`, icon: <IconDashboard />, to: ROUTES.accounting },
-    { id: 'acc-sales', label: AR.accounting.sidebar.sales, group: AR.commandPalette.group_accounting, keywords: `${ROUTES.accountingSales} accounting sales invoices pos`, icon: <IconCapsule />, to: ROUTES.accountingSales },
-    { id: 'acc-refunds', label: AR.accounting.sidebar.refunds, group: AR.commandPalette.group_accounting, keywords: `${ROUTES.accountingRefunds} accounting refunds returns`, icon: <IconAlertTriangle />, to: ROUTES.accountingRefunds },
-    { id: 'acc-cash', label: AR.accounting.sidebar.cash_register, group: AR.commandPalette.group_accounting, keywords: `${ROUTES.accountingCash} accounting cash register till`, icon: <IconBox />, to: ROUTES.accountingCash },
+    { id: 'acc-overview', label: STR.accounting.sidebar.overview, group: STR.commandPalette.group_accounting, keywords: `${ROUTES.accounting} accounting overview`, icon: <IconDashboard />, to: ROUTES.accounting },
+    { id: 'acc-sales', label: STR.accounting.sidebar.sales, group: STR.commandPalette.group_accounting, keywords: `${ROUTES.accountingSales} accounting sales invoices pos`, icon: <IconCapsule />, to: ROUTES.accountingSales },
+    { id: 'acc-refunds', label: STR.accounting.sidebar.refunds, group: STR.commandPalette.group_accounting, keywords: `${ROUTES.accountingRefunds} accounting refunds returns`, icon: <IconAlertTriangle />, to: ROUTES.accountingRefunds },
+    { id: 'acc-cash', label: STR.accounting.sidebar.cash_register, group: STR.commandPalette.group_accounting, keywords: `${ROUTES.accountingCash} accounting cash register till`, icon: <IconBox />, to: ROUTES.accountingCash },
   ];
 
   // No action rows: the only action was the theme toggle (removed — the app
@@ -110,6 +115,7 @@ function anotherDialogIsOpen(): boolean {
 }
 
 export function CommandPalette() {
+  const { STR } = useLang();
   const open = useCommandKOpen();
   const navigate = useNavigate();
 
@@ -119,9 +125,9 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const listId = useId();
 
-  // Built once — the registry is static (labels come from `AR`, routes from
-  // `ROUTES`), so there is no reason to rebuild it on every keystroke.
-  const commands = useMemo(() => buildCommands(), []);
+  // Rebuilt when the language changes — labels come from the live `STR`
+  // dictionary (routes from `ROUTES` stay constant).
+  const commands = useMemo(() => buildCommands(STR), [STR]);
 
   const results = useMemo(() => filterCommands(commands, query), [commands, query]);
 
@@ -247,7 +253,7 @@ export function CommandPalette() {
         className="cmdk"
         role="dialog"
         aria-modal="true"
-        aria-label={AR.commandPalette.title}
+        aria-label={STR.commandPalette.title}
       >
         <div className="cmdk-input-row">
           <input
@@ -259,8 +265,8 @@ export function CommandPalette() {
             aria-controls={listId}
             aria-activedescendant={activeOptionId}
             aria-autocomplete="list"
-            aria-label={AR.commandPalette.search_label}
-            placeholder={AR.commandPalette.placeholder}
+            aria-label={STR.commandPalette.search_label}
+            placeholder={STR.commandPalette.placeholder}
             autoComplete="off"
             spellCheck={false}
             value={query}
@@ -271,16 +277,16 @@ export function CommandPalette() {
             }}
             onKeyDown={onKeyDown}
           />
-          <kbd className="cmdk-esc">{AR.commandPalette.hint_close}</kbd>
+          <kbd className="cmdk-esc">{STR.commandPalette.hint_close}</kbd>
         </div>
 
         {results.length === 0 ? (
           <div className="cmdk-empty" role="status">
-            <p className="cmdk-empty-title">{AR.commandPalette.empty_title}</p>
-            <p className="cmdk-empty-hint">{AR.commandPalette.empty_hint}</p>
+            <p className="cmdk-empty-title">{STR.commandPalette.empty_title}</p>
+            <p className="cmdk-empty-hint">{STR.commandPalette.empty_hint}</p>
           </div>
         ) : (
-          <ul className="cmdk-list" id={listId} role="listbox" aria-label={AR.commandPalette.search_label}>
+          <ul className="cmdk-list" id={listId} role="listbox" aria-label={STR.commandPalette.search_label}>
             {results.map((command, index) => {
               const active = index === safeIndex;
               return (
@@ -310,14 +316,14 @@ export function CommandPalette() {
         <div className="cmdk-foot">
           <span className="cmdk-foot-hint">
             <kbd>↑</kbd>
-            <kbd>↓</kbd> {AR.commandPalette.hint_navigate}
+            <kbd>↓</kbd> {STR.commandPalette.hint_navigate}
           </span>
           <span className="cmdk-foot-hint">
-            <kbd>↵</kbd> {AR.commandPalette.hint_select}
+            <kbd>↵</kbd> {STR.commandPalette.hint_select}
           </span>
           {results.length > 0 && (
             <span className="cmdk-foot-count">
-              {AR.commandPalette.results_count.replace(':count', String(results.length))}
+              {STR.commandPalette.results_count.replace(':count', String(results.length))}
             </span>
           )}
         </div>
@@ -335,13 +341,14 @@ export function CommandPalette() {
  * Light Mode header.
  */
 export function CommandPaletteTrigger() {
+  const { STR } = useLang();
   const isMac = useMemo(() => detectMac(), []);
   return (
     <button
       type="button"
       className="cmdk-trigger"
-      title={AR.commandPalette.open_tooltip}
-      aria-label={AR.commandPalette.open_tooltip}
+      title={STR.commandPalette.open_tooltip}
+      aria-label={STR.commandPalette.open_tooltip}
       onClick={() => openCommandPalette()}
     >
       <span className="cmdk-trigger-label">{shortcutLabel(isMac)}</span>

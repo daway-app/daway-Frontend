@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Btn, FormField, LoadingState, Notice, PageHeader } from '@/components/ui';
 import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { toast } from '@/lib/toast';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import { thumbUrl } from '@/lib/format';
@@ -43,11 +42,12 @@ import type { AdminMedicineDetail, AdminMedicineOption, AdminMedicinesResponse }
  *     alternatives of a medicine whose picker had not finished loading.
  */
 export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
+  const { STR } = useLang();
   const api = useAdminApi();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = mode === 'edit';
-  const M = AR.admin.medicines.form;
+  const M = STR.admin.medicines.form;
 
   const [nameAr, setNameAr] = useState('');
   const [ingredient, setIngredient] = useState('');
@@ -214,7 +214,7 @@ export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
             box). `PageHeader` is the same header every other screen uses. */}
         <PageHeader
           title={isEdit ? M.edit_title.replace('{name}', nameAr || '…') : M.create_title}
-          subtitle={AR.admin.medicines.main_description}
+          subtitle={STR.admin.medicines.main_description}
           iconChip={<i className={isEdit ? 'fas fa-pen' : 'fas fa-plus'} />}
         />
 
@@ -352,7 +352,7 @@ export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
               {altDebounced.length >= 2 && (
                 <div className="med-alt-results" role="group" aria-label={M.search_results_label}>
-                  {altQuery.isLoading && <p className="med-alt-empty">{AR.admin.common.loading}</p>}
+                  {altQuery.isLoading && <p className="med-alt-empty">{STR.admin.common.loading}</p>}
                   {!altQuery.isLoading && results.length === 0 && (
                     <p className="med-alt-empty">{M.search_no_results}</p>
                   )}
@@ -391,7 +391,7 @@ export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
                           type="button"
                           className="med-alt-chip"
                           onClick={() => toggleAlt(medId)}
-                          aria-label={`${AR.admin.common.close} — ${nameOf(medId)}`}
+                          aria-label={`${STR.admin.common.close} — ${nameOf(medId)}`}
                         >
                           {nameOf(medId)}
                           <i className="fas fa-xmark" aria-hidden="true" />
@@ -409,7 +409,7 @@ export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
               {M.cancel}
             </Link>
             <button type="submit" className="btn-submit" disabled={saving}>
-              {saving ? AR.admin.common.loading : isEdit ? M.edit_submit : M.create_submit}
+              {saving ? STR.admin.common.loading : isEdit ? M.edit_submit : M.create_submit}
             </button>
           </div>
         </form>

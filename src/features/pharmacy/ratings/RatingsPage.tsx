@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { AR } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
+import type { Strings } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary } from '@/components/ui';
 import { usePharmacyApi, useAuth } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -21,11 +21,8 @@ import type { ApiRating } from '@/api/pharmacyTypes';
  *     faked — showing an invented line on a ratings screen would be misleading.
  * Both facts are recorded in `docs/API-CONTRACT-MAP.md` → GAP-2.
  */
-const R = AR.pharmacy.ratings;
-void R;
-
 /** Blade `$unitLabel = fn($stars) => $stars == 1 ? star : stars`. */
-function unitLabel(stars: number, STR: typeof AR): string {
+function unitLabel(stars: number, STR: Strings): string {
   const r = STR.pharmacy.ratings;
   return stars === 1 ? r.star : r.stars;
 }

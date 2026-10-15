@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { AsyncBoundary, Badge, Btn, PageHeader } from '@/components/ui';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
-import { AR } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { thumbUrl } from '@/lib/format';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
@@ -44,9 +43,6 @@ import type { AdminProfile } from '@/api/adminTypes';
  * like a missing feature) or shipped as a live button that always fails.
  * This is a documented gap, and the note under the actions says so.
  */
-const P = AR.admin.profile;
-void P; // module AR snapshot — component uses STR below
-
 /** First letter of the name — the avatar fallback (mirrors the sidebar). */
 function initial(name: string): string {
   return name.trim().charAt(0) || '؟';

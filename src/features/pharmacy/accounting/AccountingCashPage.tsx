@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { AR, labelOf } from '@/lib/i18n';
+import { labelOf } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { AsyncBoundary, Btn, EmptyState } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
@@ -28,16 +29,9 @@ import type { ApiCashMovement, ApiCashStats } from '@/api/pharmacyTypes';
  * key, so a new backend enum value shows a readable token instead of blank).
  */
 
-const A = AR.accounting;
 
 const DIRECTIONS = ['all', 'in', 'out'] as const;
 type DirectionKey = (typeof DIRECTIONS)[number];
-
-const DIRECTION_LABELS: Record<DirectionKey, string> = {
-  all: A.common.all,
-  in: A.cash_registers.incoming,
-  out: A.cash_registers.outgoing,
-};
 
 /**
  * The filter options the backend understands.
@@ -60,6 +54,13 @@ const SOURCE_TYPES = [
 const PER_PAGE = 25;
 
 export function AccountingCashPage() {
+  const { STR } = useLang();
+  const A = STR.accounting;
+  const DIRECTION_LABELS: Record<DirectionKey, string> = {
+    all: A.common.all,
+    in: A.cash_registers.incoming,
+    out: A.cash_registers.outgoing,
+  };
   const api = usePharmacyApi();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).

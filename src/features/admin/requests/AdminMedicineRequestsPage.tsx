@@ -13,7 +13,7 @@ import {
 import { toast } from '@/lib/toast';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
-import { AR } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { formatDate, num, pageInfo } from '../shared';
 import type { AdminMedicineRequestsResponse, AdminMedicineRequest } from '@/api/adminTypes';
@@ -40,6 +40,7 @@ import type { AdminMedicineRequestsResponse, AdminMedicineRequest } from '@/api/
  * rejection with no reason leaves the pharmacy unable to fix the submission.
  */
 export function AdminMedicineRequestsPage() {
+  const { STR } = useLang();
   const api = useAdminApi();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
@@ -67,7 +68,7 @@ export function AdminMedicineRequestsPage() {
   const [editNameAr, setEditNameAr] = useState('');
   const [editIngredient, setEditIngredient] = useState('');
 
-  const R = AR.admin.requests;
+  const R = STR.admin.requests;
 
   // Debounce the search — commit only when the term changed (see AdminMedicinesPage).
   useEffect(() => {
@@ -166,7 +167,7 @@ export function AdminMedicineRequestsPage() {
 
   return (
     <>
-      <PageHeader title={R.title} subtitle={AR.admin.nav.medicine_requests} icon="fas fa-clipboard" />
+      <PageHeader title={R.title} subtitle={STR.admin.nav.medicine_requests} icon="fas fa-clipboard" />
 
       <AsyncBoundary
         isLoading={query.isLoading}
@@ -221,13 +222,13 @@ export function AdminMedicineRequestsPage() {
                   icon="fas fa-clipboard-check"
                   title={R.empty}
                   description={
-                    isFiltered ? AR.admin.common.empty_filtered_hint : R.empty_hint
+                    isFiltered ? STR.admin.common.empty_filtered_hint : R.empty_hint
                   }
                   action={
                     isFiltered ? (
                       <Btn size="sm" variant="outline" onClick={clearFilters}>
                         <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
-                        {AR.admin.common.clear_filters}
+                        {STR.admin.common.clear_filters}
                       </Btn>
                     ) : undefined
                   }
@@ -291,7 +292,7 @@ export function AdminMedicineRequestsPage() {
                     disabled={pagination.current_page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                   >
-                    {AR.admin.common.previous}
+                    {STR.admin.common.previous}
                   </Btn>
                   <span>{info?.label}</span>
                   <Btn
@@ -300,7 +301,7 @@ export function AdminMedicineRequestsPage() {
                     disabled={pagination.current_page >= pagination.last_page}
                     onClick={() => setPage((p) => p + 1)}
                   >
-                    {AR.admin.common.next}
+                    {STR.admin.common.next}
                   </Btn>
                 </div>
               )}
@@ -317,7 +318,7 @@ export function AdminMedicineRequestsPage() {
         footer={
           <>
             <Btn variant="outline" onClick={() => setReviewing(null)}>
-              {AR.admin.common.cancel}
+              {STR.admin.common.cancel}
             </Btn>
             <Btn
               variant="danger"
@@ -413,7 +414,7 @@ export function AdminMedicineRequestsPage() {
                 setRejectNotes('');
               }}
             >
-              {AR.admin.common.cancel}
+              {STR.admin.common.cancel}
             </Btn>
             <Btn
               variant="danger"

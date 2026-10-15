@@ -4,7 +4,8 @@ import { AsyncBoundary, Badge, Btn, DataTable, EmptyState, Modal } from '@/compo
 import { toast } from '@/lib/toast';
 import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
-import { AR, roleLabel } from '@/lib/i18n';
+import { roleLabel } from '@/lib/i18n';
+import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { ariaSort, useSort } from '@/lib/sort';
 import { thumbUrl } from '@/lib/format';
@@ -76,6 +77,7 @@ function relativeTime(value: string | null): string {
  * rendered without destructive controls so the hazard is not one misclick deep.
  */
 export function AdminUsersPage() {
+  const { STR } = useLang();
   const api = useAdminApi();
   const { user: currentUser } = useAdminAuth();
 
@@ -99,7 +101,7 @@ export function AdminUsersPage() {
     { kind: 'delete' | 'toggle'; row: AdminUserRow } | null
   >(null);
 
-  const U = AR.admin.users;
+  const U = STR.admin.users;
 
   // Debounce the search — commit only when the term changed (see AdminMedicinesPage).
   useEffect(() => {
@@ -137,7 +139,7 @@ export function AdminUsersPage() {
         case 'name':
           return row.name;
         case 'role':
-          return roleLabel(row.role);
+          return roleLabel(row.role, STR);
         case 'date':
           return row.created_at;
       }
@@ -304,12 +306,12 @@ export function AdminUsersPage() {
                     <EmptyState
                       icon="fas fa-users"
                       title={U.empty}
-                      description={isFiltered ? AR.admin.common.empty_filtered_hint : U.empty_hint}
+                      description={isFiltered ? STR.admin.common.empty_filtered_hint : U.empty_hint}
                       action={
                         isFiltered ? (
                           <Btn size="sm" variant="outline" onClick={clearFilters}>
                             <i className="fas fa-rotate-left" aria-hidden="true" />{' '}
-                            {AR.admin.common.clear_filters}
+                            {STR.admin.common.clear_filters}
                           </Btn>
                         ) : undefined
                       }
@@ -377,7 +379,7 @@ export function AdminUsersPage() {
                           </td>
                           <td dir="ltr">{row.email ?? '—'}</td>
                           <td dir="ltr">{row.phone ?? '—'}</td>
-                          <td>{roleLabel(row.role)}</td>
+                          <td>{roleLabel(row.role, STR)}</td>
                           <td>
                             <Badge variant={row.is_active ? 'ok' : 'out'}>
                               {row.is_active ? U.status_active : U.status_inactive}
@@ -453,7 +455,7 @@ export function AdminUsersPage() {
                       disabled={pagination.current_page <= 1}
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                     >
-                      {AR.admin.common.previous}
+                      {STR.admin.common.previous}
                     </Btn>
                     <span className="page-meta">{info?.label}</span>
                     <Btn
@@ -462,7 +464,7 @@ export function AdminUsersPage() {
                       disabled={pagination.current_page >= pagination.last_page}
                       onClick={() => setPage((p) => p + 1)}
                     >
-                      {AR.admin.common.next}
+                      {STR.admin.common.next}
                     </Btn>
                   </div>
                 )}
@@ -479,14 +481,14 @@ export function AdminUsersPage() {
         footer={
           <>
             <Btn variant="outline" onClick={() => setConfirmAction(null)}>
-              {AR.admin.common.cancel}
+              {STR.admin.common.cancel}
             </Btn>
             <Btn
               variant={confirmAction?.kind === 'delete' ? 'danger' : 'primary'}
               onClick={handleConfirmedAction}
               disabled={isPending}
             >
-              {AR.admin.common.confirm}
+              {STR.admin.common.confirm}
             </Btn>
           </>
         }

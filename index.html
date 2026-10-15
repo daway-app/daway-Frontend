@@ -34,35 +34,20 @@
     -->
     <script defer src="/vendor/chart.umd.js"></script>
     <!--
-      Theme pre-paint — AUDIT (not in the original report; found while fixing
-      B-15/B-13). `initTheme()` lives in a Topbar effect, but the Topbar only
-      mounts AFTER login, so:
-        · the login screen could never render dark, and
-        · every authenticated load painted light first, then flipped to dark.
-      This inline snippet runs synchronously before first paint, exactly like the
-      Blade layout's own inline theme script, so the correct theme is on <html>
-      before anything is drawn. Kept dependency-free and wrapped in try/catch
-      because localStorage can throw in private/locked-down contexts.
-
-      It applies the SAME rule as `src/lib/theme.ts`: an explicit stored choice
-      wins; with no stored choice the OS preference (`prefers-color-scheme`) is
-      followed, so the very first paint is already correct.
+      Theme pre-paint — LIGHT ONLY (طلب عبود: بلا دارك مود).
+      يضمن عدم وجود صنف `dark-mode` على <html> من أول رسم، ويمسح أي
+      اختيار `theme` مخزن من نسخة قديمة فيرجع مستخدم الدارك السابق
+      إلى الفاتح تلقائيًا. موسوم بـtry/catch لأن localStorage قد
+      يرمي في سياقات التصفح الخاص.
     -->
     <script>
       (function () {
-        var stored = null;
+        document.documentElement.classList.remove('dark-mode');
         try {
-          stored = localStorage.getItem('theme');
+          localStorage.removeItem('theme');
         } catch (e) {
-          /* storage unavailable — fall through to the system preference */
+          /* storage unavailable — nothing stored, nothing to clear */
         }
-        var dark;
-        if (stored === 'dark' || stored === 'light') {
-          dark = stored === 'dark';
-        } else {
-          dark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        }
-        document.documentElement.classList.toggle('dark-mode', dark);
       })();
     </script>
     <!--

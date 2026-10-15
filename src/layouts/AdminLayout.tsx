@@ -4,9 +4,8 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { Toaster } from '@/components/ui';
 import { roleLabel } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
-import { initTheme, toggleTheme } from '@/lib/theme';
+import { initTheme } from '@/lib/theme';
 import { topbarTitleFor } from '@/components/layout/routeTitles';
-import { IconMoon, IconSun } from '@/components/layout/icons';
 import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
@@ -85,20 +84,6 @@ export function AdminLayout() {
               <p>{heading.subtitle}</p>
             </div>
             <div className="topbar-actions">
-              <button
-                type="button"
-                className="icon-btn theme-toggle-btn"
-                title={STR.layout.dark_mode_tooltip}
-                onClick={() => toggleTheme()}
-              >
-                <span className="icon-3d sun-icon">
-                  <IconSun />
-                </span>
-                <span className="icon-3d moon-icon">
-                  <IconMoon />
-                </span>
-              </button>
-
               {/* الاسم والصورة بالشريط العلوي — زر الخروج مقره فوتر السايدبار */}
               <div className="user-profile-btn" title={STR.layout.edit_profile_modal_title}>
                 <div

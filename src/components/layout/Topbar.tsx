@@ -7,9 +7,9 @@ import { useApiQuery } from '@/api/useApiQuery';
 import { pharmacyKeys, PRESET_STALE_TIMES } from '@/api/queryKeys';
 import type { ApiPharmacyProfile } from '@/api/pharmacyTypes';
 import { thumbUrl } from '@/lib/format';
-import { initTheme, toggleTheme } from '@/lib/theme';
+import { initTheme } from '@/lib/theme';
 import { topbarTitleFor } from './routeTitles';
-import { IconBell, IconMoon, IconSun } from './icons';
+import { IconBell } from './icons';
 
 /**
  * Topbar — faithful port of components/topbar.blade.php.
@@ -18,8 +18,9 @@ import { IconBell, IconMoon, IconSun } from './icons';
  *   div.topbar > .topbar-title-group (h1 + p) + .topbar-actions
  *     a.icon-btn.lang-switch-btn > span.lang-label
  *     .notifications-wrapper > button.icon-btn#notificationBtn + .notifications-dropdown
- *     button.icon-btn.theme-toggle-btn > span.icon-3d.sun-icon / .moon-icon
  *     .user-profile-btn > .avatar + .user-details
+ *
+ * (زر تبديل الثيم حُذف — التطبيق فاتح فقط بلا دارك مود.)
  *
  * Avatar display (read-only): the pharmacy `logo_url` from the shared profile
  * query (thumbUrl 84×84), or the name's first letter when null. The backend
@@ -38,7 +39,7 @@ export function Topbar() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Apply the persisted theme once on mount (mirrors Blade's DOMContentLoaded).
+  // Enforce the single light theme on mount (clears any stale dark choice).
   // Skipped in the visual-QA harness, which pins the theme via the html class.
   useEffect(() => {
     if (document.body.dataset.harness === 'theme') return;
@@ -118,20 +119,6 @@ export function Topbar() {
             </div>
           </div>
         </div>
-
-        {/* Theme toggle */}
-        <button
-          className="icon-btn theme-toggle-btn"
-          title={STR.layout.dark_mode_tooltip}
-          onClick={() => toggleTheme()}
-        >
-          <span className="icon-3d sun-icon">
-            <IconSun />
-          </span>
-          <span className="icon-3d moon-icon">
-            <IconMoon />
-          </span>
-        </button>
 
         {/* User profile — الاسم والصورة يظلان ظاهرين هنا (طلب عبود)، وزر
             الخروج مقره فوتر السايدبار أسفل. مطابق لـBlade: صورة المستخدم

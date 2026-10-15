@@ -12,9 +12,8 @@ import {
   useCommandKOpen,
 } from '@/lib/commandPalette';
 import { AR } from '@/lib/i18n';
-import { toggleTheme } from '@/lib/theme';
 import { ROUTES } from '@/routes/paths';
-import { IconAlertTriangle, IconBox, IconCapsule, IconChat, IconDashboard, IconPlus, IconStar, IconUser } from './icons';
+import { IconAlertTriangle, IconBox, IconCapsule, IconChat, IconDashboard, IconStar, IconUser } from './icons';
 
 /**
  * CommandPalette — a Ctrl+K / Cmd+K quick-navigation dialog.
@@ -80,8 +79,6 @@ function buildCommands(): PaletteCommand[] {
   const destinations: PaletteCommand[] = [
     { id: 'dashboard', label: AR.pharmacy.sidebar.dashboard, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.dashboard} home dashboard`, icon: <IconDashboard />, to: ROUTES.dashboard },
     { id: 'medicines', label: AR.pharmacy.sidebar.manage_medicines, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.medicines} medicines meds`, icon: <IconCapsule />, to: ROUTES.medicines },
-    { id: 'inventory', label: AR.pharmacy.sidebar.inventory, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.inventory} inventory stock`, icon: <IconBox />, to: ROUTES.inventory },
-    { id: 'inventory-import', label: AR.pharmacy.sidebar.bulk_import, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.inventoryImport} inventory import bulk excel`, icon: <IconPlus />, to: ROUTES.inventoryImport },
     { id: 'inquiries', label: AR.pharmacy.sidebar.inquiries, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.inquiries} inquiries chat`, icon: <IconChat />, to: ROUTES.inquiries },
     { id: 'alternatives', label: AR.pharmacy.sidebar.manage_alternatives, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.alternatives} alternatives substitutes`, icon: <IconAlertTriangle />, to: ROUTES.alternatives },
     { id: 'profile', label: AR.pharmacy.sidebar.pharmacy_profile, group: AR.commandPalette.group_destinations, keywords: `${ROUTES.profile} profile settings`, icon: <IconUser />, to: ROUTES.profile },
@@ -95,20 +92,11 @@ function buildCommands(): PaletteCommand[] {
     { id: 'acc-cash', label: AR.accounting.sidebar.cash_register, group: AR.commandPalette.group_accounting, keywords: `${ROUTES.accountingCash} accounting cash register till`, icon: <IconBox />, to: ROUTES.accountingCash },
   ];
 
-  // A single real ACTION — toggling the theme is already wired and reversible.
-  // Logout is deliberately NOT offered: the sidebar routes it through a
-  // confirmation dialog, and a palette row that logged out on Enter would
-  // bypass that confirmation.
-  const actions: PaletteCommand[] = [
-    {
-      id: 'toggle-theme',
-      label: AR.commandPalette.action_toggle_theme,
-      group: AR.commandPalette.group_actions,
-      keywords: `theme dark light mode ${AR.commandPalette.action_toggle_theme}`,
-      icon: <IconStar />,
-      action: () => toggleTheme(),
-    },
-  ];
+  // No action rows: the only action was the theme toggle (removed — the app
+  // is light-only now). Logout is deliberately NOT offered: the sidebar
+  // routes it through a confirmation dialog, and a palette row that logged
+  // out on Enter would bypass that confirmation.
+  const actions: PaletteCommand[] = [];
 
   return [...destinations, ...accounting, ...actions];
 }

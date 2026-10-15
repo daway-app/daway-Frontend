@@ -326,6 +326,21 @@ export function createPharmacyApi(client: ApiClient) {
     },
 
     /**
+     * رفع مباشر لشعار الصيدلية.
+     *
+     * يرسل الملف وحده كـ multipart إلى نفس `POST /api/profile/pharmacy` —
+     * الباك يقبل حقل `logo_file` ويغلّبه على `logo_url` ثم يرجع البروفايل
+     * كاملًا (ومن ضمنه `logo_url` الجديد). الـ client يترك Content-Type
+     * للمتصفح ليضيف الـ boundary (نفس نمط `previewImport`).
+     */
+    async uploadLogo(file: File): Promise<ApiPharmacyProfile> {
+      const form = new FormData();
+      form.append('logo_file', file);
+      const res = await client.post<ApiSuccess<ApiPharmacyProfile>>(P.profile, form);
+      return res.data;
+    },
+
+    /**
      * Change the pharmacy password.
      *
      * The backend **deletes all tokens** when a password is supplied, so the

@@ -162,6 +162,47 @@ export function AdminPharmaciesPage() {
   );
   const deleteMutation = useApiMutation(async (id: number) => api.admin.deletePharmacy(id));
 
+  // ── طلبات استعادة كلمة المرور — قائمة مراجعة الأدمن ─────────────────────
+  // الموافقة هنا ليست إشعاراً: تولّد كلمة مرور جديدة فعلاً وتُلغي الجلسات
+  // القائمة، وتُعيدها في الرد مرة واحدة — فتُعرض عبر نفس `CredentialsModal`
+  // الذي يعرض بيانات إنشاء الصيدلية (ولا تُمرَّر أبداً عبر toast أو URL).
+  const resetRequestsQuery = useApiQuery<{
+    success: boolean;
+    data: Array<{
+      id: number;
+      status: 'pending';
+      created_at: string | null;
+      pharmacy: { id: number; name: string; pharmacy_id: string; phone: string | null };
+    }>;
+    pagination: { current_page: number; last_page: number; per_page: number; total: number };
+  }>(
+    (signal) => api.admin.pharmacyPasswordResetRequests(signal),
+    ['pharmacy-password-reset-requests'],
+  );
+  const approveResetRequestMutation = useApiMutation((id: number) =>
+    api.admin.approvePharmacyPasswordResetRequest(id),
+  );
+  const rejectResetRequestMutation = useApiMutation((id: number) =>
+    api.admin.rejectPharmacyPasswordResetRequest(id),
+  );
+
+  async function reviewResetRequest(id: number, action: 'approve' | 'reject') {
+    try {
+      if (action === 'approve') {
+        const result = await approveResetRequestMutation.run(id);
+        setCredentials(result.data.credentials);
+        toast.success('تمت الموافقة على الطلب وتوليد بيانات دخول جديدة.');
+      } else {
+        await rejectResetRequestMutation.run(id);
+        toast.success('تم رفض طلب الاستعادة.');
+      }
+      resetRequestsQuery.refetch();
+    } catch {
+      // الرفض المتزامن من أدمن آخر يعود 409 — الرسالة العامة تغطيه.
+      toast.error('تعذّرت مراجعة الطلب. قد يكون تمت مراجعته من مسؤول آخر.');
+    }
+  }
+
   async function handleCreate() {
     const name = newName.trim();
     if (!name) return;
@@ -255,6 +296,63 @@ export function AdminPharmaciesPage() {
                 label={C.stat_items}
               />
             </div>
+
+            {/* ── طلبات استعادة كلمة المرور — مراجعة الأدمن ──────────────── */}
+            <Card
+              title="طلبات استعادة كلمة مرور الصيدليات"
+              icon="fas fa-key"
+              description="راجع الطلبات الواردة. عند الموافقة ستظهر كلمة المرور الجديدة مرة واحدة فقط."
+            >
+              {resetRequestsQuery.isLoading ? (
+                <p className="admin-muted">جارٍ تحميل الطلبات…</p>
+              ) : resetRequestsQuery.isError ? (
+                <div className="admin-error-state">
+                  <p>تعذّر تحميل طلبات الاستعادة.</p>
+                  <Btn variant="outline" size="sm" onClick={resetRequestsQuery.refetch}>
+                    إعادة المحاولة
+                  </Btn>
+                </div>
+              ) : !resetRequestsQuery.data?.data.length ? (
+                <p className="admin-muted">لا توجد طلبات استعادة معلّقة.</p>
+              ) : (
+                <div className="admin-list">
+                  {resetRequestsQuery.data.data.map((item) => (
+                    <div className="admin-list-row" key={item.id}>
+                      <div className="admin-list-row__main">
+                        <strong>{item.pharmacy.name}</strong>
+                        <span dir="ltr">{item.pharmacy.pharmacy_id}</span>
+                        <span dir="ltr">{item.pharmacy.phone ?? '—'}</span>
+                        <small>
+                          {item.created_at ? timeAgo(item.created_at) : 'وقت الطلب غير متاح'}
+                        </small>
+                      </div>
+                      <div className="admin-list-row__actions">
+                        <Btn
+                          variant="primary"
+                          size="sm"
+                          disabled={
+                            approveResetRequestMutation.isPending || rejectResetRequestMutation.isPending
+                          }
+                          onClick={() => reviewResetRequest(item.id, 'approve')}
+                        >
+                          الموافقة وإعادة التعيين
+                        </Btn>
+                        <Btn
+                          variant="danger"
+                          size="sm"
+                          disabled={
+                            approveResetRequestMutation.isPending || rejectResetRequestMutation.isPending
+                          }
+                          onClick={() => reviewResetRequest(item.id, 'reject')}
+                        >
+                          رفض
+                        </Btn>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
 
             <Card
               headExtra={

@@ -415,13 +415,50 @@ body.dark-mode .auth-shell {
     cursor: pointer;
 }
 
-/* نص إرشادي بديل عن رابط "نسيت كلمة المرور" الميّت (لا يوجد مسار استعادة بعد) */
+/* رابط «نسيت كلمة المرور» — زرّ حقيقي يفتح لوحة طلب الاستعادة.
+   كان <span> نصّاً إرشادياً بلا مسار («تواصل مع إدارة النظام»)؛ صار <button>
+   فورثه يحتاج تصفير مظهر الزر الافتراضي ليظل يبدو كنصّ قابل للنقر. */
 .forgot-hint {
+    appearance: none;
+    border: 0;
+    padding: 0;
+    background: transparent;
     color: var(--ink-soft);
+    font-family: inherit;
     font-size: var(--fs-xs);
     font-weight: 600;
     text-align: end;
+    cursor: pointer;
 }
+.forgot-hint:hover { color: var(--teal-text); text-decoration: underline; }
+.forgot-hint:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: 3px;
+}
+
+/* لوحة طلب استعادة كلمة المرور — تنفتح داخل نموذج الدخول نفسه (لا مسار
+   منفصل): المستخدم في لحظة إحباط، وإعادة توجيهه لشاشة أخرى تزيد الاحتكاك. */
+.forgot-panel {
+    display: grid;
+    gap: 10px;
+    margin: 0 0 18px;
+    padding: 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-md);
+    background: var(--field-bg);
+}
+.forgot-panel > p {
+    margin: 0 0 4px;
+    color: var(--ink-soft);
+    font-size: var(--fs-sm);
+    line-height: 1.65;
+}
+.forgot-panel__input { width: 100%; min-width: 0; }
+/* ردّ الخادم «إذا كانت البيانات مطابقة…» يُعرض كتأكيد لا كتحذير — لونه لون
+   العلامة لا الأحمر، لأنه يظهر حتى في حالة البيانات غير المطابقة عمداً. */
+.forgot-panel__notice { color: var(--teal-text) !important; margin: 0; }
+.forgot-panel__submit { width: 100%; justify-content: center; }
 
 /* -- الزر الأساسي --
    `.btn-p` حُذف: كان زر Blade القديم ولم يبقَ له أي مستخدم في React (كل

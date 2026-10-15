@@ -30,6 +30,11 @@ export const ADMIN_ENDPOINTS = {
   pharmacy: (id: number) => `/api/admin/pharmacies/${id}`,
   pharmacyToggle: (id: number) => `/api/admin/pharmacies/${id}/toggle-status`,
   pharmacyReset: (id: number) => `/api/admin/pharmacies/${id}/reset-credentials`,
+  pharmacyPasswordResetRequests: '/api/admin/pharmacy-password-reset-requests',
+  pharmacyPasswordResetApprove: (id: number) =>
+    `/api/admin/pharmacy-password-reset-requests/${id}/approve`,
+  pharmacyPasswordResetReject: (id: number) =>
+    `/api/admin/pharmacy-password-reset-requests/${id}/reject`,
   medicines: '/api/admin/medicines',
   medicine: (id: number) => `/api/admin/medicines/${id}`,
   medicineRequests: '/api/admin/medicine-requests',
@@ -152,6 +157,40 @@ export function createAdminApi(client: ApiClient) {
         data: { credentials: DeliveredCredentials };
       }>(ADMIN_ENDPOINTS.pharmacyReset(id));
       return res;
+    },
+
+    // ── طلبات استعادة كلمة مرور الصيدليات ─────────────────────────────────
+    // الطلب ينشئه المالك من شاشة الدخول (عام)، والمراجعة من هنا فقط.
+    // الموافقة تولّد كلمة مرور جديدة وتُلغي الجلسات القائمة، وتُعيدها مرة
+    // واحدة في `credentials` — تُعرض عبر CredentialsModal ولا تُمرَّر أبداً
+    // عبر toast أو URL أو log.
+
+    async pharmacyPasswordResetRequests(signal?: AbortSignal) {
+      return client.get<{
+        success: boolean;
+        data: Array<{
+          id: number;
+          status: 'pending';
+          created_at: string | null;
+          pharmacy: { id: number; name: string; pharmacy_id: string; phone: string | null };
+        }>;
+        pagination: { current_page: number; last_page: number; per_page: number; total: number };
+      }>(ADMIN_ENDPOINTS.pharmacyPasswordResetRequests, { signal });
+    },
+
+    async approvePharmacyPasswordResetRequest(id: number) {
+      return client.post<{
+        success: boolean;
+        message: string;
+        data: { credentials: DeliveredCredentials };
+      }>(ADMIN_ENDPOINTS.pharmacyPasswordResetApprove(id));
+    },
+
+    async rejectPharmacyPasswordResetRequest(id: number, admin_notes = '') {
+      return client.post<{ success: boolean; message: string }>(
+        ADMIN_ENDPOINTS.pharmacyPasswordResetReject(id),
+        { admin_notes },
+      );
     },
 
     // ── Medicines ───────────────────────────────────────────────────────────

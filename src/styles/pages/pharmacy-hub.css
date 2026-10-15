@@ -1252,3 +1252,30 @@ body.dark-mode .ph-modal { border: 1px solid var(--line); }
 .admin-detail-list strong { font-size: var(--fs-md); color: var(--ph-ink); }
 .admin-detail-list__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
 .admin-detail-list--static li { justify-content: space-between; }
+
+/* ==========================================================
+   طلبات استعادة كلمة مرور الصيدليات — بطاقة المراجعة في
+   AdminPharmaciesPage. صفوف بسيطة: بيانات الصيدلية يميناً وأفعال يساراً.
+   ========================================================== */
+.admin-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line, #e5e7eb);
+}
+.admin-list-row:last-child { border-bottom: 0; }
+.admin-list-row__main {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.admin-list-row__main > span { color: var(--ink-soft); font-size: var(--fs-sm); }
+.admin-list-row__main > small { color: var(--ink-soft); }
+.admin-list-row__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 640px) {
+  .admin-list-row { align-items: stretch; flex-direction: column; }
+  .admin-list-row__actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .admin-list-row__actions .ph-btn { justify-content: center; }
+}

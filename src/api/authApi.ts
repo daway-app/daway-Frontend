@@ -20,6 +20,7 @@ import {
 export const AUTH_ENDPOINTS = {
   login: '/api/login/pharmacy',
   registerPharmacy: '/api/register/pharmacy',
+  passwordResetRequest: '/api/pharmacy/password-reset-requests',
   refresh: '/api/refresh-token',
   logout: '/api/logout',
 } as const;
@@ -48,6 +49,12 @@ export interface PharmacyRegistrationData {
   phone: string;
   is_active: boolean;
   status: 'pending_approval';
+}
+
+/** Body of `POST /api/pharmacy/password-reset-requests` — matches the backend validator. */
+export interface PasswordResetRequestInput {
+  pharmacy_id: string;
+  phone: string;
 }
 
 /**
@@ -99,6 +106,27 @@ export function createAuthApi(client: ApiClient) {
       );
 
       return { message: response.message ?? '', data: response.data };
+    },
+
+    /**
+     * Ask for a password reset — the PUBLIC request half of the flow.
+     *
+     * 🔴 THE BACKEND REPLIES 202 EVEN WHEN THE ID/PHONE DO NOT MATCH. That is
+     * deliberate: one response for both cases means this endpoint cannot be
+     * used to enumerate accounts. Nothing resets here either — the request only
+     * queues an item an admin reviews; the new password is issued on approval
+     * and shown once in the admin panel.
+     */
+    async requestPasswordReset(
+      input: PasswordResetRequestInput,
+    ): Promise<{ message: string }> {
+      const response = await client.post<ApiSuccess<null>>(
+        AUTH_ENDPOINTS.passwordResetRequest,
+        input,
+        { skipAuth: true, skipRefresh: true },
+      );
+
+      return { message: response.message ?? '' };
     },
 
     /** Returns the new token, or `null` when the session cannot be extended. */

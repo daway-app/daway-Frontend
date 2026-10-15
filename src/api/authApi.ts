@@ -10,14 +10,16 @@ import {
 /**
  * Auth endpoints — paths verified from `routes/api.php`.
  *
- *   POST /api/login/pharmacy     — public, throttled (`login`, `login-account`)
- *   POST /api/refresh-token      — `auth:sanctum`, throttled `30,1`
- *   POST /api/logout             — `auth:sanctum`
+ *   POST /api/login/pharmacy      — public, throttled (`login`, `login-account`)
+ *   POST /api/register/pharmacy   — public, throttled `register`
+ *   POST /api/refresh-token       — `auth:sanctum`, throttled `30,1`
+ *   POST /api/logout              — `auth:sanctum`
  *
  * No other auth path is assumed to exist.
  */
 export const AUTH_ENDPOINTS = {
   login: '/api/login/pharmacy',
+  registerPharmacy: '/api/register/pharmacy',
   refresh: '/api/refresh-token',
   logout: '/api/logout',
 } as const;
@@ -25,6 +27,27 @@ export const AUTH_ENDPOINTS = {
 export interface LoginResult {
   user: LoginData['user'];
   token: string;
+}
+
+/** Body of `POST /api/register/pharmacy` — matches the backend validator. */
+export interface PharmacyRegistrationRequest {
+  pharmacy_name: string;
+  phone: string;
+  region: string;
+  password: string;
+}
+
+/**
+ * `data` of a successful registration.
+ *
+ * `status` is always `'pending_approval'` and `is_active` always `false`: the
+ * backend does NOT hand out a usable account here.
+ */
+export interface PharmacyRegistrationData {
+  pharmacy_name: string;
+  phone: string;
+  is_active: boolean;
+  status: 'pending_approval';
 }
 
 /**
@@ -55,6 +78,27 @@ export function createAuthApi(client: ApiClient) {
       }
 
       return { user, token };
+    },
+
+    /**
+     * Apply for a pharmacy account.
+     *
+     * 🔴 THIS DOES NOT CREATE A LOGIN. The backend files the pharmacy as
+     * `pending_approval` (HTTP 201) and returns NO token — the credentials are
+     * issued later, by SMS, once an admin approves. Callers must present this as
+     * an APPLICATION; treating it as a signup leaves the user trying to log in
+     * with credentials that do not exist yet.
+     */
+    async registerPharmacy(
+      input: PharmacyRegistrationRequest,
+    ): Promise<{ message: string; data: PharmacyRegistrationData }> {
+      const response = await client.post<ApiSuccess<PharmacyRegistrationData>>(
+        AUTH_ENDPOINTS.registerPharmacy,
+        input,
+        { skipAuth: true },
+      );
+
+      return { message: response.message ?? '', data: response.data };
     },
 
     /** Returns the new token, or `null` when the session cannot be extended. */

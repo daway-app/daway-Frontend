@@ -11,6 +11,13 @@ import { NotFoundPage, PlaceholderPage } from '@/features/PlaceholderPage';
 
 // ── Auth pages (eager: needed before lazy chunks load) ───────────────────────
 const LoginPage = lazyPage(() => import('@/features/auth/LoginPage'));
+/**
+ * Public self-registration for a pharmacy. It lives in the SAME guest branch as
+ * `login` because it is the counterpart of it — a signed-out visitor's screen.
+ * It files an APPLICATION (`status: 'pending_approval'`), not an account, so it
+ * must never sit behind `RequireAuth`.
+ */
+const RegisterPage = lazyPage(() => import('@/features/auth/RegisterPage'));
 const PasswordChangePage = lazyPage(() => import('@/features/auth/PasswordChangePage'));
 
 // ── Pharmacy pages (split by feature area) ───────────────────────────────────
@@ -144,7 +151,13 @@ export const router = createBrowserRouter([
         children: [
           {
             element: <AuthLayout />,
-            children: [{ path: ROUTES.login, element: <LoginPage /> }],
+            children: [
+              { path: ROUTES.login, element: <LoginPage /> },
+              // Public registration. `RequireGuest` (not `RequireAuth`) on
+              // purpose: an already-signed-in pharmacy has no reason to file a
+              // second application, and the guard bounces it back to `/`.
+              { path: ROUTES.register, element: <RegisterPage /> },
+            ],
           },
         ],
       },

@@ -8,6 +8,14 @@
  */
 export const ROUTES = {
   login: '/login',
+  /**
+   * Pharmacy self-registration — a PUBLIC screen, the counterpart of `login`.
+   *
+   * It files an application, not an account: the backend stores the pharmacy as
+   * `pending_approval` and the credentials (Pharmacy ID + password) only arrive
+   * by SMS after an admin approves it. See `RegisterPage`.
+   */
+  register: '/register',
   dashboard: '/',
   inventory: '/inventory',
   /** Bulk inventory import (pharmacy/import/*). */

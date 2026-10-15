@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useAdminAuth } from '@/auth/adminContext';
 import { ApiError } from '@/api/errors';
@@ -411,8 +411,18 @@ export function LoginPage() {
             <span className="forgot-hint">{L.forgot}</span>
           </div>
 
-          {/* 7A: one-system primary button (was the auth-only `.btn-p`). */}
-          <Btn type="submit" variant="primary" id="submitBtn" disabled={isSubmitting}>
+          {/* 7A: one-system primary button (was the auth-only `.btn-p`).
+              `auth-submit` restores the FULL width that `.btn-p` had. `.ph-btn`
+              is `inline-flex`, so without it the CTA shrank to its own label —
+              measured 120px against 435px input fields, which read as a
+              misaligned form rather than a deliberate small button. */}
+          <Btn
+            type="submit"
+            variant="primary"
+            id="submitBtn"
+            className="auth-submit"
+            disabled={isSubmitting}
+          >
             {isSubmitting
               ? L.submitting
               : isAdmin
@@ -421,7 +431,18 @@ export function LoginPage() {
           </Btn>
         </form>
 
-        <div className="auth-footer">{L.no_account}</div>
+        {/* كان نصّاً ميّتاً: «ليس لديك حساب؟ تواصل مع إدارة النظام لإنشاء حساب.»
+            — بلا رابط وبلا مسار، أي وعدٌ لا يمكن الوفاء به. الآن `/register`
+            قائم فعلاً. يظهر للصيدلية فقط: الأدمن يُنشئ حسابه من إدارة النظام،
+            ولا معنى لعرض «سجّل صيدليتك» على من اختار «أدمن». */}
+        {!isAdmin ? (
+          <div className="auth-footer">
+            {L.no_account}{' '}
+            <Link to={ROUTES.register} className="auth-footer__link">
+              {L.register_link}
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       {/* الجانب الآخر: الهوية البصرية — النصّ يتبع الدور. */}
@@ -436,7 +457,7 @@ export function LoginPage() {
               height={92}
               fetchPriority="high"
               decoding="async"
-              alt="شعار دوائي"
+              alt="شعار دواك"
               className="brand-logo-img"
             />
           </div>

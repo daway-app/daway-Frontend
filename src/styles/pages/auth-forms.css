@@ -1,5 +1,5 @@
 /* ==========================================================
-   دوائي — Auth / Login
+   دواك — Auth / Login
    نظام تصميم موحّد يعتمد حصراً على درجات التيل الخاصة بالعلامة:
    #155E85 (Deep) · #1C72A6 (Primary) · #7BC1B7 (Light)
    ========================================================== */
@@ -423,29 +423,15 @@ body.dark-mode .auth-shell {
     text-align: end;
 }
 
-/* -- الزر الأساسي -- */
-.btn-p {
+/* -- الزر الأساسي --
+   `.btn-p` حُذف: كان زر Blade القديم ولم يبقَ له أي مستخدم في React (كل
+   الشاشات صارت تستخدم `.ph-btn`). الشكل واللون يأتيان الآن من `.ph-btn.primary`،
+   وما يلزم هنا هو العرض وحده: `.ph-btn` هو inline-flex فينكمش الزر إلى عرض
+   نصّه — قيس 120px مقابل 435px لحقول الإدخال، فبدا النموذج غير متراصف.
+   القاعدة أدناه تُعيد العرض الكامل الذي كان `.btn-p` يمنحه (width: 100%). */
+.auth-submit {
     width: 100%;
-    background: linear-gradient(135deg, var(--teal-primary), var(--teal-deep));
-    color: #fff;
-    border: none;
-    padding: 14px;
-    border-radius: var(--r-sm);
-    font-size: var(--fs-md);
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: transform .2s var(--ease), box-shadow .2s var(--ease), filter .2s ease;
-    box-shadow: 0 10px 22px -6px rgba(21,94,133,.55);
 }
-
-.btn-p:hover { filter: brightness(1.06); transform: translateY(-1px); }
-.btn-p:active { transform: translateY(0); }
-.btn-p:disabled { opacity: .6; cursor: not-allowed; transform: none; }
 
 .auth-footer {
     text-align: center;

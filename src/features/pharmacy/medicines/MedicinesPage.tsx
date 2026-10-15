@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AR } from '@/lib/i18n';
+import { useUrlState } from '@/lib/urlState';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { AsyncBoundary, Btn, EmptyState } from '@/components/ui';
@@ -44,11 +45,19 @@ const STATUS_TEXT: Record<'ok' | 'low' | 'out', string> = {
 export function MedicinesPage() {
   const api = usePharmacyApi();
 
-  const [status, setStatus] = useState<Tab>('all');
+  // Phase 3: tab + committed search live in the URL (shareable, back/forward-safe).
+  const { state, set } = useUrlState({
+    tab: { key: 'tab', parse: String, serialize: String, default: 'all' },
+    q: { key: 'q', parse: String, serialize: String, default: '' },
+  });
+
+  const status = state.tab as Tab;
+  const setStatus = (value: Tab) => set({ tab: value });
   /** The committed search term — filters the loaded rows. */
-  const [q, setQ] = useState('');
+  const q = state.q as string;
+  const setQ = (value: string) => set({ q: value });
   /** The live input value. */
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(q);
 
   /**
    * ⚠️ The search is CLIENT-SIDE, on purpose.

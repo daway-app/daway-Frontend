@@ -1,12 +1,15 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/auth/authHooks';
+import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useAdminAuth } from '@/auth/adminContext';
 import { ApiError } from '@/api/errors';
 import { Btn } from '@/components/ui';
 import { AR } from '@/lib/i18n';
 import { ROUTES } from '@/routes/paths';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
+import { preloadRoute } from '@/lib/routePreload';
+import { queryClient, PRESET_STALE_TIMES } from '@/api/queryClient';
+import { pharmacyKeys } from '@/api/queryKeys';
 
 /**
  * Unified login — ONE screen for both principals, with a segmented role switch.
@@ -77,6 +80,7 @@ const LOGIN_TIMEOUT_MS = 30_000;
 export function LoginPage() {
   const pharmacyAuth = useAuth();
   const adminAuth = useAdminAuth();
+  const pharmacyApi = usePharmacyApi();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -94,6 +98,12 @@ export function LoginPage() {
   // Incremented on every explicit retry so a stale response from an abandoned
   // attempt cannot navigate the user after they have moved on.
   const attemptRef = useRef(0);
+  // Phase 1b: post-login preparing (prefetch dashboard chunk + critical data).
+  const [isPreparing, setIsPreparing] = useState(false);
+  const [prepareError, setPrepareError] = useState(false);
+  // Same registry tracks in-flight prepare attempts so a logout mid-prepare
+  // aborts it cleanly.
+  const pendingPrepareRef = useRef<Promise<void> | null>(null);
 
   const L = AR.admin.unified;
   const isAdmin = role === 'admin';
@@ -108,6 +118,77 @@ export function LoginPage() {
     // The two credential shapes are not interchangeable — see the header note.
     setIdentity('');
     setError(null);
+  }
+
+  /**
+   * Phase 2: warm the target dashboard while the post-login overlay shows.
+   *
+   *  1. preload the route's JS chunk (intent-based; browser dedupes).
+   *  2. for the PHARMACY dashboard, fire the 3 critical data requests early via
+   *     queryClient.prefetchQuery so DashboardPage finds them cached and skips
+   *     its own network round-trips.
+   *  3. race against a 12s ceiling so a slow backend never traps the user.
+   *
+   * On ANY exit path the overlay is dismissed and navigation proceeds; DashboardPage
+   * will just refetch if prefetch did not complete. A logout mid-prepare aborts
+   * (the auth stack's session-expired handler takes over).
+   */
+  async function prepareDashboard(attempt: number, isAdminDash: boolean, destination: string) {
+    if (attempt !== attemptRef.current) return;
+    setIsPreparing(true);
+    setPrepareError(false);
+
+    // 1. warm the JS chunk
+    preloadRoute(destination);
+
+    const keys = isAdminDash ? null : pharmacyKeys(pharmacyAuth.user?.id ?? 'anon');
+
+    if (!isAdminDash && keys && pharmacyAuth.isAuthenticated) {
+      // 2. prefetch the 3 dashboard queries in parallel — TanStack dedupes
+      //    so when DashboardPage mounts its useQuery(key) calls, they resolve
+      //    instantly from this pre-warmed cache.
+      // 3. race against a 12s ceiling (backend reads 3.7–9.2s per request).
+      //      allSettled lets partial success through — dashboard page shows
+      const preparePromise = Promise.allSettled([
+        queryClient.prefetchQuery({
+          queryKey: keys.dashboardStats,
+          queryFn: () => pharmacyApi.dashboardStats(),
+          staleTime: PRESET_STALE_TIMES.dashboardSummary,
+        }),
+        queryClient.prefetchQuery({
+          queryKey: keys.profile,
+          queryFn: () => pharmacyApi.profile(),
+          staleTime: PRESET_STALE_TIMES.settings,
+        }),
+        queryClient.prefetchQuery({
+          queryKey: keys.sales({ per_page: 1 }),
+          queryFn: () => pharmacyApi.sales({ per_page: 1 }),
+          staleTime: PRESET_STALE_TIMES.financial,
+        }),
+      ]).then(() => undefined);
+      pendingPrepareRef.current = preparePromise;
+
+      try {
+        await Promise.race([preparePromise, new Promise<void>((r) => setTimeout(r, 12_000))]);
+      } catch {
+        // Some requests failed — the dashboard page will show an error state.
+        // Still navigate: the dashboard's own queries have error UIs.
+      }
+
+      if (attempt !== attemptRef.current) return;
+      if (!pharmacyAuth.isAuthenticated) {
+        // Session expired mid-prepare → let session-expired redirect handle it.
+        return;
+      }
+    } else if (isAdminDash) {
+      // Admin: chunk-only warmup; navigate after letting the chunk land.
+      if (attempt !== attemptRef.current) return;
+      if (!adminAuth.isAuthenticated) return;
+    }
+
+    setIsPreparing(false);
+    pendingPrepareRef.current = null;
+    navigate(destination, { replace: true });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -136,7 +217,13 @@ export function LoginPage() {
       }
       // A newer attempt superseded this one — do not navigate on its behalf.
       if (attempt !== attemptRef.current) return;
-      navigate(redirectTo, { replace: true });
+
+      // Phase 1b: while the post-login overlay is still visible, warm the
+      // dashboard's route chunk and fire its critical data requests so the
+      // user does not trade the login spinner for a blank dashboard skeleton.
+      // A timeout / "continue anyway" fall-through still navigates — the
+      // dashboard will refetch on its own if preflight did not complete.
+      await prepareDashboard(attempt, isAdmin, redirectTo);
     } catch (caught) {
       if (attempt !== attemptRef.current) return;
       if (caught instanceof ApiError) {
@@ -159,11 +246,16 @@ export function LoginPage() {
   return (
     <div className="auth-container">
       <div
-        className={`loader-overlay${isSubmitting ? ' active' : ''}${isSlow ? ' show-slow' : ''}`}
+        className={
+          `loader-overlay` +
+          `${isSubmitting || isPreparing ? ' active' : ''}` +
+          `${isSlow ? ' show-slow' : ''}` +
+          `${prepareError ? ' prepare-error' : ''}`
+        }
         role="status"
         aria-live="polite"
-        aria-busy={isSubmitting}
-        aria-hidden={!isSubmitting}
+        aria-busy={isSubmitting || isPreparing}
+        aria-hidden={!(isSubmitting || isPreparing)}
       >
         <div className="loader-spinner-box">
           <div className="spinner" />
@@ -171,11 +263,37 @@ export function LoginPage() {
             {isAdmin ? '🛡️' : '💊'}
           </span>
         </div>
-        <div className="loader-text">{L.submitting}</div>
-        {isSlow ? (
+        <div className="loader-text">
+          {isPreparing ? L.preparing : L.submitting}
+        </div>
+        {isSlow && !isPreparing ? (
           /* Advisory only — the request is still running, so this says so
              instead of offering a retry that would abandon a live attempt. */
           <p className="loader-slow-note">{L.slow_note}</p>
+        ) : null}
+        {prepareError ? (
+          <div className="prepare-actions" role="group" aria-label={L.preparing_failed}>
+            <button
+              type="button"
+              className="modal-btn primary"
+              onClick={() => {
+                setPrepareError(false);
+                // Re-run the prepare step for the current attempt — this is
+                // safe to repeat because preflight is idempotent (browser
+                // dedupes the JS chunk; data requests are fire-and-forget).
+                prepareDashboard(attemptRef.current, isAdmin, redirectTo);
+              }}
+            >
+              {L.preparing_retry}
+            </button>
+            <button
+              type="button"
+              className="modal-btn"
+              onClick={() => navigate(redirectTo, { replace: true })}
+            >
+              {L.preparing_continue}
+            </button>
+          </div>
         ) : null}
       </div>
 

@@ -11,7 +11,9 @@ import {
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { AR, labelOf } from '@/lib/i18n';
-import { ariaSort, useSort } from '@/lib/sort';import { formatDateTime, pageInfo } from '../shared';
+import { useUrlState } from '@/lib/urlState';
+import { ariaSort, useSort } from '@/lib/sort';
+import { formatDateTime, pageInfo } from '../shared';
 import type { AdminLogsResponse, AdminLogRow } from '@/api/adminTypes';
 
 /**
@@ -36,22 +38,36 @@ import type { AdminLogsResponse, AdminLogRow } from '@/api/adminTypes';
 export function AdminLogsPage() {
   const api = useAdminApi();
 
-  const [q, setQ] = useState('');
-  const [event, setEvent] = useState<'all' | 'created' | 'updated' | 'deleted' | 'auth'>('all');
-  const [date, setDate] = useState('');
-  const [page, setPage] = useState(1);
-  const [debouncedQ, setDebouncedQ] = useState('');
+  // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
+  const { state, set } = useUrlState({
+    q: { key: 'q', parse: String, serialize: String, default: '' },
+    event: { key: 'event', parse: String, serialize: String, default: 'all' },
+    date: { key: 'date', parse: String, serialize: String, default: '' },
+    page: { key: 'page', parse: (r) => Number(r) || 1, serialize: String, default: 1 },
+  });
+
+  /** The live input value; the URL `q` is the committed (debounced) term. */
+  const [q, setQ] = useState(state.q as string);
+  const committedQ = state.q as string;
+  const event = state.event as 'all' | 'created' | 'updated' | 'deleted' | 'auth';
+  const setEvent = (value: typeof event) => set({ event: value, page: 1 });
+  const date = state.date as string;
+  const setDate = (value: string) => set({ date: value, page: 1 });
+  const page = Math.max(1, Number(state.page) || 1);
+  const setPage = (value: number | ((p: number) => number)) => {
+    set({ page: typeof value === 'function' ? value(page) : value });
+  };
 
   const L = AR.admin.logs;
   const C = AR.admin.common;
 
+  // Debounce the search — commit only when the term changed (see AdminMedicinesPage).
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQ(q);
-      setPage(1);
+      if (q !== committedQ) set({ q, page: 1 });
     }, 350);
     return () => clearTimeout(timer);
-  }, [q]);
+  }, [q, committedQ, set]);
 
   /** Machine token → Arabic label, with the token as a safe fallback. */
   const EVENT_LABELS: Record<string, string> = {
@@ -66,7 +82,7 @@ export function AdminLogsPage() {
     (signal) =>
       api.admin.logs(
         {
-          q: debouncedQ,
+          q: committedQ,
           // `auth` is a client-side grouping the API does not know; the two
           // real tokens behind it are sent as-is only when one is chosen.
           event: event === 'all' || event === 'auth' ? '' : event,
@@ -76,7 +92,7 @@ export function AdminLogsPage() {
         },
         signal,
       ),
-    [debouncedQ, event, date, page],
+    [committedQ, event, date, page],
   );
 
   const rows = useMemo(() => query.data?.logs ?? [], [query.data]);
@@ -88,9 +104,7 @@ export function AdminLogsPage() {
   const isFiltered = q.trim() !== '' || event !== 'all' || date !== '';
   function clearFilters() {
     setQ('');
-    setEvent('all');
-    setDate('');
-    setPage(1);
+    set({ q: '', event: 'all', date: '', page: 1 });
   }
 
   /*

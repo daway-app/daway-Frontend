@@ -58,6 +58,10 @@ const userDataDir = mkdtempSync(join(tmpdir(), 'daway-nav-'));
 const port = 9800 + Math.floor(Math.random() * 200);
 
 const chrome = spawn(CHROME, [
+  // Chrome otherwise honours the SYSTEM proxy, which routes 127.0.0.1 through
+  // the sandbox proxy and fails ("upstream connect error"). Same fix as
+  // screens.mjs / probe-inventory.mjs.
+  '--no-proxy-server',
   '--headless=new', '--disable-gpu', '--hide-scrollbars', '--no-first-run',
   '--no-default-browser-check', `--user-data-dir=${userDataDir}`,
   `--remote-debugging-port=${port}`, 'about:blank',

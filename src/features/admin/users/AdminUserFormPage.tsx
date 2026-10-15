@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Btn, FormField, LoadingState, Notice } from '@/components/ui';
+import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { AR } from '@/lib/i18n';
@@ -61,6 +62,21 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | null>(null);
 
+  /**
+   * The values the form was seeded with. `dirty` compares against this so the
+   * unsaved-changes guard only fires on real edits.
+   */
+  const [baseline, setBaseline] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    role: 'patient' as 'admin' | 'pharmacy' | 'patient',
+    status: true,
+  });
+  /** Flipped immediately before the post-save redirect so the guard does not
+   *  intercept its own success navigation (see UnsavedChangesGuard). */
+  const allowLeaveRef = useRef(false);
+
   /* ---- load (edit only) ------------------------------------------------- */
   const detail = useApiQuery<AdminUserDetail>(
     (signal) => api.admin.user(Number(id), signal),
@@ -78,7 +94,23 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
     setEmail(u.email ?? '');
     setRole((u.role as typeof role) ?? 'patient');
     setStatus(Boolean(u.is_active));
+    setBaseline({
+      name: u.name ?? '',
+      phone: u.phone ?? '',
+      email: u.email ?? '',
+      role: (u.role as typeof role) ?? 'patient',
+      status: Boolean(u.is_active),
+    });
   }, [isEdit, detail.data]);
+
+  /** True once the user has changed any field away from its seeded value. */
+  const dirty =
+    name !== baseline.name ||
+    phone !== baseline.phone ||
+    email !== baseline.email ||
+    role !== baseline.role ||
+    status !== baseline.status ||
+    password !== '';
 
   /**
    * The role select is disabled for a pharmacy-linked account.
@@ -176,6 +208,8 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
         });
         toast.success(F.created);
       }
+      // The save succeeded — this redirect is not a "discard", so let it through.
+      allowLeaveRef.current = true;
       navigate(ADMIN_ROUTES.users);
     } catch (err) {
       const message = err instanceof Error && err.message ? err.message : F.save_failed;
@@ -199,6 +233,8 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
   return (
     <div className="admin-page">
+      {/* Guard the half-filled form: leaving now would discard the edits. */}
+      <UnsavedChangesGuard when={() => dirty && !allowLeaveRef.current} />
       <div className="page-wrapper">
         <div className="main-card">
           <div className="card-header-modern">

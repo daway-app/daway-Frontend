@@ -12,6 +12,7 @@ import { toast } from '@/lib/toast';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { AR } from '@/lib/i18n';
+import { useUrlState } from '@/lib/urlState';
 import { num, pageInfo, timeAgo } from '../shared';
 import { CredentialsModal } from './CredentialsModal';
 import type { AdminPharmaciesResponse, DeliveredCredentials } from '@/api/adminTypes';
@@ -69,10 +70,22 @@ function hasCoords(lat: number | string | null, lng: number | string | null): bo
 export function AdminPharmaciesPage() {
   const api = useAdminApi();
 
-  const [q, setQ] = useState('');
-  const [status, setStatus] = useState<'all' | 'active' | 'disabled'>('all');
-  const [page, setPage] = useState(1);
-  const [debouncedQ, setDebouncedQ] = useState('');
+  // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
+  const { state, set } = useUrlState({
+    q: { key: 'q', parse: String, serialize: String, default: '' },
+    status: { key: 'status', parse: String, serialize: String, default: 'all' },
+    page: { key: 'page', parse: (r) => Number(r) || 1, serialize: String, default: 1 },
+  });
+
+  /** The live input value; the URL `q` is the committed (debounced) term. */
+  const [q, setQ] = useState(state.q as string);
+  const committedQ = state.q as string;
+  const status = state.status as 'all' | 'active' | 'disabled';
+  const setStatus = (value: typeof status) => set({ status: value, page: 1 });
+  const page = Math.max(1, Number(state.page) || 1);
+  const setPage = (value: number | ((p: number) => number)) => {
+    set({ page: typeof value === 'function' ? value(page) : value });
+  };
 
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState('');
@@ -114,18 +127,18 @@ export function AdminPharmaciesPage() {
 
   const C = AR.admin.pharmacies;
 
-  // Debounce the search so typing does not fire a request per keystroke.
+  // Debounce the search so typing does not fire a request per keystroke — and
+  // only commit when the term changed, so a deep link is not rewritten on mount.
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQ(q);
-      setPage(1);
+      if (q !== committedQ) set({ q, page: 1 });
     }, 350);
     return () => clearTimeout(timer);
-  }, [q]);
+  }, [q, committedQ, set]);
 
   const query = useApiQuery<AdminPharmaciesResponse>(
-    (signal) => api.admin.pharmacies({ q: debouncedQ, status, page, per_page: 50 }, signal),
-    [debouncedQ, status, page],
+    (signal) => api.admin.pharmacies({ q: committedQ, status, page, per_page: 50 }, signal),
+    [committedQ, status, page],
   );
 
   const data = query.data;
@@ -137,8 +150,7 @@ export function AdminPharmaciesPage() {
   const isFiltered = q.trim() !== '' || status !== 'all';
   function clearFilters() {
     setQ('');
-    setStatus('all');
-    setPage(1);
+    set({ q: '', status: 'all', page: 1 });
   }
 
   const createMutation = useApiMutation(async (name: string) =>

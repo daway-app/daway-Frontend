@@ -1,13 +1,16 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AR } from '@/lib/i18n';
 import { AsyncBoundary, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
 import { usePharmacyApi } from '@/auth/authHooks';
+import { useAuth } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
+import { pharmacyKeys } from '@/api/queryKeys';
 import { money } from '@/lib/format';
 import { round2 } from '@/lib/money';
+import { readDraft, writeDraft, clearDraft } from '@/lib/drafts';
 import type { ApiCustomer, ApiInventoryItem, PaymentMethod } from '@/api/pharmacyTypes';
 import { ROUTES } from '@/routes/paths';
 import { buildSalePayload, type CartLine, type SalePayload } from './salePayload';
@@ -72,6 +75,8 @@ interface CatalogItem {
 
 export function AccountingSaleCreatePage() {
   const api = usePharmacyApi();
+  const { user } = useAuth();
+  const keys = pharmacyKeys(user?.id ?? 'anon');
 
   const [cart, setCart] = useState<CartLine[]>([]);
   const [barcode, setBarcode] = useState('');
@@ -87,6 +92,50 @@ export function AccountingSaleCreatePage() {
   const [savedNumber, setSavedNumber] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
+  /*
+   * Phase 3: cart draft persistence (sessionStorage, identity-scoped).
+   *
+   * The keep-alive wrapper (KeepAliveOutlet) already preserves the MOUNTED
+   * instance across in-session navigation. The draft covers the harder cases:
+   * a full page refresh, or a logout/login cycle by the SAME pharmacy. The
+   * restored cart is a DRAFT ONLY — prices and stock are re-validated from the
+   * live inventory catalogue on submit (buildSalePayload reads the live rows),
+   * so a cached cart line can never "prove" a stale price or availability.
+   */
+  const DRAFT_ROUTE = 'accounting/sales/create';
+  const draftLoadedRef = useRef(false);
+
+  // Restore once on mount.
+  useEffect(() => {
+    if (draftLoadedRef.current) return;
+    draftLoadedRef.current = true;
+    const saved = readDraft<{ cart: CartLine[]; customerId: number | null; customerName: string }>(
+      user?.id ?? 'anon',
+      DRAFT_ROUTE,
+    );
+    if (saved?.cart?.length) {
+      setCart(saved.cart);
+      if (saved.customerId != null) {
+        setCustomerId(saved.customerId);
+        setCustomerName(saved.customerName ?? '');
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- restore-once on purpose
+  }, []);
+
+  // Persist (debounced-ish: coalesced by React batching on each cart mutation).
+  useEffect(() => {
+    if (!draftLoadedRef.current) return;
+    if (cart.length === 0) {
+      clearDraft(user?.id ?? 'anon', DRAFT_ROUTE);
+      return;
+    }
+    writeDraft(user?.id ?? 'anon', DRAFT_ROUTE, { cart, customerId, customerName });
+    // customerName is derived state of customerId — tracking both keeps the
+    // draft self-contained without depending on the input field value.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cart is the trigger
+  }, [cart, customerId, user?.id]);
+
   const inventory = useApiQuery<{ data: ApiInventoryItem[] }>(
     // 🔴 `per_page` is CAPPED AT 100 by the backend (`max:100`). Sending 200
     // returns HTTP 422 "يجب ألا تكون قيمة الحقل per page أكبر من 100" and the
@@ -101,7 +150,21 @@ export function AccountingSaleCreatePage() {
     [],
   );
 
-  const createSale = useApiMutation((body: SalePayload) => api.createSale(body));
+  const createSale = useApiMutation(
+    (body: SalePayload) => api.createSale(body),
+    {
+      // A completed sale affects: this sale's inventory (stock ↓), the sales
+      // list, the cash register, and the dashboard summary. All refresh via
+      // one invalidation — no manual refetch() calls needed.
+      invalidates: [
+        keys.inventory.all,
+        keys.sales({ per_page: 50 }),
+        keys.cash({ per_page: 50 }),
+        keys.dashboardStats,
+        keys.sidebarCounts,
+      ],
+    },
+  );
 
   /** The sellable catalogue, flattened from the inventory payload. */
   const catalog = useMemo<CatalogItem[]>(
@@ -267,13 +330,15 @@ export function AccountingSaleCreatePage() {
        */
       toast.success(A.pos.sale_saved);
       setSavedNumber(sale.number);
-      // Reset the till for the next sale.
+      // Reset the till for the next sale — and drop the draft with it, so a
+      // refresh never resurrects a cart that was already paid.
       setCart([]);
       setPaid('');
       setCustomerId(null);
       setCustomerName('');
       setCustomerQuery('');
       setBarcode('');
+      clearDraft(user?.id ?? 'anon', DRAFT_ROUTE);
       setScanFound(null);
       setSearch('');
     } catch {

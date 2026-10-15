@@ -9,6 +9,8 @@ import { IconMoon, IconSun } from '@/components/layout/icons';
 import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
+import { adminKeys } from '@/api/queryKeys';
+import { PRESET_STALE_TIMES } from '@/api/queryClient';
 import type { AdminProfile } from '@/api/adminTypes';
 
 /**
@@ -40,8 +42,12 @@ export function AdminLayout() {
   // الذي تستخدمه صفحة الملف الشخصي، فالـcache يتشارك. عند غيابه: الحرف الأول.
   const profileQuery = useApiQuery<{ user: AdminProfile }>(
     (signal) => api.admin.profile(signal),
-    [],
-    { isEmpty: () => false },
+    [user?.id],
+    {
+      queryKey: adminKeys(user?.id ?? 'anon').profile,
+      staleTime: PRESET_STALE_TIMES.settings,
+      isEmpty: () => false,
+    },
   );
   // مطابق لـBlade: thumbUrl(avatar, 84, 84) كخلفية دائرية لـ`.avatar`.
   const avatarUrl = thumbUrl(profileQuery.data?.user?.avatar_url ?? null, 84, 84);

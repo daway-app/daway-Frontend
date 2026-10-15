@@ -4,6 +4,8 @@ import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
 import { preloadRoute } from '@/lib/routePreload';
 import { useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
+import { adminKeys } from '@/api/queryKeys';
+import { PRESET_STALE_TIMES } from '@/api/queryClient';
 import type { AdminProfile } from '@/api/adminTypes';
 import { AR } from '@/lib/i18n';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
@@ -67,8 +69,14 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
   // الأدمن هو نفس عمود users.avatar مُحلولًا من الخادم.
   const profileQuery = useApiQuery<{ user: AdminProfile }>(
     (signal) => api.admin.profile(signal),
-    [],
-    { isEmpty: () => false },
+    [user?.id],
+    {
+      // Shared key with AdminLayout — TanStack dedupes the GET so the profile
+      // is fetched ONCE per admin session, not twice per page mount.
+      queryKey: adminKeys(user?.id ?? 'anon').profile,
+      staleTime: PRESET_STALE_TIMES.settings,
+      isEmpty: () => false,
+    },
   );
   const avatarUrl = thumbUrl(profileQuery.data?.user?.avatar_url ?? null, 84, 84);
 

@@ -11,6 +11,7 @@ import {
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { AR } from '@/lib/i18n';
+import { useUrlState } from '@/lib/urlState';
 import { money, num, pageInfo, tpl } from '../shared';
 import { thumbUrl } from '@/lib/format';
 import { ariaSort, useSort } from '@/lib/sort';
@@ -40,26 +41,40 @@ import type { AdminMedicinesResponse, AdminMedicine } from '@/api/adminTypes';
 export function AdminMedicinesPage() {
   const api = useAdminApi();
 
-  const [q, setQ] = useState('');
-  const [status, setStatus] = useState<'all' | 'available' | 'low' | 'out'>('all');
-  const [page, setPage] = useState(1);
-  const [debouncedQ, setDebouncedQ] = useState('');
+  // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
+  const { state, set } = useUrlState({
+    q: { key: 'q', parse: String, serialize: String, default: '' },
+    status: { key: 'status', parse: String, serialize: String, default: 'all' },
+    page: { key: 'page', parse: (r) => Number(r) || 1, serialize: String, default: 1 },
+  });
+
+  /** The live input value; the URL `q` is the committed (debounced) term. */
+  const [q, setQ] = useState(state.q as string);
+  const committedQ = state.q as string;
+  const status = state.status as 'all' | 'available' | 'low' | 'out';
+  const setStatus = (value: typeof status) => set({ status: value, page: 1 });
+  const page = Math.max(1, Number(state.page) || 1);
+  const setPage = (value: number | ((p: number) => number)) => {
+    set({ page: typeof value === 'function' ? value(page) : value });
+  };
   const [pendingDelete, setPendingDelete] = useState<AdminMedicine | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const M = AR.admin.medicines;
 
+  // Commit the live input to the URL after a pause, and reset to page 1 — but
+  // only when the term actually changed, so a deep link (`?q=…&page=3`) is not
+  // rewritten on mount.
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQ(q);
-      setPage(1);
+      if (q !== committedQ) set({ q, page: 1 });
     }, 350);
     return () => clearTimeout(timer);
-  }, [q]);
+  }, [q, committedQ, set]);
 
   const query = useApiQuery<AdminMedicinesResponse>(
-    (signal) => api.admin.medicines({ q: debouncedQ, status, page, per_page: 50 }, signal),
-    [debouncedQ, status, page],
+    (signal) => api.admin.medicines({ q: committedQ, status, page, per_page: 50 }, signal),
+    [committedQ, status, page],
   );
 
   const rows = useMemo(() => query.data?.medicines ?? [], [query.data]);
@@ -72,8 +87,7 @@ export function AdminMedicinesPage() {
   const isFiltered = q.trim() !== '' || status !== 'all';
   function clearFilters() {
     setQ('');
-    setStatus('all');
-    setPage(1);
+    set({ q: '', status: 'all', page: 1 });
   }
 
   async function confirmDelete() {

@@ -14,6 +14,7 @@ import { toast } from '@/lib/toast';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { AR } from '@/lib/i18n';
+import { useUrlState } from '@/lib/urlState';
 import { formatDate, num, pageInfo } from '../shared';
 import type { AdminMedicineRequestsResponse, AdminMedicineRequest } from '@/api/adminTypes';
 
@@ -41,10 +42,22 @@ import type { AdminMedicineRequestsResponse, AdminMedicineRequest } from '@/api/
 export function AdminMedicineRequestsPage() {
   const api = useAdminApi();
 
-  const [status, setStatus] = useState<'pending' | 'approved' | 'rejected'>('pending');
-  const [q, setQ] = useState('');
-  const [page, setPage] = useState(1);
-  const [debouncedQ, setDebouncedQ] = useState('');
+  // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
+  const { state, set } = useUrlState({
+    status: { key: 'status', parse: String, serialize: String, default: 'pending' },
+    q: { key: 'q', parse: String, serialize: String, default: '' },
+    page: { key: 'page', parse: (r) => Number(r) || 1, serialize: String, default: 1 },
+  });
+
+  const status = state.status as 'pending' | 'approved' | 'rejected';
+  const setStatus = (value: typeof status) => set({ status: value, page: 1 });
+  /** The live input value; the URL `q` is the committed (debounced) term. */
+  const [q, setQ] = useState(state.q as string);
+  const committedQ = state.q as string;
+  const page = Math.max(1, Number(state.page) || 1);
+  const setPage = (value: number | ((p: number) => number)) => {
+    set({ page: typeof value === 'function' ? value(page) : value });
+  };
   const [reviewing, setReviewing] = useState<AdminMedicineRequest | null>(null);
   const [rejecting, setRejecting] = useState<AdminMedicineRequest | null>(null);
   const [rejectNotes, setRejectNotes] = useState('');
@@ -56,17 +69,17 @@ export function AdminMedicineRequestsPage() {
 
   const R = AR.admin.requests;
 
+  // Debounce the search — commit only when the term changed (see AdminMedicinesPage).
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQ(q);
-      setPage(1);
+      if (q !== committedQ) set({ q, page: 1 });
     }, 350);
     return () => clearTimeout(timer);
-  }, [q]);
+  }, [q, committedQ, set]);
 
   const query = useApiQuery<AdminMedicineRequestsResponse>(
-    (signal) => api.admin.medicineRequests({ q: debouncedQ, status, page, per_page: 25 }, signal),
-    [debouncedQ, status, page],
+    (signal) => api.admin.medicineRequests({ q: committedQ, status, page, per_page: 25 }, signal),
+    [committedQ, status, page],
   );
 
   const rows = useMemo(() => query.data?.requests ?? [], [query.data]);
@@ -83,8 +96,7 @@ export function AdminMedicineRequestsPage() {
   const isFiltered = q.trim() !== '' || status !== 'pending';
   function clearFilters() {
     setQ('');
-    setStatus('pending');
-    setPage(1);
+    set({ q: '', status: 'pending', page: 1 });
   }
 
   const approveMutation = useApiMutation(

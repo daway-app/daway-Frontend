@@ -3,6 +3,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import { Toaster } from '@/components/ui';
 import { PushPermissionBanner } from '@/components/pharmacy/PushPermissionBanner';
+import { KeepAliveOutlet } from '@/layouts/KeepAliveOutlet';
 
 /**
  * Authenticated pharmacy shell.
@@ -51,7 +52,11 @@ export function AppLayout() {
                 renders null until its usage signal is met (see the component
                 and lib/pushPermission.ts). */}
             <PushPermissionBanner />
-            <Outlet />
+            {/* KeepAliveOutlet instead of <Outlet />: preserves the POS cart
+                page (accounting/sales/create) across navigation — see
+                layouts/KeepAliveOutlet.tsx. Behaves exactly like <Outlet />
+                for every other route. */}
+            <KeepAliveOutlet />
           </main>
         </div>
       </div>

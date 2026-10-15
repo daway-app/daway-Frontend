@@ -3,9 +3,10 @@ import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary, Card, SetupChecklist, StatCard } from '@/components/ui';
 import type { SetupStep } from '@/components/ui';
 import { AR } from '@/lib/i18n';
-import { usePharmacyApi } from '@/auth/authHooks';
-import { useAuth } from '@/auth/authHooks';
+import { usePharmacyApi, useAuth } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
+import { pharmacyKeys } from '@/api/queryKeys';
+import { PRESET_STALE_TIMES } from '@/api/queryClient';
 import { relativeTime } from '@/lib/format';
 import type { ApiDashboardStats, ApiPharmacyProfile, ApiSalesList } from '@/api/pharmacyTypes';
 
@@ -26,11 +27,16 @@ const S = AR.pharmacy.status;
 export function DashboardPage() {
   const api = usePharmacyApi();
   const { user } = useAuth();
+  const keys = pharmacyKeys(user?.id ?? 'anon');
 
   const query = useApiQuery<ApiDashboardStats>(
     (signal) => api.dashboardStats(signal),
-    [],
-    { isEmpty: () => false },
+    [user?.id],
+    {
+      queryKey: keys.dashboardStats,
+      staleTime: PRESET_STALE_TIMES.dashboardSummary,
+      isEmpty: () => false,
+    },
   );
 
   /*
@@ -46,11 +52,13 @@ export function DashboardPage() {
    */
   const profileQuery = useApiQuery<ApiPharmacyProfile>(
     (signal) => api.profile(signal),
-    [],
+    [user?.id],
+    { queryKey: keys.profile, staleTime: PRESET_STALE_TIMES.settings },
   );
   const salesQuery = useApiQuery<ApiSalesList>(
     (signal) => api.sales({ per_page: 1 }, signal),
-    [],
+    [user?.id],
+    { queryKey: keys.sales({ per_page: 1 }), staleTime: PRESET_STALE_TIMES.financial },
   );
 
   const data = query.data;

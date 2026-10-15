@@ -5,6 +5,7 @@ import { toast } from '@/lib/toast';
 import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { AR, roleLabel } from '@/lib/i18n';
+import { useUrlState } from '@/lib/urlState';
 import { ariaSort, useSort } from '@/lib/sort';
 import { thumbUrl } from '@/lib/format';
 import { num, pageInfo, tpl } from '../shared';
@@ -78,27 +79,39 @@ export function AdminUsersPage() {
   const api = useAdminApi();
   const { user: currentUser } = useAdminAuth();
 
-  const [q, setQ] = useState('');
-  const [role, setRole] = useState<'all' | 'admin' | 'pharmacy' | 'patient'>('all');
-  const [page, setPage] = useState(1);
-  const [debouncedQ, setDebouncedQ] = useState('');
+  // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
+  const { state, set } = useUrlState({
+    q: { key: 'q', parse: String, serialize: String, default: '' },
+    role: { key: 'role', parse: String, serialize: String, default: 'all' },
+    page: { key: 'page', parse: (r) => Number(r) || 1, serialize: String, default: 1 },
+  });
+
+  /** The live input value; the URL `q` is the committed (debounced) term. */
+  const [q, setQ] = useState(state.q as string);
+  const committedQ = state.q as string;
+  const role = state.role as 'all' | 'admin' | 'pharmacy' | 'patient';
+  const setRole = (value: typeof role) => set({ role: value, page: 1 });
+  const page = Math.max(1, Number(state.page) || 1);
+  const setPage = (value: number | ((p: number) => number)) => {
+    set({ page: typeof value === 'function' ? value(page) : value });
+  };
   const [confirmAction, setConfirmAction] = useState<
     { kind: 'delete' | 'toggle'; row: AdminUserRow } | null
   >(null);
 
   const U = AR.admin.users;
 
+  // Debounce the search — commit only when the term changed (see AdminMedicinesPage).
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedQ(q);
-      setPage(1);
+      if (q !== committedQ) set({ q, page: 1 });
     }, 350);
     return () => clearTimeout(timer);
-  }, [q]);
+  }, [q, committedQ, set]);
 
   const query = useApiQuery<AdminUsersResponse>(
-    (signal) => api.admin.users({ q: debouncedQ, role, page, per_page: 50 }, signal),
-    [debouncedQ, role, page],
+    (signal) => api.admin.users({ q: committedQ, role, page, per_page: 50 }, signal),
+    [committedQ, role, page],
   );
 
   const rows = useMemo(() => query.data?.users ?? [], [query.data]);
@@ -111,8 +124,7 @@ export function AdminUsersPage() {
   const isFiltered = q.trim() !== '' || role !== 'all';
   function clearFilters() {
     setQ('');
-    setRole('all');
-    setPage(1);
+    set({ q: '', role: 'all', page: 1 });
   }
 
   const toggleMutation = useApiMutation(async (id: number) => api.admin.toggleUser(id));

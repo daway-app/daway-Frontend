@@ -20,9 +20,12 @@
  * navigates (the query is keyed on the pathname), which is exactly when they
  * look at it.
  */
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { usePharmacyApi } from '@/auth/authHooks';
+import { useAuth } from '@/auth/authHooks';
 import { countStock } from '@/lib/stock';
+import { pharmacyKeys } from '@/api/queryKeys';
+import { PRESET_STALE_TIMES } from '@/api/queryClient';
 
 export interface SidebarCounts {
   /** Inquiries the pharmacy has not replied to yet — `counts.new`. */
@@ -47,22 +50,23 @@ const EMPTY: SidebarCounts = { newInquiries: 0, lowStock: 0 };
  */
 export function useSidebarCounts(): SidebarCounts {
   const api = usePharmacyApi();
-  const [counts, setCounts] = useState<SidebarCounts>(EMPTY);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    let alive = true;
-
-    (async () => {
+  const { user } = useAuth();
+  const { data } = useQuery<SidebarCounts>({
+    // Shared key so mutations (e.g. replying to an inquiry) can invalidate
+    // the badge with a single invalidateQueries(pharmacyKeys(id).sidebarCounts).
+    queryKey: pharmacyKeys(user?.id ?? 'anon').sidebarCounts,
+    staleTime: PRESET_STALE_TIMES.inquiries,
+    // No retry on failure — a stale `0` is preferable to a retry storm against
+    // a remote DB for a decorative badge.
+    retry: false,
+    queryFn: async (ctx) => {
       const [inquiries, inventory] = await Promise.allSettled([
         // `per_page: 1` — the counts come from the envelope, so there is no
         // reason to transfer rows. This is the whole point of using the list
         // endpoint for a badge.
-        api.inquiries({ per_page: 1 }, controller.signal),
-        api.inventory({ per_page: 100 }, controller.signal),
+        api.inquiries({ per_page: 1 }, ctx.signal),
+        api.inventory({ per_page: 100 }, ctx.signal),
       ]);
-
-      if (!alive) return;
 
       const next: SidebarCounts = { ...EMPTY };
 
@@ -85,14 +89,9 @@ export function useSidebarCounts(): SidebarCounts {
         next.lowStock = countStock(inventory.value.data ?? []).low;
       }
 
-      setCounts(next);
-    })();
+      return next;
+    },
+  });
 
-    return () => {
-      alive = false;
-      controller.abort();
-    };
-  }, [api]);
-
-  return counts;
+  return data ?? EMPTY;
 }

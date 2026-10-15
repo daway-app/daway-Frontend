@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AsyncBoundary, Badge, Btn, Card, Notice, PageHeader } from '@/components/ui';
+import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 import { toast } from '@/lib/toast';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
@@ -155,8 +156,20 @@ export function AdminSettingsPage() {
 
   const visibleFields = useMemo(() => FIELDS.filter((f) => f.tab === tab), [tab]);
 
+  /** True when the draft differs from what the server currently holds. */
+  const dirty = useMemo(() => {
+    if (!settings) return false;
+    return FIELDS.some((field) => {
+      const raw = settings[field.key] ?? '';
+      const serverValue = field.kind === 'toggle' ? raw === '1' : raw;
+      return draft[field.key] !== serverValue;
+    });
+  }, [draft, settings]);
+
   return (
     <>
+      {/* Guard unsaved configuration: these edits live only in component state. */}
+      <UnsavedChangesGuard when={dirty} />
       <PageHeader
         title={S.title}
         subtitle={AR.admin.nav.system_settings}

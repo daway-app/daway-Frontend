@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Btn, FormField, LoadingState, Notice, PageHeader } from '@/components/ui';
+import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 import { useAdminApi } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { AR } from '@/lib/i18n';
@@ -57,6 +58,22 @@ export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * The values the form was seeded with. `dirty` compares against this so the
+   * unsaved-changes guard only fires on real edits — a fresh create form is not
+   * "dirty" until the user types.
+   */
+  const [baseline, setBaseline] = useState({
+    nameAr: '',
+    ingredient: '',
+    description: '',
+    image: '',
+    altIds: [] as number[],
+  });
+  /** Flipped immediately before the post-save redirect so the guard does not
+   *  intercept its own success navigation (see UnsavedChangesGuard). */
+  const allowLeaveRef = useRef(false);
+
   /* ---- load (edit only) ------------------------------------------------- */
   const detail = useApiQuery<AdminMedicineDetail>(
     (signal) => api.admin.medicine(Number(id), signal),
@@ -81,7 +98,22 @@ export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
     setDescription(d.description ?? '');
     setImage(d.image_url ?? '');
     setAltIds(d.alternative_ids ?? []);
+    setBaseline({
+      nameAr: d.trade_name ?? '',
+      ingredient: d.active_ingredient ?? '',
+      description: d.description ?? '',
+      image: d.image_url ?? '',
+      altIds: d.alternative_ids ?? [],
+    });
   }, [isEdit, detail.data]);
+
+  /** True once the user has changed any field away from its seeded value. */
+  const dirty =
+    nameAr !== baseline.nameAr ||
+    ingredient !== baseline.ingredient ||
+    description !== baseline.description ||
+    image !== baseline.image ||
+    altIds.join(',') !== baseline.altIds.join(',');
 
   /* ---- alternatives search --------------------------------------------- */
   const [altTerm, setAltTerm] = useState('');
@@ -157,6 +189,8 @@ export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
         await api.admin.createMedicine(body);
         toast.success(M.created);
       }
+      // The save succeeded — this redirect is not a "discard", so let it through.
+      allowLeaveRef.current = true;
       navigate(ADMIN_ROUTES.medicines);
     } catch (err) {
       // The server's own Arabic message wins — Laravel localises 422s.
@@ -173,6 +207,8 @@ export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
   return (
     <div className="admin-page">
+      {/* Guard the half-filled form: leaving now would discard the edits. */}
+      <UnsavedChangesGuard when={() => dirty && !allowLeaveRef.current} />
       <div className="edit-medicine-page-wrapper">
         {/* Was a hand-rolled `.page-heading` (22px title, its own 52px icon
             box). `PageHeader` is the same header every other screen uses. */}

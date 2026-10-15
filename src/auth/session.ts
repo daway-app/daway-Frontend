@@ -2,6 +2,7 @@ import { createApiClient, type ApiClient } from '@/api/client';
 import { createAuthApi, type AuthApi } from '@/api/authApi';
 import { createPharmacyApi, type PharmacyApi } from '@/api/pharmacyApi';
 import { createAdminApi, type AdminApi } from '@/api/adminApi';
+import { queryClient } from '@/api/queryClient';
 import {
   browserAdminTokenStorage,
   browserAdminUserStorage,
@@ -97,6 +98,10 @@ export function createApiStack(options?: {
     isAuthenticated: (): boolean => tokens.get() !== null,
 
     async login(pharmacyId: string, password: string): Promise<AuthUser> {
+      // Clear any cache from a previous session so data from one account can
+      // never appear for the next (e.g. a different pharmacy logging in on
+      // a shared browser). The cache is repopulated as routes mount.
+      queryClient.clear();
       const result = await auth.login({
         pharmacy_id: pharmacyId,
         password,
@@ -116,6 +121,10 @@ export function createApiStack(options?: {
         tokens.clear();
         user = null;
         browserUserStorage.clear();
+        // Phase 2: purge the entire query cache so NO private data (stats,
+        // inventory, financials) survives logout — not even in memory. The
+        // next login calls queryClient.clear() again before populating.
+        queryClient.clear();
         notify();
       }
     },
@@ -215,6 +224,9 @@ export function createAdminApiStack(options?: {
     isAuthenticated: (): boolean => tokens.get() !== null,
 
     async login(email: string, password: string): Promise<AdminUser> {
+      // Clear any cache from a previous pharmacy/admin session (shared cache
+      // — see queryClient.ts). No cross-role data leakage in either direction.
+      queryClient.clear();
       const response = await admin.login(email, password);
       const payload = response.data;
 
@@ -240,6 +252,7 @@ export function createAdminApiStack(options?: {
         tokens.clear();
         user = null;
         browserAdminUserStorage.clear();
+        queryClient.clear();
         notify();
       }
     },

@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { AR, labelOf } from '@/lib/i18n';
+import { useUrlState } from '@/lib/urlState';
 import { AsyncBoundary, Btn, EmptyState } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -61,9 +62,21 @@ const PER_PAGE = 25;
 export function AccountingCashPage() {
   const api = usePharmacyApi();
 
-  const [sourceType, setSourceType] = useState<string>('all');
-  const [direction, setDirection] = useState<DirectionKey>('all');
-  const [page, setPage] = useState(1);
+  // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
+  const { state, set } = useUrlState({
+    source: { key: 'source', parse: String, serialize: String, default: 'all' },
+    direction: { key: 'direction', parse: String, serialize: String, default: 'all' },
+    page: { key: 'page', parse: (r) => Number(r) || 1, serialize: String, default: 1 },
+  });
+
+  const sourceType = state.source as string;
+  const setSourceType = (value: string) => set({ source: value, page: 1 });
+  const direction = state.direction as DirectionKey;
+  const setDirection = (value: DirectionKey) => set({ direction: value, page: 1 });
+  const page = Math.max(1, Number(state.page) || 1);
+  const setPage = (value: number | ((p: number) => number)) => {
+    set({ page: typeof value === 'function' ? value(page) : value });
+  };
 
   const query = useApiQuery<{
     data: ApiCashMovement[];

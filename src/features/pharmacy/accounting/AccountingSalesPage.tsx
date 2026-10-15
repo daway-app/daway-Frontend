@@ -5,6 +5,7 @@ import { AsyncBoundary, Modal } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { money, statusBadgeClass } from '@/lib/format';
+import { useUrlState } from '@/lib/urlState';
 import type { ApiSale, ApiSalesStats } from '@/api/pharmacyTypes';
 import { ROUTES } from '@/routes/paths';
 
@@ -77,13 +78,40 @@ function filterValue(value: string): string | undefined {
 export function AccountingSalesPage() {
   const api = usePharmacyApi();
 
-  const [q, setQ] = useState('');
-  /** The committed search term — only this drives the request. */
-  const [committedQ, setCommittedQ] = useState('');
-  const [range, setRange] = useState<RangeKey>('all');
-  const [method, setMethod] = useState<MethodKey>('all');
-  const [status, setStatus] = useState<StatusKey>('all');
-  const [page, setPage] = useState(1);
+  /*
+   * Phase 3: list state lives in the URL (q/range/method/status/page).
+   * Filters, sorting position and pagination survive navigation away/back,
+   * browser refresh, and are shareable as links — with `replace: true` so
+   * filter tweaking never floods the history stack.
+   */
+  const { state, set, reset } = useUrlState({
+    q: { key: 'q', parse: String, serialize: String, default: '' },
+    range: { key: 'range', parse: String, serialize: String, default: 'all' },
+    method: { key: 'method', parse: String, serialize: String, default: 'all' },
+    status: { key: 'status', parse: String, serialize: String, default: 'all' },
+    page: { key: 'page', parse: (r) => Number(r) || 1, serialize: String, default: 1 },
+  });
+
+  /** The live input value; the URL `q` is the committed term that drives the request. */
+  const [q, setQ] = useState(state.q as string);
+  const committedQ = state.q as string;
+  const setCommittedQ = (value: string) => set({ q: value });
+  const range = state.range as RangeKey;
+  const setRange = (value: RangeKey) => {
+    set({ range: value, page: 1 });
+  };
+  const method = state.method as MethodKey;
+  const setMethod = (value: MethodKey) => {
+    set({ method: value, page: 1 });
+  };
+  const status = state.status as StatusKey;
+  const setStatus = (value: StatusKey) => {
+    set({ status: value, page: 1 });
+  };
+  const page = Math.max(1, Number(state.page) || 1);
+  const setPage = (value: number | ((p: number) => number)) => {
+    set({ page: typeof value === 'function' ? value(page) : value });
+  };
   const [msg, setMsg] = useState<string | null>(null);
 
   const hasFilters = committedQ !== '' || status !== 'all' || method !== 'all' || range !== 'all';
@@ -110,12 +138,8 @@ export function AccountingSalesPage() {
   const pagination = query.data?.pagination;
 
   function clearFilters() {
+    reset();
     setQ('');
-    setCommittedQ('');
-    setRange('all');
-    setMethod('all');
-    setStatus('all');
-    setPage(1);
   }
 
   /** Any filter change resets to page 1, or the user lands on an empty page. */

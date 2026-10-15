@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AsyncBoundary, Notice } from '@/components/ui';
 import { AR } from '@/lib/i18n';
+import { useUrlState } from '@/lib/urlState';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { formatDate, formatTime } from '@/lib/format';
@@ -39,8 +40,16 @@ const BADGE_CLASS: Record<ApiInquiryStatus, string> = {
 export function InquiriesPage() {
   const api = usePharmacyApi();
 
-  const [status, setStatus] = useState<Tab>('all');
-  const [q, setQ] = useState('');
+  // Phase 3: status tab + search in the URL (shareable, back/forward-safe).
+  const { state, set } = useUrlState({
+    status: { key: 'status', parse: String, serialize: String, default: 'all' },
+    q: { key: 'q', parse: String, serialize: String, default: '' },
+  });
+
+  const status = state.status as Tab;
+  const setStatus = (value: Tab) => set({ status: value });
+  const q = state.q as string;
+  const setQ = (value: string) => set({ q: value });
   /** Statuses changed in this session, applied over the fetched rows. */
   const [overrides, setOverrides] = useState<Record<number, ApiInquiryStatus>>({});
   /**

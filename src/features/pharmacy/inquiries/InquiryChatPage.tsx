@@ -2,8 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { AR } from '@/lib/i18n';
 import { AsyncBoundary, Notice } from '@/components/ui';
-import { usePharmacyApi } from '@/auth/authHooks';
+import { usePharmacyApi, useAuth } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
+import { readDraft, writeDraft, clearDraft } from '@/lib/drafts';
 import { formatDateTime, formatTime } from '@/lib/format';
 import type { ApiInquiry, ApiInquiryMessage } from '@/api/pharmacyTypes';
 
@@ -48,10 +49,37 @@ const STATUS_LABEL: Record<string, string> = {
 export function InquiryChatPage() {
   const { id } = useParams<{ id: string }>();
   const api = usePharmacyApi();
+  const { user } = useAuth();
+
+  /*
+   * Phase 3: unsent-message draft (sessionStorage, per user + per inquiry).
+   * A typed-but-unsent reply survives navigating away to the inquiries list
+   * and back. Cleared the moment the message actually sends. Scope includes
+   * the inquiry id so two open chats never cross-contaminate drafts.
+   */
+  const DRAFT_ROUTE = `inquiries/${id ?? 'unknown'}/chat`;
+  const draftLoadedRef = useRef(false);
 
   const [draft, setDraft] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  // Restore once on mount.
+  useEffect(() => {
+    if (draftLoadedRef.current) return;
+    draftLoadedRef.current = true;
+    const saved = readDraft<string>(user?.id ?? 'anon', DRAFT_ROUTE);
+    if (saved) setDraft(saved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- restore-once on purpose
+  }, []);
+
+  // Persist on every keystroke (a short string — trivially cheap).
+  useEffect(() => {
+    if (!draftLoadedRef.current) return;
+    if (draft === '') clearDraft(user?.id ?? 'anon', DRAFT_ROUTE);
+    else writeDraft(user?.id ?? 'anon', DRAFT_ROUTE, draft);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- draft is the trigger
+  }, [draft]);
 
   const inquiryQuery = useApiQuery<ApiInquiry>((signal) => api.inquiry(String(id), signal), [id], {
     isEmpty: () => false,
@@ -91,6 +119,7 @@ export function InquiryChatPage() {
     try {
       await sendMessage.run({ message: text });
       setDraft('');
+      clearDraft(user?.id ?? 'anon', DRAFT_ROUTE);
       messagesQuery.refetch();
     } catch {
       // `sendMessage.error` renders below the composer.

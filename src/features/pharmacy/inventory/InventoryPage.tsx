@@ -5,7 +5,12 @@ import { toast } from '@/lib/toast';
 import { AR } from '@/lib/i18n';
 import { ROUTES } from '@/routes/paths';
 import { usePharmacyApi } from '@/auth/authHooks';
+import { useAuth } from '@/auth/authHooks';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
+import { pharmacyKeys } from '@/api/queryKeys';
+import { PRESET_STALE_TIMES } from '@/api/queryClient';
+import { readDraft, writeDraft, clearDraft } from '@/lib/drafts';
+import { useUrlState } from '@/lib/urlState';
 import { countStock, stockStatus, LOW_STOCK_THRESHOLD } from '@/lib/stock';
 import { money } from '@/lib/format';
 import { ariaSort, useSort, type SortValue } from '@/lib/sort';
@@ -55,16 +60,43 @@ const STATUS_TEXT: Record<'ok' | 'low' | 'out', string> = {
 
 export function InventoryPage() {
   const api = usePharmacyApi();
+  const { user } = useAuth();
+  const keys = pharmacyKeys(user?.id ?? 'anon');
 
-  const [status, setStatus] = useState<Tab>('all');
-  const [q, setQ] = useState('');
+  // Phase 3: tab + search in the URL (shareable, back/forward-safe).
+  const { state, set } = useUrlState({
+    tab: { key: 'tab', parse: String, serialize: String, default: 'all' },
+    q: { key: 'q', parse: String, serialize: String, default: '' },
+  });
+
+  const status = state.tab as Tab;
+  const setStatus = (value: Tab) => set({ tab: value });
+  const q = state.q as string;
+  const setQ = (value: string) => set({ q: value });
+
   /** Local edits, keyed by pharmacy_medicine id. Cleared after a successful save. */
-  const [drafts, setDrafts] = useState<Record<number, number>>({});
+  const [drafts, setDrafts] = useState<Record<number, number>>(() => {
+    // Phase 3: restore unsaved quantity drafts from sessionStorage. Restored
+    // values are matched against live rows on apply (applyDrafts ignores ids
+    // that no longer exist), so a stale draft can never write to a deleted row.
+    return readDraft<Record<number, number>>(user?.id ?? 'anon', 'inventory') ?? {};
+  });
+
+  // Persist drafts as they change (also survives an in-session reload).
+  useEffect(() => {
+    if (Object.keys(drafts).length === 0) clearDraft(user?.id ?? 'anon', 'inventory');
+    else writeDraft(user?.id ?? 'anon', 'inventory', drafts);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- drafts is the trigger
+  }, [drafts]);
 
   const query = useApiQuery<{ data: ApiInventoryItem[]; stats: ApiInventoryStats }>(
     (signal) => api.inventory({ per_page: 100 }, signal),
-    [],
-    { isEmpty: (r) => r.data.length === 0 },
+    [user?.id],
+    {
+      queryKey: keys.inventory.list({ per_page: 100 }),
+      staleTime: PRESET_STALE_TIMES.inventory,
+      isEmpty: (r) => r.data.length === 0,
+    },
   );
 
   /**
@@ -74,15 +106,23 @@ export function InventoryPage() {
    */
   const rows = useMemo(() => query.data?.data ?? [], [query.data]);
 
-  // Drafts are per loaded page: when fresh data arrives, drop stale edits so the
-  // server value wins (a reload should never show an edit that was not saved).
-  useEffect(() => {
-    setDrafts({});
-  }, [query.data]);
+  /*
+   * Phase 3: drafts are NO LONGER wiped on refetch — they persist in
+   * sessionStorage (identity-scoped, 24h TTL) and are re-applied against the
+   * live rows. A draft whose row disappeared from the loaded page simply
+   * never matches on save (applyDrafts iterates ROWS, not draft ids), so a
+   * stale draft cannot write to a deleted row. They are cleared explicitly
+   * after a successful save and when the user empties them.
+   */
 
-  const save = useApiMutation(async (changes: Array<{ id: number; quantity: number }>) => {
-    return api.bulkUpdateInventory(changes);
-  });
+  const save = useApiMutation(
+    async (changes: Array<{ id: number; quantity: number }>) => api.bulkUpdateInventory(changes),
+    {
+      // After a save, refresh inventory + dashboard stats + sidebar counts so
+      // every consumer reflects the new quantities in ONE pass (no manual refetch).
+      invalidates: [keys.inventory.list({ per_page: 100 }), keys.dashboardStats, keys.sidebarCounts],
+    },
+  );
 
   /**
    * Derived counts — approved rule, self-consistent.
@@ -209,8 +249,9 @@ export function InventoryPage() {
    * success the selection is cleared and the list refetched so the table cannot
    * show stale quantities.
    */
-  const bulkApply = useApiMutation(async (items: Array<{ id: number; quantity: number }>) =>
-    api.bulkUpdateInventory(items),
+  const bulkApply = useApiMutation(
+    async (items: Array<{ id: number; quantity: number }>) => api.bulkUpdateInventory(items),
+    { invalidates: [keys.inventory.list({ per_page: 100 }), keys.dashboardStats, keys.sidebarCounts] },
   );
 
   async function runBulkApply() {
@@ -224,7 +265,11 @@ export function InventoryPage() {
       setSelected(new Set());
       setBulkQty('');
       setConfirmBulk(false);
-      query.refetch();
+      // Applied rows are saved server-side — drop matching drafts + their
+      // persisted copy (the bulk value overrode each row's draft).
+      setDrafts({});
+      clearDraft(user?.id ?? 'anon', 'inventory');
+      // invalidateQueries runs auto (configured on bulkApply) — no manual refetch.
     } catch (err) {
       const serverMessage = bulkApply.error?.message;
       const thrown = err instanceof Error ? err.message : undefined;
@@ -249,7 +294,11 @@ export function InventoryPage() {
     try {
       const result = await save.run(dirtyChanges);
       toast.success(I.toast_saved.replace(':count', String(result.updated_count)));
-      query.refetch();
+      // Saved values now live on the server — drop the local drafts AND their
+      // persisted copy so a refresh never re-offers already-saved edits.
+      setDrafts({});
+      clearDraft(user?.id ?? 'anon', 'inventory');
+      // invalidateQueries runs auto (configured on save) — no manual refetch.
     } catch (err) {
       // Prefer the server's own localised message (Laravel localises errors);
       // fall back to the screen's wording so a failure is NEVER blank. (`??`

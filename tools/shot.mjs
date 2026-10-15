@@ -34,6 +34,9 @@ const userDataDir = mkdtempSync(join(tmpdir(), 'daway-chrome-'));
 const port = 9200 + Math.floor(Math.random() * 500);
 
 const chrome = spawn(CHROME, [
+  // Chrome otherwise honours the SYSTEM proxy, which routes 127.0.0.1 through
+  // the sandbox proxy and refuses the connection. Same fix as screens.mjs.
+  '--no-proxy-server',
   '--headless=new',
   '--disable-gpu',
   '--hide-scrollbars',

@@ -2,45 +2,55 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout, AuthLayout } from '@/layouts/AppLayout';
 import { RequireAuth, RequireGuest } from './guards';
 import { ROUTES } from './paths';
-import { LoginPage } from '@/features/auth/LoginPage';
-import { PasswordChangePage } from '@/features/auth/PasswordChangePage';
-import { DashboardPage } from '@/features/pharmacy/dashboard/DashboardPage';
-import { InventoryPage } from '@/features/pharmacy/inventory/InventoryPage';
-import { InventoryImportPage } from '@/features/pharmacy/import/InventoryImportPage';
-import { MedicinesPage } from '@/features/pharmacy/medicines/MedicinesPage';
-import { MedicineRequestPage } from '@/features/pharmacy/medicines/MedicineRequestPage';
-import { InquiriesPage } from '@/features/pharmacy/inquiries/InquiriesPage';
-import { InquiryChatPage } from '@/features/pharmacy/inquiries/InquiryChatPage';
-import { AlternativesPage } from '@/features/pharmacy/alternatives/AlternativesPage';
-import { AlternativeCreatePage } from '@/features/pharmacy/alternatives/AlternativeCreatePage';
-import { RatingsPage } from '@/features/pharmacy/ratings/RatingsPage';
-import { ProfilePage } from '@/features/pharmacy/profile/ProfilePage';
-import { ProfileCompletePage } from '@/features/pharmacy/profile/ProfileCompletePage';
-import { AccountingOverviewPage } from '@/features/pharmacy/accounting/AccountingOverviewPage';
-import { AccountingSalesPage } from '@/features/pharmacy/accounting/AccountingSalesPage';
-import { AccountingSaleCreatePage } from '@/features/pharmacy/accounting/AccountingSaleCreatePage';
-import { AccountingInvoicePage } from '@/features/pharmacy/accounting/AccountingInvoicePage';
-import { AccountingRefundsPage } from '@/features/pharmacy/accounting/AccountingRefundsPage';
-import { AccountingRefundCreatePage } from '@/features/pharmacy/accounting/AccountingRefundCreatePage';
-import { AccountingRefundShowPage } from '@/features/pharmacy/accounting/AccountingRefundShowPage';
-import { AccountingCashPage } from '@/features/pharmacy/accounting/AccountingCashPage';
-import { NotFoundPage, PlaceholderPage } from '@/features/PlaceholderPage';
+import { lazyPage } from './lazyPage';
 import { SessionExpiryWatcher } from '@/auth/SessionExpiryWatcher';
 import { ADMIN_ROUTES } from './adminPaths';
 import { RequireAdmin, RedirectAdminLoginToUnified } from './adminGuards';
 import { AdminLayout } from '@/layouts/AdminLayout';
-import { AdminDashboardPage } from '@/features/admin/dashboard/AdminDashboardPage';
-import { AdminPharmaciesPage } from '@/features/admin/pharmacies/AdminPharmaciesPage';
-import { AdminMedicinesPage } from '@/features/admin/medicines/AdminMedicinesPage';
-import { AdminMedicineFormPage } from '@/features/admin/medicines/AdminMedicineFormPage';
-import { AdminMedicineRequestsPage } from '@/features/admin/requests/AdminMedicineRequestsPage';
-import { AdminCategoriesPage } from '@/features/admin/categories/AdminCategoriesPage';
-import { AdminUsersPage } from '@/features/admin/users/AdminUsersPage';
-import { AdminUserFormPage } from '@/features/admin/users/AdminUserFormPage';
-import { AdminLogsPage } from '@/features/admin/logs/AdminLogsPage';
-import { AdminSettingsPage } from '@/features/admin/settings/AdminSettingsPage';
-import { AdminProfilePage } from '@/features/admin/profile/AdminProfilePage';
-import { AdminPasswordChangePage } from '@/features/admin/profile/AdminPasswordChangePage';
+import { NotFoundPage, PlaceholderPage } from '@/features/PlaceholderPage';
+
+// ── Auth pages (eager: needed before lazy chunks load) ───────────────────────
+const LoginPage = lazyPage(() => import('@/features/auth/LoginPage'));
+const PasswordChangePage = lazyPage(() => import('@/features/auth/PasswordChangePage'));
+
+// ── Pharmacy pages (split by feature area) ───────────────────────────────────
+const DashboardPage = lazyPage(() => import('@/features/pharmacy/dashboard/DashboardPage'));
+const InventoryPage = lazyPage(() => import('@/features/pharmacy/inventory/InventoryPage'));
+const InventoryImportPage = lazyPage(() => import('@/features/pharmacy/import/InventoryImportPage'));
+const MedicinesPage = lazyPage(() => import('@/features/pharmacy/medicines/MedicinesPage'));
+const MedicineRequestPage = lazyPage(() => import('@/features/pharmacy/medicines/MedicineRequestPage'));
+const InquiriesPage = lazyPage(() => import('@/features/pharmacy/inquiries/InquiriesPage'));
+const InquiryChatPage = lazyPage(() => import('@/features/pharmacy/inquiries/InquiryChatPage'));
+const AlternativesPage = lazyPage(() => import('@/features/pharmacy/alternatives/AlternativesPage'));
+const AlternativeCreatePage = lazyPage(() => import('@/features/pharmacy/alternatives/AlternativeCreatePage'));
+const RatingsPage = lazyPage(() => import('@/features/pharmacy/ratings/RatingsPage'));
+const ProfilePage = lazyPage(() => import('@/features/pharmacy/profile/ProfilePage'));
+const ProfileCompletePage = lazyPage(() => import('@/features/pharmacy/profile/ProfileCompletePage'));
+
+// ── Accounting pages ──────────────────────────────────────────────────────────
+const AccountingOverviewPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingOverviewPage'));
+const AccountingSalesPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingSalesPage'));
+// NOTE: AccountingSaleCreatePage is NOT routed here — it is mounted by
+// layouts/KeepAliveOutlet.tsx (Phase 3 keep-alive for the POS cart).
+const AccountingInvoicePage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingInvoicePage'));
+const AccountingRefundsPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingRefundsPage'));
+const AccountingRefundCreatePage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingRefundCreatePage'));
+const AccountingRefundShowPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingRefundShowPage'));
+const AccountingCashPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingCashPage'));
+
+// ── Admin pages ───────────────────────────────────────────────────────────────
+const AdminDashboardPage = lazyPage(() => import('@/features/admin/dashboard/AdminDashboardPage'));
+const AdminPharmaciesPage = lazyPage(() => import('@/features/admin/pharmacies/AdminPharmaciesPage'));
+const AdminMedicinesPage = lazyPage(() => import('@/features/admin/medicines/AdminMedicinesPage'));
+const AdminMedicineFormPage = lazyPage(() => import('@/features/admin/medicines/AdminMedicineFormPage'));
+const AdminMedicineRequestsPage = lazyPage(() => import('@/features/admin/requests/AdminMedicineRequestsPage'));
+const AdminCategoriesPage = lazyPage(() => import('@/features/admin/categories/AdminCategoriesPage'));
+const AdminUsersPage = lazyPage(() => import('@/features/admin/users/AdminUsersPage'));
+const AdminUserFormPage = lazyPage(() => import('@/features/admin/users/AdminUserFormPage'));
+const AdminLogsPage = lazyPage(() => import('@/features/admin/logs/AdminLogsPage'));
+const AdminSettingsPage = lazyPage(() => import('@/features/admin/settings/AdminSettingsPage'));
+const AdminProfilePage = lazyPage(() => import('@/features/admin/profile/AdminProfilePage'));
+const AdminPasswordChangePage = lazyPage(() => import('@/features/admin/profile/AdminPasswordChangePage'));
 
 /**
  * Pharmacy Web route table.
@@ -228,8 +238,15 @@ export const router = createBrowserRouter([
               {
                 // Declared before `accounting/sales/:number` so "create" is not
                 // swallowed as an invoice number (same ordering rule as Blade).
+                //
+                // Phase 3 keep-alive: this route intentionally renders NULL.
+                // The POS page component is mounted by `KeepAliveOutlet` (see
+                // layouts/KeepAliveOutlet.tsx) so its cart state survives
+                // navigation away and back. The route match still owns the URL,
+                // the guards, and the topbar title — only the component mount
+                // moved.
                 path: 'accounting/sales/create',
-                element: <AccountingSaleCreatePage />,
+                element: null,
               },
               {
                 path: 'accounting/sales/:number',

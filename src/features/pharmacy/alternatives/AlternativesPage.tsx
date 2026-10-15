@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AR } from '@/lib/i18n';
+import { useUrlState } from '@/lib/urlState';
 import { AsyncBoundary, Btn, EmptyState, Modal, Notice } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -33,8 +34,14 @@ const A = AR.pharmacy.alternatives.index;
 export function AlternativesPage() {
   const api = usePharmacyApi();
 
+  // Phase 3: the search term lives in the URL (shareable, back/forward-safe).
+  const { state, set } = useUrlState({
+    q: { key: 'q', parse: String, serialize: String, default: '' },
+  });
+  const q = state.q as string;
+  const setQ = (value: string) => set({ q: value });
+
   const [collapsed, setCollapsed] = useState<Record<number, boolean>>({});
-  const [q, setQ] = useState('');
   const [pending, setPending] = useState<{ baseId: number; cand: ApiAlternativeRef } | null>(
     null,
   );

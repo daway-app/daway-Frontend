@@ -5,6 +5,7 @@ import { AsyncBoundary } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { money } from '@/lib/format';
+import { useUrlState } from '@/lib/urlState';
 import type { ApiRefundRow, RefundStatus } from '@/api/pharmacyTypes';
 import { ROUTES } from '@/routes/paths';
 
@@ -53,11 +54,23 @@ const PER_PAGE = 25;
 export function AccountingRefundsPage() {
   const api = usePharmacyApi();
 
-  const [q, setQ] = useState('');
-  /** The committed search term — only this drives the request. */
-  const [committedQ, setCommittedQ] = useState('');
-  const [status, setStatus] = useState<StatusKey>('all');
-  const [page, setPage] = useState(1);
+  // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
+  const { state, set } = useUrlState({
+    q: { key: 'q', parse: String, serialize: String, default: '' },
+    status: { key: 'status', parse: String, serialize: String, default: 'all' },
+    page: { key: 'page', parse: (r) => Number(r) || 1, serialize: String, default: 1 },
+  });
+
+  /** The live input value; the URL `q` is the committed term that drives the request. */
+  const [q, setQ] = useState(state.q as string);
+  const committedQ = state.q as string;
+  const setCommittedQ = (value: string) => set({ q: value, page: 1 });
+  const status = state.status as StatusKey;
+  const setStatus = (value: StatusKey) => set({ status: value, page: 1 });
+  const page = Math.max(1, Number(state.page) || 1);
+  const setPage = (value: number | ((p: number) => number)) => {
+    set({ page: typeof value === 'function' ? value(page) : value });
+  };
 
   const query = useApiQuery<{
     data: ApiRefundRow[];

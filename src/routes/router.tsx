@@ -18,6 +18,12 @@ const LoginPage = lazyPage(() => import('@/features/auth/LoginPage'));
  * must never sit behind `RequireAuth`.
  */
 const RegisterPage = lazyPage(() => import('@/features/auth/RegisterPage'));
+/**
+ * Forgot-password REQUEST page. Same guest branch as its siblings: a
+ * signed-out visitor's screen that FILES a review request for an admin — it
+ * issues no token and resets nothing, so it must never sit behind RequireAuth.
+ */
+const ForgotPasswordPage = lazyPage(() => import('@/features/auth/ForgotPasswordPage'));
 const PasswordChangePage = lazyPage(() => import('@/features/auth/PasswordChangePage'));
 
 // ── Pharmacy pages (split by feature area) ───────────────────────────────────
@@ -157,6 +163,8 @@ export const router = createBrowserRouter([
               // purpose: an already-signed-in pharmacy has no reason to file a
               // second application, and the guard bounces it back to `/`.
               { path: ROUTES.register, element: <RegisterPage /> },
+              // Public reset REQUEST — sibling of the two above, same reasoning.
+              { path: ROUTES.forgotPassword, element: <ForgotPasswordPage /> },
             ],
           },
         ],

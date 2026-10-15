@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useApi, useAuth, usePharmacyApi } from '@/auth/authHooks';
+import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useAdminAuth } from '@/auth/adminContext';
 import { ApiError } from '@/api/errors';
 import { Btn } from '@/components/ui';
@@ -81,7 +81,6 @@ export function LoginPage() {
   const pharmacyAuth = useAuth();
   const adminAuth = useAdminAuth();
   const pharmacyApi = usePharmacyApi();
-  const apiStack = useApi();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -89,13 +88,6 @@ export function LoginPage() {
   const [identity, setIdentity] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  // «نسيت كلمة المرور» — لوحة قابلة للطيّ داخل النموذج نفسه، لا مسار منفصل:
-  // المستخدم هنا في لحظة إحباط، وإعادة توجيهه لشاشة أخرى تزيد الاحتكاك.
-  const [forgotOpen, setForgotOpen] = useState(false);
-  const [forgotPharmacyId, setForgotPharmacyId] = useState('');
-  const [forgotPhone, setForgotPhone] = useState('');
-  const [forgotSubmitting, setForgotSubmitting] = useState(false);
-  const [forgotNotice, setForgotNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Reassurance notice, ported from Blade and then corrected: if the response
@@ -248,33 +240,6 @@ export function LoginPage() {
         setIsSlow(false);
         setIsSubmitting(false);
       }
-    }
-  }
-
-  /**
-   * Public reset REQUEST — queues an item for admin review. The backend
-   * deliberately answers 202 with the same message whether the pharmacy ID and
-   * phone match or not (anti-enumeration), so ANY failure here is a transport
-   * problem: a 422 would mean the input shape is wrong, never "no such
-   * pharmacy" — the UI must not translate a success into an error.
-   */
-  async function submitPasswordResetRequest() {
-    const pharmacyId = forgotPharmacyId.trim();
-    const phone = forgotPhone.trim();
-    if (!pharmacyId || !phone || forgotSubmitting) return;
-
-    setForgotSubmitting(true);
-    setForgotNotice(null);
-    try {
-      const response = await apiStack.auth.requestPasswordReset({
-        pharmacy_id: pharmacyId,
-        phone,
-      });
-      setForgotNotice(response.message || L.forgot_sent);
-    } catch {
-      setForgotNotice(L.forgot_error);
-    } finally {
-      setForgotSubmitting(false);
     }
   }
 
@@ -443,85 +408,16 @@ export function LoginPage() {
               <span>{L.remember}</span>
               <input type="checkbox" name="remember" />
             </label>
-            {/* كان <span> ميّتاً بلا مسار («تواصل مع إدارة النظام»). الآن زرّ
-                يفتح لوحة الطلب — للصيدلية فقط: استعادة الأدمن تمرّ عبر مساره
-                الخاص، ولا معنى لطلب استعادة صيدلية من مستخدم أدمن. */}
+            {/* كان <span> ميّتاً بلا مسار («تواصل مع إدارة النظام»). الآن رابط
+                إلى صفحة الطلب المستقلة `/forgot-password` — بنية صفحة كاملة
+                نظير `/register`، لا لوحة مطوية داخل النموذج. للصيدلية فقط:
+                استعادة الأدمن تمرّ عبر مساره الخاص. */}
             {!isAdmin ? (
-              <button
-                type="button"
-                className="forgot-hint"
-                onClick={() => {
-                  setForgotOpen((open) => !open);
-                  setForgotNotice(null);
-                }}
-                aria-expanded={forgotOpen}
-                aria-controls="forgotPasswordPanel"
-              >
+              <Link to={ROUTES.forgotPassword} className="forgot-hint">
                 {L.forgot}
-              </button>
+              </Link>
             ) : null}
           </div>
-
-          {forgotOpen && !isAdmin ? (
-            <section
-              className="forgot-panel"
-              id="forgotPasswordPanel"
-              aria-label={L.forgot_panel_title}
-            >
-              <p>{L.forgot_panel_desc}</p>
-              <label className="fl" htmlFor="forgotPharmacyId">
-                {L.forgot_pharmacy_id}
-              </label>
-              <input
-                className="fc forgot-panel__input"
-                id="forgotPharmacyId"
-                name="forgot_pharmacy_id"
-                value={forgotPharmacyId}
-                onChange={(event) => setForgotPharmacyId(event.target.value)}
-                autoComplete="username"
-                autoCapitalize="characters"
-                spellCheck={false}
-                dir="ltr"
-                maxLength={32}
-              />
-              <label className="fl" htmlFor="forgotPhone">
-                {L.forgot_phone}
-              </label>
-              <input
-                className="fc forgot-panel__input"
-                id="forgotPhone"
-                name="forgot_phone"
-                type="tel"
-                value={forgotPhone}
-                onChange={(event) => setForgotPhone(event.target.value)}
-                autoComplete="tel"
-                inputMode="tel"
-                dir="ltr"
-                maxLength={20}
-                onKeyDown={(event) => {
-                  // Enter داخل اللوحة يجب ألا يُرسل نموذج الدخول المحيط.
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    void submitPasswordResetRequest();
-                  }
-                }}
-              />
-              {forgotNotice ? (
-                <p className="forgot-panel__notice" role="status">
-                  {forgotNotice}
-                </p>
-              ) : null}
-              <Btn
-                type="button"
-                variant="outline"
-                className="forgot-panel__submit"
-                disabled={forgotSubmitting || !forgotPharmacyId.trim() || !forgotPhone.trim()}
-                onClick={submitPasswordResetRequest}
-              >
-                {forgotSubmitting ? L.forgot_submitting : L.forgot_submit}
-              </Btn>
-            </section>
-          ) : null}
 
           {/* 7A: one-system primary button (was the auth-only `.btn-p`).
               `auth-submit` restores the FULL width that `.btn-p` had. `.ph-btn`

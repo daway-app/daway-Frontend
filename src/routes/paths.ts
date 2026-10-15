@@ -16,6 +16,15 @@ export const ROUTES = {
    * by SMS after an admin approves it. See `RegisterPage`.
    */
   register: '/register',
+  /**
+   * Forgot-password REQUEST — a PUBLIC screen, the sibling of `register`.
+   *
+   * It files a REVIEW REQUEST, not a reset: the backend queues a
+   * `pending` item for an admin, answers 202 with the same message whether
+   * the details match or not (anti-enumeration), and NO password is issued
+   * here. See `ForgotPasswordPage`.
+   */
+  forgotPassword: '/forgot-password',
   dashboard: '/',
   inventory: '/inventory',
   /** Bulk inventory import (pharmacy/import/*). */

@@ -92,7 +92,6 @@ export const EN = {
         invoice: 'Create your first invoice',
         invoice_hint: 'Record your first sale from the point-of-sale screen',
       },
-      update_inventory: 'Update Inventory',
       stat_out: 'Out of stock',
       stat_low: 'Low stock',
       stat_available: 'Available',

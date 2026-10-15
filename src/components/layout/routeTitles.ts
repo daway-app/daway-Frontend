@@ -53,12 +53,11 @@ export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle
   ];
 
   const PHARMACY_ENTRIES: Entry[] = [
-    { path: ROUTES.inventory, title: STR.pharmacy.sidebar.inventory },
-    { path: ROUTES.medicines, title: STR.pharmacy.sidebar.manage_medicines },
-    { path: ROUTES.inquiries, title: STR.pharmacy.sidebar.inquiries },
-    { path: ROUTES.alternatives, title: STR.pharmacy.sidebar.manage_alternatives },
-    { path: ROUTES.ratings, title: STR.pharmacy.sidebar.ratings },
-    { path: ROUTES.profile, title: STR.pharmacy.sidebar.pharmacy_profile },
+    { path: ROUTES.medicines, title: STR.pharmacy.medicines.index.heading_page },
+    { path: ROUTES.inquiries, title: STR.pharmacy.inquiries.heading },
+    { path: ROUTES.alternatives, title: STR.pharmacy.alternatives.index.heading_page },
+    { path: ROUTES.ratings, title: STR.pharmacy.ratings.heading_page },
+    { path: ROUTES.profile, title: STR.pharmacy.profile.heading_page },
     { path: ROUTES.accounting, title: STR.accounting.sidebar.section_title },
   ];
 
@@ -71,11 +70,17 @@ export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle
       subtitle: STR.admin.nav.panel_subtitle,
     };
   }
+
+  if (pathname === ROUTES.dashboard) {
+    return {
+      title: STR.topbar.dashboard_title,
+      subtitle: STR.topbar.dashboard_subtitle,
+    };
+  }
+
+  const matchedTitle = match(PHARMACY_ENTRIES, pathname);
   return {
-    title: match(PHARMACY_ENTRIES, pathname) ?? STR.topbar.dashboard_title,
-    subtitle:
-      pathname === ROUTES.dashboard
-        ? STR.topbar.dashboard_subtitle
-        : STR.pharmacy.sidebar.section_title,
+    title: matchedTitle ?? STR.topbar.dashboard_title,
+    subtitle: matchedTitle ? STR.pharmacy.sidebar.section_title : STR.topbar.dashboard_subtitle,
   };
 }

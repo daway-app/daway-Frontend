@@ -21,7 +21,6 @@ import {
 const items: CommandDescriptor[] = [
   { id: 'dashboard', label: 'لوحة التحكم', group: 'الانتقال', keywords: '/ dashboard home' },
   { id: 'medicines', label: 'إدارة الأدوية', group: 'الانتقال', keywords: '/medicines pills' },
-  { id: 'inventory', label: 'إدارة المخزون', group: 'الانتقال', keywords: '/inventory stock' },
   { id: 'inquiries', label: 'استفسارات التوفر', group: 'الانتقال', keywords: '/inquiries chat' },
   { id: 'sales', label: 'المبيعات', group: 'المحاسبة', keywords: '/accounting/sales invoices' },
   { id: 'refunds', label: 'الإرجاعات', group: 'المحاسبة', keywords: '/accounting/refunds' },
@@ -62,29 +61,29 @@ describe('normalizeArabic()', () => {
 });
 
 describe('matchScore()', () => {
-  const inv = items[2];
+  const inv = items[1];
 
   it('gives an exact label match the best score', () => {
-    expect(matchScore('إدارة المخزون', inv)).toBe(0);
+    expect(matchScore('إدارة الأدوية', inv)).toBe(0);
   });
 
   it('ranks a label prefix above a substring (prefix beats substring)', () => {
     const prefix = matchScore('إدارة', inv);
-    const substring = matchScore('المخزون', inv);
+    const substring = matchScore('الأدوية', inv);
     expect(prefix).not.toBeNull();
     expect(substring).not.toBeNull();
     expect(prefix!).toBeLessThan(substring!);
   });
 
   it('matches on the latin route keyword (arabic-keyboard-less user)', () => {
-    // "inv" must find inventory via the keyword, not the Arabic label.
-    expect(matchScore('inv', inv)).not.toBeNull();
-    expect(matchScore('sales', items[4])).not.toBeNull();
+    // "pills" must find medicines via the keyword, not the Arabic label.
+    expect(matchScore('pills', inv)).not.toBeNull();
+    expect(matchScore('sales', items[3])).not.toBeNull();
   });
 
   it('is diacritic-insensitive across a query/label mismatch', () => {
     // Query without hamza, label with it.
-    expect(matchScore('ادارة المخزون', inv)).toBe(0);
+    expect(matchScore('ادارة الأدوية', inv)).toBe(0);
   });
 
   it('returns null for a non-match', () => {
@@ -110,8 +109,8 @@ describe('filterCommands()', () => {
   });
 
   it('filters down to the matching items only', () => {
-    const out = filterCommands(items, 'inventory');
-    expect(out.map((i) => i.id)).toEqual(['inventory']);
+    const out = filterCommands(items, 'medicines');
+    expect(out.map((i) => i.id)).toEqual(['medicines']);
   });
 
   it('finds several results across groups for a loose query', () => {
@@ -121,7 +120,7 @@ describe('filterCommands()', () => {
 
   it('returns a new array and does not mutate the input', () => {
     const snapshot = items.slice();
-    const out = filterCommands(items, 'inv');
+    const out = filterCommands(items, 'pills');
     expect(out).not.toBe(items);
     expect(items).toEqual(snapshot);
   });

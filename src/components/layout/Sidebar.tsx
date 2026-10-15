@@ -12,7 +12,6 @@ import { ROUTES } from '@/routes/paths';
 import { useSidebarCounts } from './useSidebarCounts';
 import {
   IconAlertTriangle,
-  IconBox,
   IconCapsule,
   IconCart,
   IconCash,
@@ -55,18 +54,12 @@ interface NavItem {
    * with no count simply has no badge, which is why this is optional rather
    * than defaulting to zero.
    */
-  badge?: 'newInquiries' | 'lowStock';
+  badge?: 'newInquiries';
 }
 
 const PHARMACY_NAV: NavItem[] = [
   { to: ROUTES.dashboard, labelKey: 'dashboard', icon: <IconDashboard /> },
   { to: ROUTES.medicines, labelKey: 'manage_medicines', icon: <IconCapsule /> },
-  {
-    to: ROUTES.inventory,
-    labelKey: 'inventory',
-    icon: <IconBox />,
-    badge: 'lowStock',
-  },
   { to: `${ROUTES.medicines}/create`, labelKey: 'add_medicine', icon: <IconPlus /> },
   {
     to: ROUTES.inquiries,

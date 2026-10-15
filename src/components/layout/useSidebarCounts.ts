@@ -21,28 +21,22 @@
  * look at it.
  */
 import { useQuery } from '@tanstack/react-query';
-import { usePharmacyApi } from '@/auth/authHooks';
-import { useAuth } from '@/auth/authHooks';
-import { countStock } from '@/lib/stock';
+import { usePharmacyApi, useAuth } from '@/auth/authHooks';
 import { pharmacyKeys } from '@/api/queryKeys';
 import { PRESET_STALE_TIMES } from '@/api/queryClient';
 
 export interface SidebarCounts {
   /** Inquiries the pharmacy has not replied to yet — `counts.new`. */
   newInquiries: number;
-  /** Medicines at or below the low-stock threshold. */
-  lowStock: number;
 }
 
-const EMPTY: SidebarCounts = { newInquiries: 0, lowStock: 0 };
+const EMPTY: SidebarCounts = { newInquiries: 0 };
 
 /**
  * Fetch the sidebar's counts.
  *
- * Both requests are issued together and are individually tolerant: if the
- * inquiry call fails the stock badge still renders, and vice versa. A failed
- * count is `0`, never `undefined` — a badge showing "undefined" is worse than
- * no badge, and `NaN` in a badge is worse still.
+ * Only the unread-inquiry count is fetched — the inventory page was removed
+ * from the sidebar, so the low-stock badge is no longer needed.
  *
  * Errors are swallowed on purpose. These are decorative counts; surfacing a
  * toast for a failed badge fetch would interrupt the user for something that
@@ -60,35 +54,10 @@ export function useSidebarCounts(): SidebarCounts {
     // a remote DB for a decorative badge.
     retry: false,
     queryFn: async (ctx) => {
-      const [inquiries, inventory] = await Promise.allSettled([
-        // `per_page: 1` — the counts come from the envelope, so there is no
-        // reason to transfer rows. This is the whole point of using the list
-        // endpoint for a badge.
-        api.inquiries({ per_page: 1 }, ctx.signal),
-        api.inventory({ per_page: 100 }, ctx.signal),
-      ]);
-
-      const next: SidebarCounts = { ...EMPTY };
-
-      if (inquiries.status === 'fulfilled') {
-        const n = inquiries.value.counts?.new;
-        next.newInquiries = Number.isFinite(n) ? Number(n) : 0;
-      }
-
-      if (inventory.status === 'fulfilled') {
-        /*
-         * Uses the shared `countStock` rather than a local `quantity <= 10`, so
-         * the badge cannot drift from the inventory screen's own numbers — the
-         * threshold lives in exactly one place (`src/lib/stock.ts`).
-         *
-         * The count covers the first page only (100 rows), which is the same
-         * page the inventory screen shows. If a pharmacy ever exceeds that, the
-         * badge under-counts rather than lying — and the threshold is a
-         * *restock* signal, not an audited total.
-         */
-        next.lowStock = countStock(inventory.value.data ?? []).low;
-      }
-
+      const inquiries = await api.inquiries({ per_page: 1 }, ctx.signal);
+      const next: SidebarCounts = {
+        newInquiries: Number.isFinite(inquiries.counts?.new) ? Number(inquiries.counts.new) : 0,
+      };
       return next;
     },
   });

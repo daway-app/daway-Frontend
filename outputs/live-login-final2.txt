@@ -1,0 +1,22 @@
+=== probing https://daway-frontend.vercel.app ===
+origin        : https://daway-frontend.vercel.app
+form appeared : true
+raw fetch     : undefined
+filled        : undefined
+page state    : {"path":"/login","h1":"تسجيل الدخول","hasSidebar":false,"visibleError":"","bodyHead":"💊 جارٍ التحقق والدخول… تسجيل الدخول اختر نوع الحساب ثم أدخل بياناتك. نوع الحساب صيدلية أدمن معرّف الصيدلية (Pharmacy ID"}
+path before   : /login
+path after    : /login
+token         : absent
+
+--- requests to the API ---
+  -> POST https://daway-backend-zlh2.onrender.com/api/login/pharmacy
+  -> OPTIONS https://daway-backend-zlh2.onrender.com/api/login/pharmacy
+  <- 204 https://daway-backend-zlh2.onrender.com/api/login/pharmacy
+
+--- failed requests ---
+  (none)
+
+--- console (first 25) ---
+  (nothing)
+
+RESULT: LOGIN FAILED

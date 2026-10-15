@@ -1,0 +1,670 @@
+[
+ {
+  "path": "register.err_region_required",
+  "ar": "يرجى إدخال المنطقة."
+ },
+ {
+  "path": "register.success_note",
+  "ar": "لن تستطيع الدخول الآن: تُنشأ بيانات الدخول (Pharmacy ID وكلمة المرور) بعد موافقة الأدمن، وتصلك برسالة على رقم الهاتف الذي أدخلته."
+ },
+ {
+  "path": "register.success_go_login",
+  "ar": "العودة إلى تسجيل الدخول"
+ },
+ {
+  "path": "register.hero_title",
+  "ar": "انضم إلى دواك"
+ },
+ {
+  "path": "register.hero_desc",
+  "ar": "اعرض أدويتك ومخزونك لمرضى يبحثون عن دواء قريب منهم — قبل أن يتحرّكوا."
+ },
+ {
+  "path": "push_banner.dismiss",
+  "ar": "لاحقاً"
+ },
+ {
+  "path": "push_banner.granted",
+  "ar": "تم تفعيل التنبيهات على هذا الجهاز."
+ },
+ {
+  "path": "admin.nav.panel_title",
+  "ar": "لوحة إدارة دواك"
+ },
+ {
+  "path": "admin.login.email_placeholder",
+  "ar": "admin@example.com"
+ },
+ {
+  "path": "admin.login.password_placeholder",
+  "ar": "••••••••"
+ },
+ {
+  "path": "admin.login.submitting",
+  "ar": "جارٍ تسجيل الدخول…"
+ },
+ {
+  "path": "admin.login.invalid",
+  "ar": "بيانات الاعتماد غير صحيحة."
+ },
+ {
+  "path": "admin.login.inactive",
+  "ar": "الحساب معطّل."
+ },
+ {
+  "path": "admin.login.not_admin",
+  "ar": "هذا الحساب ليس حساب مدير نظام."
+ },
+ {
+  "path": "admin.login.generic_error",
+  "ar": "تعذّر تسجيل الدخول، حاول مرة أخرى."
+ },
+ {
+  "path": "admin.login.back_to_pharmacy",
+  "ar": "الدخول كصيدلية"
+ },
+ {
+  "path": "admin.unified.brand_tag",
+  "ar": "منصة دواك"
+ },
+ {
+  "path": "admin.unified.hero_title",
+  "ar": "مرحباً بك مجدداً"
+ },
+ {
+  "path": "admin.unified.hero_pharmacy",
+  "ar": "إدارة الصيدلية، الأدوية، والطلبات ومتابعة كافة العمليات من مكان واحد."
+ },
+ {
+  "path": "admin.unified.hero_admin",
+  "ar": "إدارة الصيدليات، الأدوية، الأقسام، والطلبات والمستخدمين من مكان واحد."
+ },
+ {
+  "path": "admin.unified.switch_label",
+  "ar": "نوع الحساب"
+ },
+ {
+  "path": "admin.unified.switch_admin",
+  "ar": "أدمن"
+ },
+ {
+  "path": "admin.unified.title",
+  "ar": "تسجيل الدخول"
+ },
+ {
+  "path": "admin.unified.subtitle",
+  "ar": "اختر نوع الحساب ثم أدخل بياناتك."
+ },
+ {
+  "path": "admin.unified.identity_pharmacy",
+  "ar": "معرّف الصيدلية (Pharmacy ID)"
+ },
+ {
+  "path": "admin.unified.identity_pharmacy_placeholder",
+  "ar": "أدخل Pharmacy ID الخاص بالصيدلية"
+ },
+ {
+  "path": "admin.unified.identity_pharmacy_hint",
+  "ar": "استخدم Pharmacy ID الذي منحه الأدمن."
+ },
+ {
+  "path": "admin.unified.identity_admin_placeholder",
+  "ar": "admin@example.com"
+ },
+ {
+  "path": "admin.unified.identity_admin_hint",
+  "ar": "استخدم البريد الإلكتروني وكلمة المرور الخاصة بك."
+ },
+ {
+  "path": "admin.unified.remember",
+  "ar": "تذكرني"
+ },
+ {
+  "path": "admin.unified.forgot",
+  "ar": "نسيت كلمة المرور؟"
+ },
+ {
+  "path": "admin.unified.submit_pharmacy",
+  "ar": "الدخول كصيدلية"
+ },
+ {
+  "path": "admin.unified.submit_admin",
+  "ar": "الدخول كأدمن"
+ },
+ {
+  "path": "admin.unified.submitting",
+  "ar": "جارٍ التحقق والدخول…"
+ },
+ {
+  "path": "admin.unified.slow_note",
+  "ar": "الاتصال بالخادم بطيء قليلاً، الرجاء الانتظار…"
+ },
+ {
+  "path": "admin.unified.preparing",
+  "ar": "جارٍ تجهيز لوحة التحكم…"
+ },
+ {
+  "path": "admin.unified.preparing_failed",
+  "ar": "تعذر تجهيز البيانات، جارٍ المتابعة."
+ },
+ {
+  "path": "admin.unified.preparing_retry",
+  "ar": "إعادة تجهيز"
+ },
+ {
+  "path": "admin.unified.preparing_continue",
+  "ar": "المتابعة الآن"
+ },
+ {
+  "path": "admin.unified.missing_pharmacy",
+  "ar": "يرجى إدخال معرّف الصيدلية وكلمة المرور"
+ },
+ {
+  "path": "admin.unified.missing_admin",
+  "ar": "يرجى إدخال البريد الإلكتروني وكلمة المرور"
+ },
+ {
+  "path": "admin.unified.no_account",
+  "ar": "ليس لديك حساب؟"
+ },
+ {
+  "path": "admin.unified.register_link",
+  "ar": "سجّل صيدليتك الآن"
+ },
+ {
+  "path": "admin.unified.go_admin",
+  "ar": "الدخول كأدمن"
+ },
+ {
+  "path": "admin.dashboard.subtitle",
+  "ar": "نظرة عامة على المنصة"
+ },
+ {
+  "path": "admin.dashboard.active_pharmacies",
+  "ar": "الصيدليات المفعّلة"
+ },
+ {
+  "path": "admin.dashboard.total_medicines",
+  "ar": "الأدوية المسجّلة"
+ },
+ {
+  "path": "admin.dashboard.new_this_week",
+  "ar": "الجديد هذا الأسبوع"
+ },
+ {
+  "path": "admin.dashboard.medicines_recently",
+  "ar": "أُضيفت خلال 30 يوماً"
+ },
+ {
+  "path": "admin.dashboard.filter_searches",
+  "ar": "عمليات البحث"
+ },
+ {
+  "path": "admin.dashboard.activity_pharmacy_joined",
+  "ar": "انضمت صيدلية: {name}"
+ },
+ {
+  "path": "admin.dashboard.activity_patient_registered",
+  "ar": "سجّل مريض جديد: {name}"
+ },
+ {
+  "path": "admin.pharmacies.add_title",
+  "ar": "إضافة صيدلية جديدة"
+ },
+ {
+  "path": "admin.pharmacies.add_hint",
+  "ar": "سيُنشأ الحساب ويُولَّد معرّف وكلمة مرور لمرة واحدة."
+ },
+ {
+  "path": "admin.pharmacies.filter_disabled",
+  "ar": "معطّلة"
+ },
+ {
+  "path": "admin.pharmacies.col_id",
+  "ar": "المعرّف"
+ },
+ {
+  "path": "admin.pharmacies.status_disabled",
+  "ar": "معطّلة"
+ },
+ {
+  "path": "admin.pharmacies.phone_missing",
+  "ar": "لا يوجد هاتف"
+ },
+ {
+  "path": "admin.pharmacies.address_not_specified",
+  "ar": "العنوان غير محدّد"
+ },
+ {
+  "path": "admin.pharmacies.date_missing",
+  "ar": "—"
+ },
+ {
+  "path": "admin.pharmacies.map",
+  "ar": "خريطة"
+ },
+ {
+  "path": "admin.pharmacies.items_suffix",
+  "ar": "Items"
+ },
+ {
+  "path": "admin.pharmacies.show_map",
+  "ar": "عرض الموقع على الخريطة"
+ },
+ {
+  "path": "admin.pharmacies.map_no_coords",
+  "ar": "لا توجد إحداثيات مسجّلة لهذه الصيدلية."
+ },
+ {
+  "path": "admin.pharmacies.open_in_maps",
+  "ar": "فتح في خرائط جوجل"
+ },
+ {
+  "path": "admin.pharmacies.copy_tooltip",
+  "ar": "نسخ المعرّف"
+ },
+ {
+  "path": "admin.pharmacies.copied",
+  "ar": "تم نسخ المعرّف"
+ },
+ {
+  "path": "admin.pharmacies.copy_failed",
+  "ar": "تعذّر النسخ — انسخ المعرّف يدويًا."
+ },
+ {
+  "path": "admin.pharmacies.stat_active",
+  "ar": "المفعّلة"
+ },
+ {
+  "path": "admin.pharmacies.stat_disabled",
+  "ar": "المعطّلة"
+ },
+ {
+  "path": "admin.pharmacies.action_reset",
+  "ar": "إعادة تعيين بيانات الدخول"
+ },
+ {
+  "path": "admin.pharmacies.confirm_delete",
+  "ar": "هل أنت متأكد من حذف هذه الصيدلية؟ لا يمكن التراجع."
+ },
+ {
+  "path": "admin.pharmacies.confirm_toggle",
+  "ar": "هل أنت متأكد من تغيير حالة هذه الصيدلية؟"
+ },
+ {
+  "path": "admin.pharmacies.confirm_reset",
+  "ar": "سيتم توليد كلمة مرور جديدة وإبطال الجلسات الحالية. متابعة؟"
+ },
+ {
+  "path": "admin.pharmacies.created",
+  "ar": "تمت إضافة الصيدلية بنجاح"
+ },
+ {
+  "path": "admin.pharmacies.updated",
+  "ar": "تم تحديث بيانات الصيدلية"
+ },
+ {
+  "path": "admin.pharmacies.deleted",
+  "ar": "تم حذف الصيدلية"
+ },
+ {
+  "path": "admin.pharmacies.status_updated",
+  "ar": "تم تحديث حالة الصيدلية"
+ },
+ {
+  "path": "admin.pharmacies.credentials_warning",
+  "ar": "انسخ هذه البيانات الآن وسلّمها للصيدلية. لن تظهر مرة أخرى بعد إغلاق هذه النافذة."
+ },
+ {
+  "path": "admin.pharmacies.credentials_id",
+  "ar": "معرّف الصيدلية"
+ },
+ {
+  "path": "admin.pharmacies.credentials_copied",
+  "ar": "تم النسخ"
+ },
+ {
+  "path": "admin.medicines.registered_medicines",
+  "ar": "{count} دواء مسجل"
+ },
+ {
+  "path": "admin.medicines.col_image",
+  "ar": "الصورة"
+ },
+ {
+  "path": "admin.medicines.col_ingredient",
+  "ar": "المادة الفعّالة"
+ },
+ {
+  "path": "admin.medicines.stat_available",
+  "ar": "متوفرة"
+ },
+ {
+  "path": "admin.medicines.stat_low",
+  "ar": "منخفضة"
+ },
+ {
+  "path": "admin.medicines.stat_out",
+  "ar": "نافدة"
+ },
+ {
+  "path": "admin.medicines.pharmacy_count",
+  "ar": "{count} صيدلية"
+ },
+ {
+  "path": "admin.medicines.unit_items",
+  "ar": "دواء"
+ },
+ {
+  "path": "admin.medicines.deleted",
+  "ar": "تم حذف الدواء"
+ },
+ {
+  "path": "admin.medicines.delete_failed",
+  "ar": "تعذّر حذف الدواء، حاول مرة أخرى."
+ },
+ {
+  "path": "admin.medicines.form.edit_title",
+  "ar": "تعديل الدواء: {name}"
+ },
+ {
+  "path": "admin.medicines.form.image_hint",
+  "ar": "الصق رابط صورة (Cloudinary) أو اتركه فارغًا."
+ },
+ {
+  "path": "admin.medicines.form.alternatives_desc",
+  "ar": "اختر الأدوية التي يمكن أن تكون بديلًا لهذا الدواء."
+ },
+ {
+  "path": "admin.medicines.form.alternatives_selected",
+  "ar": "المحدّد: {count}"
+ },
+ {
+  "path": "admin.medicines.form.alternatives_none",
+  "ar": "لم تُحدَّد بدائل"
+ },
+ {
+  "path": "admin.medicines.form.search_results_label",
+  "ar": "نتائج البحث عن البدائل"
+ },
+ {
+  "path": "admin.medicines.form.created",
+  "ar": "تمت إضافة الدواء بنجاح"
+ },
+ {
+  "path": "admin.medicines.form.updated",
+  "ar": "تم تحديث الدواء بنجاح"
+ },
+ {
+  "path": "admin.medicines.form.save_failed",
+  "ar": "تعذّر حفظ الدواء، حاول مرة أخرى."
+ },
+ {
+  "path": "admin.medicines.form.back",
+  "ar": "العودة إلى الأدوية"
+ },
+ {
+  "path": "admin.medicines.form.loading",
+  "ar": "جارٍ تحميل بيانات الدواء…"
+ },
+ {
+  "path": "admin.medicines.form.not_found",
+  "ar": "لم يُعثر على هذا الدواء."
+ },
+ {
+  "path": "admin.medicines.form.name_required",
+  "ar": "اسم الدواء مطلوب"
+ },
+ {
+  "path": "admin.medicines.form.ingredient_required",
+  "ar": "المادة الفعالة مطلوبة"
+ },
+ {
+  "path": "admin.medicines.form.search_hint",
+  "ar": "اكتب حرفين على الأقل من اسم الدواء للبحث."
+ },
+ {
+  "path": "admin.requests.filter_approved",
+  "ar": "معتمدة"
+ },
+ {
+  "path": "admin.requests.filter_rejected",
+  "ar": "مرفوضة"
+ },
+ {
+  "path": "admin.requests.status_approved",
+  "ar": "معتمدة"
+ },
+ {
+  "path": "admin.requests.status_rejected",
+  "ar": "مرفوضة"
+ },
+ {
+  "path": "admin.requests.approve_title",
+  "ar": "اعتماد الطلب"
+ },
+ {
+  "path": "admin.requests.reject_title",
+  "ar": "رفض الطلب"
+ },
+ {
+  "path": "admin.requests.reject_notes_label",
+  "ar": "سبب الرفض"
+ },
+ {
+  "path": "admin.requests.reject_notes_required",
+  "ar": "سبب الرفض مطلوب"
+ },
+ {
+  "path": "admin.requests.approved_msg",
+  "ar": "تم اعتماد الطلب"
+ },
+ {
+  "path": "admin.requests.rejected_msg",
+  "ar": "تم رفض الطلب"
+ },
+ {
+  "path": "admin.requests.search_hint",
+  "ar": "ابحث باسم الدواء (حرفان على الأقل)"
+ },
+ {
+  "path": "admin.users.users_count",
+  "ar": "{count} مستخدم مسجل"
+ },
+ {
+  "path": "admin.users.you",
+  "ar": "أنت"
+ },
+ {
+  "path": "admin.users.toggle_deactivate_hint",
+  "ar": "سيتم تعطيل هذا الحساب ومنعه من الدخول."
+ },
+ {
+  "path": "admin.users.toggle_activate_hint",
+  "ar": "سيتم تفعيل هذا الحساب والسماح له بالدخول."
+ },
+ {
+  "path": "admin.users.action_failed",
+  "ar": "تعذّر تنفيذ العملية، حاول مرة أخرى."
+ },
+ {
+  "path": "admin.users.col_avatar",
+  "ar": "الصورة"
+ },
+ {
+  "path": "admin.users.col_email",
+  "ar": "البريد"
+ },
+ {
+  "path": "admin.users.col_phone",
+  "ar": "الهاتف"
+ },
+ {
+  "path": "admin.users.action_toggle",
+  "ar": "تبديل الحالة"
+ },
+ {
+  "path": "admin.users.confirm_delete",
+  "ar": "هل أنت متأكد من حذف هذا المستخدم؟"
+ },
+ {
+  "path": "admin.users.cannot_self",
+  "ar": "لا يمكنك تعطيل أو حذف حسابك."
+ },
+ {
+  "path": "admin.users.updated",
+  "ar": "تم تحديث المستخدم"
+ },
+ {
+  "path": "admin.users.deleted",
+  "ar": "تم حذف المستخدم"
+ },
+ {
+  "path": "admin.users.form.create_title",
+  "ar": "إضافة مستخدم جديد"
+ },
+ {
+  "path": "admin.users.form.edit_title",
+  "ar": "تعديل المستخدم: {name}"
+ },
+ {
+  "path": "admin.users.form.basic_data",
+  "ar": "بيانات المستخدم"
+ },
+ {
+  "path": "admin.users.form.password_hint_edit",
+  "ar": "اتركها فارغة للإبقاء على كلمة المرور الحالية."
+ },
+ {
+  "path": "admin.users.form.password_hint_create",
+  "ar": "8 أحرف على الأقل."
+ },
+ {
+  "path": "admin.users.form.create_submit",
+  "ar": "إضافة المستخدم"
+ },
+ {
+  "path": "admin.users.form.edit_submit",
+  "ar": "حفظ التعديلات"
+ },
+ {
+  "path": "admin.users.form.created",
+  "ar": "تمت إضافة المستخدم بنجاح"
+ },
+ {
+  "path": "admin.users.form.updated",
+  "ar": "تم تحديث بيانات المستخدم بنجاح"
+ },
+ {
+  "path": "admin.users.form.save_failed",
+  "ar": "تعذّر حفظ بيانات المستخدم، حاول مرة أخرى."
+ },
+ {
+  "path": "admin.users.form.back",
+  "ar": "العودة إلى المستخدمين"
+ },
+ {
+  "path": "admin.users.form.loading",
+  "ar": "جارٍ تحميل بيانات المستخدم…"
+ },
+ {
+  "path": "admin.users.form.not_found",
+  "ar": "لم يُعثر على هذا المستخدم."
+ },
+ {
+  "path": "admin.users.form.name_required",
+  "ar": "الاسم مطلوب"
+ },
+ {
+  "path": "admin.users.form.phone_required",
+  "ar": "رقم الهاتف مطلوب"
+ },
+ {
+  "path": "admin.users.form.email_invalid",
+  "ar": "البريد الإلكتروني غير صالح"
+ },
+ {
+  "path": "admin.users.form.password_required",
+  "ar": "كلمة المرور مطلوبة"
+ },
+ {
+  "path": "admin.users.form.password_too_short",
+  "ar": "كلمة المرور يجب أن تكون 8 أحرف على الأقل"
+ },
+ {
+  "path": "admin.users.form.self_role_locked",
+  "ar": "لا يمكنك تغيير دورك لنفسك."
+ },
+ {
+  "path": "admin.users.form.pharmacy_role_locked",
+  "ar": "هذا الحساب مرتبط بصيدلية — لا يمكن تغيير دوره."
+ },
+ {
+  "path": "admin.patients.col_email",
+  "ar": "البريد"
+ },
+ {
+  "path": "admin.patients.col_phone",
+  "ar": "الهاتف"
+ },
+ {
+  "path": "admin.patients.empty",
+  "ar": "لا يوجد مرضى مطابقون"
+ },
+ {
+  "path": "admin.patients.empty_hint",
+  "ar": "لم يُطابق البحث أي مريض مسجَّل."
+ },
+ {
+  "path": "admin.inventory.empty_hint",
+  "ar": "المخزون يُبنى تلقائيًا من أدوية الصيدليات المعتمدة."
+ },
+ {
+  "path": "admin.categories.btn_classify",
+  "ar": "فلاتر الأعراض"
+ },
+ {
+  "path": "admin.categories.btn_sync",
+  "ar": "مزامنة الكتالوج"
+ },
+ {
+  "path": "admin.categories.classify_confirm",
+  "ar": "تصنيف فلاتر الأعراض/الفيتامينات على كل الكتالوج (الروابط الرئيسية لا تُلمس). يتطلب عدة دقائق — متأكد؟"
+ },
+ {
+  "path": "admin.categories.sync_confirm",
+  "ar": "ستتم مزامنة أقسام الكتالوج مع الأدوية (18,330 رابطاً). المزامنة تدوم دقائق — متأكد؟"
+ },
+ {
+  "path": "admin.categories.searching",
+  "ar": "بحث..."
+ },
+ {
+  "path": "admin.categories.col_image",
+  "ar": "الصورة"
+ },
+ {
+  "path": "admin.categories.col_links",
+  "ar": "الأدوية المرتبطة"
+ },
+ {
+  "path": "admin.categories.action_toggle",
+  "ar": "تبديل الحالة"
+ },
+ {
+  "path": "admin.categories.tooltip_review",
+  "ar": "عرض الروابط قيد المراجعة"
+ },
+ {
+  "path": "admin.categories.empty_hint",
+  "ar": "لم يُطابق البحث أي قسم — جرّب جزءًا من الاسم."
+ },
+ {
+  "path": "admin.categories.links_title",
+  "ar": "أدوية القسم"
+ },
+ {
+  "path": "admin.categories.link_approved_msg",
+  "ar": "تم اعتماد الربط"
+ }
+]

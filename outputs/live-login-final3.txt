@@ -1,0 +1,40 @@
+=== probing https://daway-frontend.vercel.app ===
+reloads seen  : 0
+origin        : https://daway-frontend.vercel.app
+form appeared : true
+raw fetch     : {"ok":true,"status":200,"body":"{\"success\":true,\"message\":\"Logged in successfully\",\"data\":{\"user\":{\"id\":2,\"name\":\"\\u0635\\u064a\\u062f\\u0644\\u064a\\u0629 \\u0627\\u0644\\u0623\\u0645\\u0644\",\"pharmacy_id\":\"PH-1234\",\"role\":\"pharmacy\",\"must_c"}
+filled        : {"identity":"PH-1234","passwordLen":8,"btnDisabled":false}
+page state    : {"path":"/","h1":"لوحة الإحصائيات","hasSidebar":true,"visibleError":"","bodyHead":"تخطَّ إلى المحتوى الرئيسي دواك الصحة، في مكان واحد ص صيدلية الأمل صيدلية لوحة تحكم الصيدلية لوحة التحكم إدارة الأدوية إد"}
+path before   : /login
+path after    : /
+token         : absent
+
+--- requests to the API ---
+  -> POST https://daway-backend-zlh2.onrender.com/api/login/pharmacy
+  -> OPTIONS https://daway-backend-zlh2.onrender.com/api/login/pharmacy
+  <- 204 https://daway-backend-zlh2.onrender.com/api/login/pharmacy
+  <- 200 https://daway-backend-zlh2.onrender.com/api/login/pharmacy
+  -> OPTIONS https://daway-backend-zlh2.onrender.com/api/pharmacy/inquiries?per_page=1
+  -> OPTIONS https://daway-backend-zlh2.onrender.com/api/pharmacy/inventory?per_page=100
+  -> GET https://daway-backend-zlh2.onrender.com/api/pharmacy/inquiries?per_page=1
+  -> GET https://daway-backend-zlh2.onrender.com/api/pharmacy/inventory?per_page=100
+  <- 204 https://daway-backend-zlh2.onrender.com/api/pharmacy/inventory?per_page=100
+  <- 204 https://daway-backend-zlh2.onrender.com/api/pharmacy/inquiries?per_page=1
+  <- 200 https://daway-backend-zlh2.onrender.com/api/pharmacy/inventory?per_page=100
+  <- 200 https://daway-backend-zlh2.onrender.com/api/pharmacy/inquiries?per_page=1
+  -> OPTIONS https://daway-backend-zlh2.onrender.com/api/pharmacy/dashboard/stats
+  -> OPTIONS https://daway-backend-zlh2.onrender.com/api/profile/pharmacy
+  -> GET https://daway-backend-zlh2.onrender.com/api/pharmacy/dashboard/stats
+  -> GET https://daway-backend-zlh2.onrender.com/api/profile/pharmacy
+  -> GET https://daway-backend-zlh2.onrender.com/api/pharmacy/accounting/sales?per_page=1
+  -> OPTIONS https://daway-backend-zlh2.onrender.com/api/pharmacy/accounting/sales?per_page=1
+  <- 204 https://daway-backend-zlh2.onrender.com/api/pharmacy/dashboard/stats
+  <- 204 https://daway-backend-zlh2.onrender.com/api/profile/pharmacy
+
+--- failed requests ---
+  (none)
+
+--- console (first 25) ---
+  (nothing)
+
+RESULT: LOGIN SUCCEEDED

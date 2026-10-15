@@ -1,0 +1,14 @@
+=== probing https://daway-frontend.vercel.app ===
+origin        : https://daway-frontend.vercel.app
+form appeared : true
+path before   : /login
+path after    : /login
+token stored  : false
+
+--- console (first 30) ---
+  (nothing)
+
+--- failed requests ---
+  (none)
+
+RESULT: LOGIN FAILED

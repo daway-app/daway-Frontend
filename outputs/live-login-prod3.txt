@@ -1,0 +1,20 @@
+=== probing https://daway-frontend.vercel.app ===
+origin        : https://daway-frontend.vercel.app
+form appeared : true
+file:///C:/Users/MSI/daway-web/tools/live-login-probe.mjs:82
+      if (msg.error) reject(new Error(JSON.stringify(msg.error)));
+                            ^
+
+Error: {"code":-32000,"message":"Inspected target navigated or closed"}
+    at WebSocket.<anonymous> (file:///C:/Users/MSI/daway-web/tools/live-login-probe.mjs:82:29)
+    at WebSocket.emit (node:events:519:28)
+    at Receiver.receiverOnMessage (C:\Users\MSI\.workbuddy-ai\binaries\node\workspace\node_modules\ws\lib\websocket.js:1253:20)
+    at Receiver.emit (node:events:519:28)
+    at Receiver.dataMessage (C:\Users\MSI\.workbuddy-ai\binaries\node\workspace\node_modules\ws\lib\receiver.js:633:14)
+    at Receiver.getData (C:\Users\MSI\.workbuddy-ai\binaries\node\workspace\node_modules\ws\lib\receiver.js:532:10)
+    at Receiver.startLoop (C:\Users\MSI\.workbuddy-ai\binaries\node\workspace\node_modules\ws\lib\receiver.js:190:16)
+    at Receiver._write (C:\Users\MSI\.workbuddy-ai\binaries\node\workspace\node_modules\ws\lib\receiver.js:117:10)
+    at writeOrBuffer (node:internal/streams/writable:572:12)
+    at _write (node:internal/streams/writable:501:10)
+
+Node.js v22.22.2

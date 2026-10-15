@@ -113,9 +113,18 @@ try {
   });
 
   const reqByCdpId = new Map();
+  let navCount = 0;
 
   const drain = () => {
     for (const e of events.splice(0)) {
+      if (e.method === 'Page.frameNavigated' && !e.params.frame.parentId) {
+        // The app reloads ONCE on a fresh profile: the service worker calls
+        // skipWaiting()+clients.claim() and src/pwa.ts reloads on
+        // `controllerchange`. That reload kills any in-flight Runtime.evaluate,
+        // so we count navigations and wait for them to stop before driving the
+        // form — otherwise the probe reports a bogus failure.
+        navCount++;
+      }
       if (e.method === 'Runtime.consoleAPICalled') {
         const text = (e.params.args || [])
           .map((a) => a.value ?? a.description ?? a.unserializableValue ?? '')
@@ -150,8 +159,14 @@ try {
   };
 
   const evalJs = async (expression, awaitPromise = false) => {
-    const res = await S('Runtime.evaluate', { expression, returnByValue: true, awaitPromise });
-    return res?.result?.value;
+    // A reload mid-call makes CDP answer -32000 and the result never arrives.
+    // Retry, so a service-worker reload cannot masquerade as a real failure.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const res = await S('Runtime.evaluate', { expression, returnByValue: true, awaitPromise });
+      if (res !== undefined) return res?.result?.value;
+      await sleep(600);
+    }
+    return undefined;
   };
 
   const waitFor = async (expr, tries = 60, step = 400) => {
@@ -162,11 +177,28 @@ try {
     return false;
   };
 
+  /** Wait until the page stops navigating (the SW reload fires exactly once). */
+  const waitStable = async (quietMs = 3500, maxMs = 30000) => {
+    const start = Date.now();
+    let last = -1;
+    let quietSince = Date.now();
+    while (Date.now() - start < maxMs) {
+      if (navCount !== last) { last = navCount; quietSince = Date.now(); }
+      if (Date.now() - quietSince > quietMs) return true;
+      await sleep(300);
+    }
+    return false;
+  };
+
   console.log(`=== probing ${BASE} ===`);
   await S('Page.navigate', { url: `${BASE}/login` });
 
-  const formAppeared = await waitFor(`!!document.querySelector('#identityInput')`, 75);
+  await waitFor(`!!document.querySelector('#identityInput')`, 75);
+  // Let the one-time service-worker reload finish before touching the form.
+  await waitStable();
+  const formAppeared = await waitFor(`!!document.querySelector('#identityInput')`, 40);
   const origin = await evalJs('location.origin');
+  console.log(`reloads seen  : ${navCount}`);
   console.log(`origin        : ${origin}`);
   console.log(`form appeared : ${formAppeared}`);
   if (!formAppeared) {
@@ -221,7 +253,7 @@ try {
   await sleep(1200);
 
   let afterPath = beforePath;
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 180; i++) {
     afterPath = await evalJs('location.pathname');
     if (afterPath !== beforePath) break;
     await sleep(500);
@@ -243,7 +275,7 @@ try {
   const errText = await evalJs(
     `(document.querySelector('.error-message')?.innerText || '').trim().slice(0, 200)`,
   );
-  const token = await evalJs(`window.localStorage.getItem('daway.token') ? 'present' : 'absent'`);
+  const token = await evalJs(`window.localStorage.getItem('daway.auth.token') ? 'present' : 'absent'`);
 
   console.log(`path before   : ${beforePath}`);
   console.log(`path after    : ${afterPath}`);

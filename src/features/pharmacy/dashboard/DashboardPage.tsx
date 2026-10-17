@@ -87,7 +87,15 @@ export function DashboardPage() {
   const statusColors = ['--success', '--warning', '--danger'];
 
   const lowStockItems = data?.low_stock_items ?? [];
-  const latestRatings = data?.latest_ratings ?? [];
+  /**
+   * DEFECT-2: the Blade dashboard rendered "آخر استفسارات المرضى" from
+   * `$inquiriesList`, but the React port read `latest_ratings` into that card —
+   * so the card titled "inquiries" showed star ratings instead. The API now
+   * sends `latest_inquiries` (matching the i18n keys `latest_inquiries_*`
+   * that were already waiting for it); if a stale backend has not shipped it
+   * yet, the card falls back to its empty state instead of mislabeling ratings.
+   */
+  const latestInquiries = data?.latest_inquiries ?? [];
 
   /*
    * First-run checklist.
@@ -298,16 +306,17 @@ export function DashboardPage() {
           </Card>
 
           <Card title={D.latest_inquiries} icon="fas fa-comment-dots" description={D.latest_inquiries_desc}>
-            {latestRatings.length > 0 ? (
-              latestRatings.map((rating) => (
-                <div className="ph-inquiry-mini" key={rating.id}>
+            {latestInquiries.length > 0 ? (
+              latestInquiries.map((inq) => (
+                <div className="ph-inquiry-mini" key={inq.id}>
                   <div className="who">
-                    <strong>{rating.user_name || D.patient_fallback}</strong>
-                    <span>{relativeTime(rating.created_at)}</span>
+                    <strong>{inq.user_name || D.patient_fallback}</strong>
+                    <span>{relativeTime(inq.created_at)}</span>
                   </div>
                   <p>
-                    {'★'.repeat(rating.stars_rating)}
-                    {rating.comment ? ` — ${rating.comment}` : ''}
+                    {inq.medicine_trade_name
+                      ? D.inquiry_q.replace(':medicine', inq.medicine_trade_name)
+                      : inq.message}
                   </p>
                 </div>
               ))

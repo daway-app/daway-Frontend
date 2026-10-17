@@ -77,6 +77,17 @@ export interface ApiDashboardRating {
   created_at: string | null;
 }
 
+/** A patient inquiry, as surfaced on the dashboard "latest inquiries" card.
+ * Contract mirrors the Blade `$inquiriesList` shape (dashboard/index.blade.php:121+). */
+export interface ApiDashboardInquiry {
+  id: number;
+  user_name: string | null;
+  medicine_trade_name: string | null;
+  message: string | null;
+  status: string;
+  created_at: string | null;
+}
+
 export interface ApiLowStockItem {
   pharmacy_medicine_id: number;
   medicine_id: number | null;
@@ -94,6 +105,7 @@ export interface ApiDashboardStats {
   total_inquiries: number;
   new_ratings_this_week: number;
   latest_ratings: ApiDashboardRating[];
+  latest_inquiries: ApiDashboardInquiry[];
   low_stock_items: ApiLowStockItem[];
 }
 

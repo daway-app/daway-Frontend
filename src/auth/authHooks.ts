@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo } from 'react';
 import type { ApiStack } from './session';
 import type { AuthUser } from './authContract';
 import type { PharmacyApi } from '@/api/pharmacyApi';
+import type { ScanSessionApi } from '@/api/scanSessionApi';
 
 /**
  * Bind every method of an API object to its owner.
@@ -56,6 +57,18 @@ export function useApi(): ApiStack {
 export function usePharmacyApi(): PharmacyApi {
   const stack = useApi();
   return useMemo(() => bindAll(stack.pharmacy), [stack]);
+}
+
+/**
+ * The scan-session API, fully bound.
+ *
+ * A separate hook from `usePharmacyApi` because the scanner is an optional
+ * capability with its own lifecycle; a screen that only sells medicines should
+ * not have to know it exists.
+ */
+export function useScanSessionApi(): ScanSessionApi {
+  const stack = useApi();
+  return useMemo(() => bindAll(stack.scanSessions), [stack]);
 }
 
 export function useAuth(): AuthContextValue {

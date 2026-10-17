@@ -4,6 +4,7 @@ import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
+import { ScanSessionModal } from '@/features/pharmacy/scanner/ScanSessionModal';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useAuth } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -90,6 +91,10 @@ export function AccountingSaleCreatePage() {
   const [msg, setMsg] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
   const [scanNote, setScanNote] = useState(false);
   const [savedNumber, setSavedNumber] = useState<string | null>(null);
+  // Phone-as-scanner: opening this mounts a real scan session (see
+  // `ScanSessionModal`). Remote scans arrive at `submitBarcode(code)` — the SAME
+  // path as a typed/USB code, so no cart or pricing rule is duplicated.
+  const [phoneScannerOpen, setPhoneScannerOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   /*
@@ -249,12 +254,20 @@ export function AccountingSaleCreatePage() {
   /**
    * Barcode submit — resolves the code through the real lookup, then matches the
    * catalogue medicine back onto a stock row.
+   *
+   * `rawCode` is the bridge for the phone scanner: a remote scan delivers a code
+   * that must go through EXACTLY this path (same lookup, same stock match, same
+   * "not found" handling), never a parallel one. Omitted, it reads the input
+   * field as before — so every existing call site is unchanged.
+   *
+   * Returns `true` only when a stock row was found and shown to the cashier;
+   * the scanner uses that to decide whether to flash "received".
    */
-  async function submitBarcode() {
-    const code = barcode.trim();
+  async function submitBarcode(rawCode?: string): Promise<boolean> {
+    const code = (rawCode ?? barcode).trim();
     if (!code) {
       setMsg({ tone: 'err', text: A.barcode.empty_code });
-      return;
+      return false;
     }
     setScanNote(false);
     setScanFound(null);
@@ -270,13 +283,15 @@ export function AccountingSaleCreatePage() {
       if (!row) {
         setScanNote(true);
         setMsg({ tone: 'err', text: A.pos.barcode_not_found });
-        return;
+        return false;
       }
       setScanFound({ ...row, barcode: code });
       setMsg(null);
+      return true;
     } catch {
       setScanNote(true);
       setMsg({ tone: 'err', text: A.pos.barcode_not_found });
+      return false;
     }
   }
 
@@ -383,6 +398,7 @@ export function AccountingSaleCreatePage() {
                   name="barcode"
                   value={barcode}
                   onValueChange={setBarcode}
+                  onOpenPhoneScanner={() => setPhoneScannerOpen(true)}
                 />
                 <p className="ac-field-help">{A.pos.barcode_hint}</p>
 
@@ -792,6 +808,19 @@ export function AccountingSaleCreatePage() {
           {A.common.saved} — {savedNumber}
         </p>
       </Modal>
+
+      {/*
+        Phone-as-scanner pairing. This is the ONLY edit to the POS screen: it
+        opens a session and forwards the raw scanned code into `submitBarcode`,
+        which is the existing, tested lookup path. No cart, price, discount,
+        payment or sale logic is touched — `onBarcode` returns whether the code
+        resolved, and nothing else about the till changes.
+      */}
+      <ScanSessionModal
+        open={phoneScannerOpen}
+        onClose={() => setPhoneScannerOpen(false)}
+        onBarcode={(code) => submitBarcode(code)}
+      />
     </div>
   );
 }

@@ -876,6 +876,17 @@ export const EN = {
       disconnected_note: 'Your cart is kept as it is.',
       mock_title: 'Demo mode',
       mock_body: 'Scan session endpoints are not wired yet. What you see here is for display only and is not recorded.',
+
+      // ── Real session (wired to the API) ──────────────────────────────
+      creating: 'Creating scan session…',
+      create_failed: 'Could not create a scan session. Check your connection and try again.',
+      session_note:
+        'Keep this window open. Every barcode scanned on the phone lands here, straight in the sale screen.',
+      retry: 'Try again',
+      approve: 'Allow',
+      reject: 'Reject',
+      closing: 'Closing the session…',
+      seconds_unit: 's',
     },
     nav: {
       breadcrumb_dashboard: 'Pharmacy Dashboard',

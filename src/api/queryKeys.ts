@@ -58,6 +58,8 @@ export function pharmacyKeys(id: string | number) {
     suppliers: [...base, 'suppliers'] as const,
     // Sidebar badges: unread inquiries + low stock
     sidebarCounts: [...base, 'sidebar', 'counts'] as const,
+    // Phone-as-scanner: the active scan session, if one is open on this screen.
+    scanSession: (sessionId: string) => [...base, 'scan-session', sessionId] as const,
   };
 }
 

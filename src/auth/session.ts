@@ -1,6 +1,7 @@
 import { createApiClient, type ApiClient } from '@/api/client';
 import { createAuthApi, type AuthApi } from '@/api/authApi';
 import { createPharmacyApi, type PharmacyApi } from '@/api/pharmacyApi';
+import { createScanSessionApi, type ScanSessionApi } from '@/api/scanSessionApi';
 import { createAdminApi, type AdminApi } from '@/api/adminApi';
 import { queryClient } from '@/api/queryClient';
 import {
@@ -81,6 +82,10 @@ export function createApiStack(options?: {
 
   const auth: AuthApi = createAuthApi(client);
   const pharmacy: PharmacyApi = createPharmacyApi(client);
+  // Web half of the phone-as-scanner feature. Kept beside `pharmacy` because it
+  // shares the same Bearer token, but SEGREGATED because it is session-scoped
+  // ephemeral state (a 5-minute pairing) rather than a data resource.
+  const scanSessions: ScanSessionApi = createScanSessionApi(client);
 
   // Wire the cycle: refresh now delegates to the auth API.
   refreshImpl = () => auth.refresh();
@@ -89,6 +94,7 @@ export function createApiStack(options?: {
     client,
     auth,
     pharmacy,
+    scanSessions,
     tokens,
 
     /** Current user, or `null` when signed out. */

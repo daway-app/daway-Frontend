@@ -29,6 +29,8 @@ export function BarcodeField({
   onValueChange,
   showStatus = true,
   required = false,
+  onOpenPhoneScanner,
+  scannerConnected = false,
 }: {
   id: string;
   name?: string;
@@ -37,12 +39,27 @@ export function BarcodeField({
   onValueChange: (next: string) => void;
   showStatus?: boolean;
   required?: boolean;
+  /**
+   * When supplied, the "scan with phone" button calls THIS instead of opening
+   * the presentation-only modal below — letting the parent own a real scan
+   * session. Omitting it preserves the original behaviour verbatim, so screens
+   * that have not been wired are untouched.
+   */
+  onOpenPhoneScanner?: () => void;
+  /** Lights the green "device connected" dot on the phone button. */
+  scannerConnected?: boolean;
 }) {
   const { STR } = useLang();
   const B = STR.accounting.barcode;
   const resolvedLabel = label ?? B.field_label;
   const [phoneOpen, setPhoneOpen] = useState(false);
   const inputEl = () => document.getElementById(id) as HTMLInputElement | null;
+
+  const wired = typeof onOpenPhoneScanner === 'function';
+  const openPhoneScanner = () => {
+    if (wired) onOpenPhoneScanner!();
+    else setPhoneOpen(true);
+  };
 
   return (
     <>
@@ -135,7 +152,7 @@ export function BarcodeField({
           data-phone-scanner-open
           aria-haspopup="dialog"
           aria-controls="ac-phone-scanner-modal"
-          onClick={() => setPhoneOpen(true)}
+          onClick={openPhoneScanner}
         >
           <span className="ac-phone-scan-icon" aria-hidden="true">
             <svg
@@ -155,16 +172,23 @@ export function BarcodeField({
             </svg>
           </span>
           <span className="ac-phone-scan-text">{STR.accounting.scanner.button}</span>
-          <span className="ac-phone-scan-dot" data-phone-scanner-dot hidden aria-hidden="true" />
+          <span
+            className="ac-phone-scan-dot"
+            data-phone-scanner-dot
+            hidden={!scannerConnected}
+            aria-hidden="true"
+          />
         </button>
       </div>
 
       {/*
-        The phone-scanner modal is part of the Blade DOM (`x-accounting.phone-scanner-modal`).
-        B3 keeps it presentation-only: it opens and shows the pairing steps, but no
-        scanner session is created. Kept so the screen is not missing a piece.
+        Presentation-only fallback modal (the Blade `x-accounting.phone-scanner-modal`
+        port). It is shown ONLY when the caller did not supply `onOpenPhoneScanner`
+        — i.e. on screens where the real session has not been wired yet, so the
+        screen is not missing a piece. When wired, the caller renders its own
+        `ScanSessionModal` and this branch is unreachable.
       */}
-      {phoneOpen && (
+      {!wired && phoneOpen && (
         <Modal
           open
           title={STR.accounting.scanner.modal_title}

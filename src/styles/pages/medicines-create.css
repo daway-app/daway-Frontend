@@ -1,0 +1,164 @@
+/* /resources/css/medicines_create.css — Daway Pharmacy: add-medicine screen */
+
+/* Page wrapper — mirrors .edit-medicine-page-wrapper for visual parity. */
+.edit-medicine-page-wrapper.med-create {
+  max-width: 850px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Success banner (replaces .ph-alt-notice specific margin here). */
+.edit-medicine-page-wrapper.med-create .ph-alt-notice {
+  margin-block-end: 16px;
+}
+
+/* Done-state action buttons. */
+.med-create-done-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+/* Inline status text (searching / stock preview). */
+.med-create-status {
+  margin: 6px 0 2px;
+  font-size: var(--fs-2xs);
+  color: var(--ink-soft);
+}
+.med-create-status.is-error {
+  color: var(--danger-text);
+}
+
+/* Catalogue results list. */
+.moh-search-results {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--ph-r-md);
+  background: var(--paper);
+  margin-top: 8px;
+  padding: 0;
+  list-style: none;
+}
+.moh-search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-soft);
+  cursor: pointer;
+}
+.moh-search-item:last-child { border-bottom: none; }
+.moh-search-item[aria-selected="true"],
+.moh-search-item.moh-selected {
+  background: var(--teal-mist);
+}
+.moh-result-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.moh-result-badge {
+  display: inline-block;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: var(--ph-r-sm);
+  background: var(--line-soft);
+  color: var(--ink-soft);
+}
+.moh-result-price {
+  font-size: var(--fs-xs);
+  color: var(--ink-soft);
+}
+
+/* Selected medicine preview card. */
+.moh-selected {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--ph-r-md);
+  background: var(--paper);
+  margin-top: 12px;
+}
+.moh-selected-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.moh-selected-info strong {
+  color: var(--ink);
+  font-size: var(--fs-sm);
+}
+.moh-official-price {
+  font-size: var(--fs-xs);
+  color: var(--ink-soft);
+}
+
+/* Manual-add fallback CTA. */
+.med-create-manual-cta {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
+.med-create-manual-title {
+  margin: 0 0 4px;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+.med-create-manual-desc {
+  margin: 0 0 10px;
+  font-size: var(--fs-2xs);
+  color: var(--ink-soft);
+}
+
+/* Stock preview pill (next to quantity input). */
+.med-create-preview {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+}
+.med-create-preview.is-available { color: var(--ok-text); }
+.med-create-preview.is-low     { color: var(--warn-text); }
+.med-create-preview.is-out     { color: var(--danger-text); }
+
+/* Card footer (actions inside a card). */
+.card-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+/* Back link at bottom of page. */
+.med-form-back {
+  margin-top: 24px;
+  text-align: right;
+}
+
+/* Dark-mode adjustments for the new surface classes. */
+body.dark-mode .moh-search-results,
+body.dark-mode .moh-selected,
+body.dark-mode .med-create-manual-cta {
+  background: var(--paper);
+  border-color: var(--line-strong);
+}
+body.dark-mode .moh-search-item {
+  border-bottom-color: var(--line-strong);
+}
+body.dark-mode .moh-selected-info strong {
+  color: var(--ink);
+}
+
+/* Reuse the shared fade-in animation if not already defined. */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

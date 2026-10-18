@@ -5,6 +5,7 @@ import type {
   ApiAccountingOverview,
   ApiAlternativeBlock,
   ApiBarcodeMedicine,
+  ApiCatalogSearchResult,
   ApiCategory,
   ApiImportSession,
   ApiSalePayload,
@@ -187,11 +188,39 @@ export function createPharmacyApi(client: ApiClient) {
      * Used by the "request a new medicine" form, whose `category_id` is required
      * and validated with `exists:categories,id`.
      */
+
+    /**
+     * Live catalogue search for the create screen.
+     * Returns BOTH the local catalogue and the MOH catalogue — unlike
+     * `searchMedicines`, which flattens them. The create screen needs the
+     * source of each hit (`medicine_id` vs `moh_medicine_id`).
+     */
+    async searchCatalog(q: string, signal?: AbortSignal): Promise<ApiCatalogSearchResult> {
+      const res = await client.get<ApiSuccess<ApiCatalogSearchResult>>(P.medicinesSearch, {
+        query: { q },
+        signal,
+      });
+      return res.data;
+    },
+
     async categories(signal?: AbortSignal): Promise<ApiCategory[]> {
       const res = await client.get<ApiSuccess<ApiCategory[]>>('/api/categories', {
         signal,
         skipAuth: true,
       });
+      return res.data;
+    },
+
+
+    /** Add a catalogue/MOH pick to the stock (`POST /api/pharmacy/medicines`). */
+    async addMedicine(body: Record<string, unknown>): Promise<ApiInventoryItem> {
+      const res = await client.post<ApiSuccess<ApiInventoryItem>>(P.medicines, body);
+      return res.data;
+    },
+
+    /** Manual add by names (`POST /api/pharmacy/medicines/by-name`). */
+    async addMedicineByName(body: Record<string, unknown>): Promise<ApiInventoryItem> {
+      const res = await client.post<ApiSuccess<ApiInventoryItem>>(P.medicinesByName, body);
       return res.data;
     },
 

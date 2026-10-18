@@ -198,6 +198,30 @@ export interface ApiSearchableMedicine {
   trade_name: string | null;
   active_ingredient: string | null;
 }
+/** One hit of the local catalogue in the create-screen live search. */
+export interface ApiCatalogMedicineHit {
+  type: 'medicine';
+  id: number;
+  name: string | null;
+  name_ar: string | null;
+  sub: string | null;
+}
+
+/** One hit of the MOH catalogue in the create-screen live search. */
+export interface ApiCatalogMohHit {
+  type: 'moh';
+  id: number;
+  name: string | null;
+  sub: string | null;
+  official_price: number | null;
+}
+
+/** `GET /api/pharmacy/medicines/search` — local catalogue + MOH catalogue. */
+export interface ApiCatalogSearchResult {
+  medicines: ApiCatalogMedicineHit[];
+  moh_catalog: ApiCatalogMohHit[];
+}
+
 
 // ══════════════════════════════════════════════════════════════════════
 // Profile

@@ -13,6 +13,7 @@ import type {
   ApiCustomer,
   ApiCustomerDetail,
   ApiCustomersList,
+  ApiSalePaymentResult,
   ApiDashboardStats,
   ApiExpense,
   ApiExpenseCategory,
@@ -647,6 +648,29 @@ export function createPharmacyApi(client: ApiClient) {
 
     async createCustomer(body: Record<string, unknown>): Promise<ApiCustomer> {
       const res = await client.post<ApiSuccess<ApiCustomer>>(P.accCustomers, body);
+      return res.data;
+    },
+
+    /**
+     * Record a customer payment against `POST customers/{id}/payments`.
+     * With `sale_id` the backend updates the SALE itself (paid/remaining/
+     * status) inside the same transaction — the payment and the invoice never
+     * disagree. A surplus above the total is clamped on the invoice and kept
+     * as customer credit (prepaid).
+     */
+    async recordCustomerPayment(
+      customerId: number,
+      body: {
+        amount: number;
+        payment_method: 'cash' | 'card' | 'bank_transfer';
+        sale_id?: number;
+        description?: string;
+      },
+    ): Promise<ApiSalePaymentResult> {
+      const res = await client.post<ApiSuccess<ApiSalePaymentResult>>(
+        `${P.accCustomers}/${customerId}/payments`,
+        body,
+      );
       return res.data;
     },
 

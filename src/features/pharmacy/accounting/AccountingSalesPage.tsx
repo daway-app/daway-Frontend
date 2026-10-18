@@ -1,13 +1,14 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
-import { AsyncBoundary, Modal } from '@/components/ui';
+import { AsyncBoundary } from '@/components/ui';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { money, statusBadgeClass } from '@/lib/format';
 import { useUrlState } from '@/lib/urlState';
 import type { ApiSale, ApiSalesStats } from '@/api/pharmacyTypes';
 import { ROUTES } from '@/routes/paths';
+import { SalePaymentModal } from './SalePaymentModal';
 
 /**
  * Sales log — live against `GET /api/pharmacy/accounting/sales`.
@@ -92,6 +93,8 @@ export function AccountingSalesPage() {
 
   /** The live input value; the URL `q` is the committed term that drives the request. */
   const [q, setQ] = useState(state.q as string);
+  /** The sale whose payment modal is open (needs a linked customer). */
+  const [paySale, setPaySale] = useState<ApiSale | null>(null);
   const committedQ = state.q as string;
   const setCommittedQ = (value: string) => set({ q: value });
   const range = state.range as RangeKey;
@@ -110,7 +113,6 @@ export function AccountingSalesPage() {
   const setPage = (value: number | ((p: number) => number)) => {
     set({ page: typeof value === 'function' ? value(page) : value });
   };
-  const [msg, setMsg] = useState<string | null>(null);
 
   const hasFilters = committedQ !== '' || status !== 'all' || method !== 'all' || range !== 'all';
 
@@ -374,14 +376,26 @@ export function AccountingSalesPage() {
                             >
                               <i className="fas fa-print" aria-hidden="true" />
                             </Link>
-                            {/* Payment / refund are separate flows, not wired in this pass. */}
+                            {/*
+                              ✅ Wired: `POST customers/{id}/payments` +
+                              `sale_id` records the collection AND updates the
+                              sale (paid/remaining/status) server-side.
+                              Needs a customer (credit/walk-in invoices with no
+                              customer stay disabled) and a positive remaining.
+                            */}
                             <button
                               type="button"
                               className="ac-icon-btn"
-                              title={A.common.record_payment}
+                              title={
+                                sale.customer_id !== null && sale.remaining > 0
+                                  ? A.common.record_payment
+                                  : sale.customer_id === null
+                                    ? A.sale_payment.no_customer
+                                    : A.common.payment_unavailable
+                              }
                               aria-label={`${A.common.record_payment} — ${sale.number}`}
-                              disabled={sale.remaining <= 0}
-                              onClick={() => setMsg(A.common.mock_notice)}
+                              disabled={sale.customer_id === null || sale.remaining <= 0}
+                              onClick={() => setPaySale(sale)}
                             >
                               <i className="fas fa-money-bill-wave" aria-hidden="true" />
                             </button>
@@ -456,18 +470,14 @@ export function AccountingSalesPage() {
         </div>
       </AsyncBoundary>
 
-      <Modal
-        open={msg !== null}
-        title={A.common.record_payment}
-        onClose={() => setMsg(null)}
-        footer={
-          <button type="button" className="ph-btn primary" onClick={() => setMsg(null)}>
-            {A.common.close}
-          </button>
-        }
-      >
-        <p className="ph-hint">{msg}</p>
-      </Modal>
+      {paySale && (
+        <SalePaymentModal
+          sale={paySale}
+          open
+          onClose={() => setPaySale(null)}
+          refetch={() => void query.refetch()}
+        />
+      )}
     </div>
   );
 }

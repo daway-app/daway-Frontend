@@ -672,6 +672,14 @@ export const AR = {
       next: 'التالي',
       mock_notice: 'بيانات تجريبية — الواجهة جاهزة للربط بالـAPI',
       /**
+       * ليست في ملفات لارافيل. الـAPI الحالي لا يملك مسارًا لتسجيل دفعة على
+       * فاتورة قائمة (`AccountingSalesController`: index/summary/show/store/
+       * cancel فقط — الدفع يُسجَّل لحظة إنشاء الفاتورة)، لذلك أزرار «تسجيل
+       * دفعة» معطّلة بهذا السبب بدل أن تظهر كأنها متاحة.
+       */
+      payment_unavailable:
+        'تسجيل دفعة على فاتورة قائمة غير مدعوم حاليًا — الدفع يُسجَّل عند إنشاء الفاتورة فقط',
+      /**
        * ADDED (not in the Laravel lang files): the Blade POS redirects to the
        * sales list after saving, so it never showed an in-page confirmation. The
        * SPA keeps the till on screen and needs one.
@@ -756,6 +764,28 @@ export const AR = {
         reason: 'السبب',
         sale_summary: 'ملخّص الفاتورة بعد الإرجاع',
       },
+    },
+
+    /**
+     * «تسجيل دفعة على فاتورة قائمة» — موصول بـ
+     * `POST /api/pharmacy/accounting/customers/{id}/payments` مع `sale_id`:
+     * الدفعة تُسجّل، الصندوق يزداد، والفاتورة نفسها تُحدَّث (paid/remaining/
+     * status) في الخادم داخل نفس المعاملة. يحتاج فاتورة مرتبطة بعميل.
+     */
+    sale_payment: {
+      title: 'تسجيل دفعة على الفاتورة',
+      describe: 'التحصيل يُربط بالفاتورة :number للعميل :customer',
+      payment_method: 'طريقة الدفع',
+      description: 'وصف (اختياري)',
+      description_placeholder: 'مثال: قبض الجزء المتبقي من الفاتورة',
+      amount_note: 'الفاتورة لا تُدفع أكثر من قيمتها — أي فائض يُسجّل في رصيد العميل كسلفة',
+      confirm_hint: 'سيتم تسجيل الدفعة في دفتر الصندوق وتخفيض دين العميل فورًا ولا يمكن التراجع عنها.',
+      confirm_action: 'تأكيد الدفع',
+      success: 'تم تسجيل الدفعة',
+      customer_balance: 'رصيد العميل الآن: :balance',
+      err_amount: 'المبلغ يجب أن يكون أكبر من صفر',
+      /** فاتورة بلا عميل: لا يمكن ربط تحصيل بها عبر الـAPI الحالي. */
+      no_customer: 'فاتورة بلا عميل مرتبط — تسجيل التحصيل يحتاج عميلًا',
     },
 
     cash_registers: {
@@ -947,7 +977,12 @@ export const AR = {
       created_by: 'أنشأها',
       created_at: 'تاريخ الإنشاء',
       print_ready: 'جاهزة للطباعة',
-      download_soon: 'تنزيل PDF غير مدعوم في النظام الحالي',
+      /**
+       * ليست في ملفات لارافيل. زر «تصدير» يُنزّل الآن ملف HTML مستقل يُبنى
+       * من بطاقة الفاتورة نفسها (لا endpoint للتصدير في الخادم) — يفتح في أي
+       * متصفح ويُطبع PDF من المتصفح نفسه.
+       */
+      export_hint: 'سيُنزَّل ملف HTML مستقل للفاتورة — افتحه ثم اطبعه PDF من المتصفح (Ctrl+P)',
       not_found: 'الفاتورة غير موجودة',
       no_payments: 'لا توجد دفعات مسجّلة على هذه الفاتورة',
       refunded_status: 'هذه الفاتورة مُرجَعة بالكامل — لا يمكن إرجاعها مرة أخرى',

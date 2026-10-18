@@ -622,6 +622,23 @@ export interface ApiCustomer {
   created_at: string | null;
 }
 
+/** `POST /customers/{id}/payments` → `data` — payment + refreshed customer. */
+export interface ApiSalePaymentResult {
+  payment: {
+    id: number;
+    amount: number;
+    method: string;
+    /** `paid_at` as a plain `Y-m-d` date. */
+    date: string | null;
+  };
+  customer: {
+    id: number;
+    name: string;
+    /** After the payment: negative means the customer is in credit. */
+    current_balance: number;
+  };
+}
+
 export interface ApiCustomerDetail extends ApiCustomer {
   sales: Array<{
     number: string;

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
-import { AsyncBoundary, Modal } from '@/components/ui';
+import { AsyncBoundary } from '@/components/ui';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { money, statusBadgeClass } from '@/lib/format';
 import type { ApiSale } from '@/api/pharmacyTypes';
 import { ROUTES } from '@/routes/paths';
+import { buildInvoiceHtml, downloadInvoiceHtml, invoiceFileName } from './invoiceExport';
+import { SalePaymentModal } from './SalePaymentModal';
 
 /**
  * Invoice detail — live against `GET /api/pharmacy/accounting/sales/{number}`.
@@ -35,7 +37,7 @@ export function AccountingInvoicePage() {
   const { user } = useAuth();
   const api = usePharmacyApi();
 
-  const [msg, setMsg] = useState<string | null>(null);
+  const [payOpen, setPayOpen] = useState(false);
 
   const query = useApiQuery<ApiSale>((signal) => api.sale(String(number), signal), [number], {
     isEmpty: () => false,
@@ -88,21 +90,76 @@ export function AccountingInvoicePage() {
           <button type="button" className="ph-btn primary" onClick={() => window.print()}>
             <i className="fas fa-print" aria-hidden="true" /> {A.common.print}
           </button>
+          {/*
+            ✅ Export is REAL and local: the backend has no invoice/PDF
+            endpoint, so we build a standalone HTML copy from the SAME
+            validated payload on screen (see `invoiceExport.ts`) and download
+            it — no invented figures, no fake success.
+          */}
           <button
             type="button"
             className="ph-btn ghost"
-            onClick={() => setMsg(A.invoice.download_soon)}
+            title={A.invoice.export_hint}
+            disabled={!sale}
+            onClick={() => {
+              if (!sale) return;
+              downloadInvoiceHtml(
+                buildInvoiceHtml(sale, {
+                  title: A.invoice.title,
+                  pharmacy: A.invoice.pharmacy,
+                  customer: A.invoice.customer,
+                  payment_method: A.common.payment_method,
+                  created_at: A.invoice.created_at,
+                  created_by: A.invoice.created_by,
+                  items: A.invoice.items,
+                  item: A.invoice.item,
+                  qty: A.common.qty,
+                  unit_price: A.common.unit_price,
+                  line_total: A.common.total,
+                  subtotal: A.common.subtotal,
+                  discount: A.common.discount,
+                  total: A.common.total,
+                  paid: A.common.paid,
+                  remaining: A.common.remaining,
+                  status: A.common.status,
+                  walk_in: A.sales.walk_in,
+                  refunded_status: A.invoice.refunded_status,
+                  no_payments: A.invoice.no_payments,
+                  payment_history: A.invoice.payment_history,
+                  print_hint: A.invoice.export_hint,
+                }, user?.name),
+                invoiceFileName(sale),
+              );
+            }}
           >
             <i className="fas fa-download" aria-hidden="true" /> {A.common.export}
           </button>
-          {sale && sale.remaining > 0 && sale.status !== 'cancelled' ? (
-            <button
-              type="button"
-              className="ph-btn ghost"
-              onClick={() => setMsg(A.common.mock_notice)}
-            >
-              <i className="fas fa-money-bill-wave" aria-hidden="true" /> {A.common.record_payment}
-            </button>
+          {/*
+            ✅ Wired: `POST customers/{id}/payments` + `sale_id` records the
+            collection AND updates this sale server-side. Needs a customer —
+            walk-in invoices stay disabled with the reason.
+          */}
+          {sale && sale.remaining > 0 && sale.status !== 'cancelled' && sale.status !== 'refunded' ? (
+            sale.customer_id !== null ? (
+              <button
+                type="button"
+                className="ph-btn ghost"
+                title={A.common.record_payment}
+                onClick={() => setPayOpen(true)}
+              >
+                <i className="fas fa-money-bill-wave" aria-hidden="true" /> {A.common.record_payment}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="ph-btn ghost"
+                title={A.sale_payment.no_customer}
+                aria-disabled="true"
+                disabled
+              >
+                <i className="fas fa-money-bill-wave" aria-hidden="true" /> {A.common.record_payment}
+              </button>
+            )
           ) : null}
           {sale && canRefund(sale) ? (
             <Link
@@ -260,18 +317,14 @@ export function AccountingInvoicePage() {
         )}
       </AsyncBoundary>
 
-      <Modal
-        open={msg !== null}
-        title={A.invoice.title}
-        onClose={() => setMsg(null)}
-        footer={
-          <button type="button" className="ph-btn primary" onClick={() => setMsg(null)}>
-            {A.common.close}
-          </button>
-        }
-      >
-        <p className="ph-hint">{msg}</p>
-      </Modal>
+      {sale && (
+        <SalePaymentModal
+          sale={sale}
+          open={payOpen}
+          onClose={() => setPayOpen(false)}
+          refetch={() => void query.refetch()}
+        />
+      )}
     </div>
   );
 }

@@ -548,6 +548,15 @@ export const EN = {
       previous: 'Previous',
       next: 'Next',
       mock_notice: 'Demo data — UI is ready for API wiring',
+      /**
+       * Not in the Laravel lang files. The backend has NO endpoint that records
+       * a payment onto an EXISTING sale (`AccountingSalesController` exposes
+       * index/summary/show/store/cancel only — payment is captured at sale
+       * time), so the "record payment" buttons are disabled with this reason
+       * rather than shown as available.
+       */
+      payment_unavailable:
+        'Recording a payment on an existing invoice is not supported yet — payment is captured only when the sale is created',
       saved: 'Invoice saved',
       back: 'Back',
       summary: 'Summary',
@@ -620,6 +629,30 @@ export const EN = {
         sale_summary: 'Sale summary after refund',
       },
     },
+    /**
+     * "Record payment on an existing invoice" — live against
+     * `POST /api/pharmacy/accounting/customers/{id}/payments` with `sale_id`:
+     * the payment is recorded, cash increases, and the SALE itself is updated
+     * (paid/remaining/status) server-side in the same transaction. Requires
+     * the invoice to have a customer.
+     */
+    sale_payment: {
+      title: 'Record payment on invoice',
+      describe: 'Collection tied to invoice :number for customer :customer',
+      payment_method: 'Payment method',
+      description: 'Description (optional)',
+      description_placeholder: 'e.g. collected the outstanding balance',
+      amount_note:
+        'The invoice can never read as overpaid — any surplus stays on the customer balance as credit',
+      confirm_hint:
+        'The payment will be written to the cash ledger and reduce the customer debt immediately — it cannot be undone.',
+      confirm_action: 'Confirm payment',
+      success: 'Payment recorded',
+      customer_balance: 'Customer balance now: :balance',
+      err_amount: 'The amount must be greater than zero',
+      no_customer: 'Invoice has no linked customer — a collection needs a customer',
+    },
+
     cash_registers: {
       title: 'Cash Register',
       subtitle: 'Every cash movement in the pharmacy — the balance is their sum, never typed by hand',
@@ -797,7 +830,14 @@ export const EN = {
       created_by: 'Created by',
       created_at: 'Created at',
       print_ready: 'Print-ready',
-      download_soon: 'PDF download is not supported by the current system',
+      /**
+       * Not in the Laravel lang files. The "Export" button now downloads a
+       * standalone HTML copy built from the invoice payload itself (no export
+       * endpoint exists on the backend) — it opens in any browser and prints
+       * to PDF from the browser's own dialog.
+       */
+      export_hint:
+        'Downloads a standalone HTML copy of the invoice — open it, then print to PDF from the browser (Ctrl+P)',
       not_found: 'Invoice not found',
       no_payments: 'No payments recorded for this invoice',
       refunded_status: 'This invoice is fully refunded — it cannot be refunded again',

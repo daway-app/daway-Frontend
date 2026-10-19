@@ -6,7 +6,7 @@ import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { money, statusBadgeClass } from '@/lib/format';
 import type { ApiSale } from '@/api/pharmacyTypes';
-import { ROUTES } from '@/routes/paths';
+import { ROUTES, refundCreatePath } from '@/routes/paths';
 import { buildInvoiceHtml, downloadInvoiceHtml, invoiceFileName } from './invoiceExport';
 import { SalePaymentModal } from './SalePaymentModal';
 
@@ -163,7 +163,7 @@ export function AccountingInvoicePage() {
           ) : null}
           {sale && canRefund(sale) ? (
             <Link
-              to={`${ROUTES.accountingRefundsCreate}/${sale.number}`}
+              to={refundCreatePath(sale.number)}
               className="ph-btn danger"
             >
               <i className="fas fa-rotate-left" aria-hidden="true" /> {A.common.refund}

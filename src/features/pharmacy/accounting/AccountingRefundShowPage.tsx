@@ -111,6 +111,15 @@ export function AccountingRefundShowPage() {
                   <span className="label">{A.common.refunded}</span>
                   <span className="value">{money(refund.amount)}</span>
                 </div>
+                {/* Returned goods settle as debt-cancel then cash, never both. */}
+                <div className="ph-grid-item">
+                  <span className="label">{A.common.debt_cancelled}</span>
+                  <span className="value">{money(refund.debt_cancelled)}</span>
+                </div>
+                <div className="ph-grid-item">
+                  <span className="label">{A.common.cash_refunded}</span>
+                  <span className="value">{money(refund.cash_refunded)}</span>
+                </div>
                 <div className="ph-grid-item">
                   <span className="label">{A.common.status}</span>
                   <span className="value">

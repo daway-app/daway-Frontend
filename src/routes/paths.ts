@@ -52,3 +52,17 @@ export const ROUTES = {
 } as const;
 
 export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES];
+
+/**
+ * `/accounting/refunds/create/<saleNumber>` — the refund form for ONE sale.
+ *
+ * 🔴 Regression guard. `ROUTES.accountingRefundsCreate` intentionally carries NO
+ * `:saleNumber` token, so calling `.replace(':saleNumber', n)` on it is a NO-OP:
+ * it silently produced `/accounting/refunds/create`, which is then captured by
+ * `accounting/refunds/:id` (id = "create") and rendered the refund DETAIL page
+ * for a refund that does not exist — a blank/404 screen instead of the refund
+ * form. Building the path here (and testing it) is why that cannot come back.
+ */
+export function refundCreatePath(saleNumber: string): string {
+  return `${ROUTES.accountingRefundsCreate}/${encodeURIComponent(saleNumber)}`;
+}

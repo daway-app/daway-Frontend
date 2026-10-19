@@ -670,7 +670,6 @@ export const AR = {
        */
       previous: 'السابق',
       next: 'التالي',
-      mock_notice: 'بيانات تجريبية — الواجهة جاهزة للربط بالـAPI',
       /**
        * ليست في ملفات لارافيل. الـAPI الحالي لا يملك مسارًا لتسجيل دفعة على
        * فاتورة قائمة (`AccountingSalesController`: index/summary/show/store/
@@ -679,11 +678,6 @@ export const AR = {
        */
       payment_unavailable:
         'تسجيل دفعة على فاتورة قائمة غير مدعوم حاليًا — الدفع يُسجَّل عند إنشاء الفاتورة فقط',
-      /**
-       * ADDED (not in the Laravel lang files): the Blade POS redirects to the
-       * sales list after saving, so it never showed an in-page confirmation. The
-       * SPA keeps the till on screen and needs one.
-       */
       saved: 'تم حفظ الفاتورة',
       back: 'رجوع',
       summary: 'الملخّص',
@@ -691,6 +685,9 @@ export const AR = {
       user: 'المستخدم',
       refunded: 'المُرجَع',
       refundable: 'القابل للإرجاع',
+      net_total: 'الصافي',
+      cash_refunded: 'نقد مُردّ',
+      debt_cancelled: 'دَين مُلغى',
       select_items: 'اختر الأصناف',
       processing: 'جارٍ المعالجة…',
       confirm_refund: 'تأكيد الإرجاع',
@@ -741,6 +738,12 @@ export const AR = {
        * on the page, so it needs one.
        */
       created_success: 'تم تنفيذ الإرجاع بنجاح',
+      /**
+       * يشرح توزيع قيمة المرتجع (D1–D7): يُلغي الدَّين أولاً ثم يُردّ الباقي
+       * نقدًا — حتى لا يظن المستخدم أن كامل القيمة خرجت من الصندوق.
+       */
+      settlement_hint:
+        'تُسوَّى قيمة المرتجع بأولوية إلغاء الدَّين المستحق، ثم يُردّ الباقي نقدًا فقط.',
       not_found: 'الإرجاع غير موجود',
       empty: 'لا توجد إرجاعات',
       empty_desc: 'ستظهر هنا كل عمليات الإرجاع التي تُنفَّذ على فواتير البيع.',
@@ -796,6 +799,22 @@ export const AR = {
       outgoing: 'صادر',
       empty: 'لا توجد حركات صندوق',
       empty_desc: 'ستظهر هنا كل الحركات النقدية: مبيعات، مصروفات، دفعات، وتسويات.',
+      /**
+       * «تسجيل حركة صندوق» — موصول بـ
+       * `POST /api/pharmacy/accounting/cash/adjustments` (إيداع / سحب / تسوية).
+       * السبب إلزامي في الخادم، وهذا هو جوهر العملية بدل كتابة الرصيد يدويًا.
+       */
+      record_movement: 'تسجيل حركة صندوق',
+      movement_reason_label: 'سبب الحركة',
+      movement_reason_placeholder: 'اذكر سبب الحركة (إلزامي)',
+      confirm_hint: 'سيتم تسجيل الحركة في دفتر الصندوق فورًا ولا يمكن التراجع عنها.',
+      confirm_action: 'تأكيد التسجيل',
+      success: 'تم تسجيل حركة الصندوق',
+      new_balance: 'الرصيد الآن: :balance',
+      negative_warning: 'تنبيه: رصيد الصندوق صار سالبًا — راجع حركة السحب',
+      err_amount: 'المبلغ يجب أن يكون أكبر من صفر',
+      err_reason: 'اكتب سببًا واضحًا — 3 أحرف على الأقل',
+      err_direction: 'اختر اتجاه التسوية',
       direction: {
         in: 'وارد',
         out: 'صادر',
@@ -908,6 +927,7 @@ export const AR = {
       barcode_invalid: 'تنسيق باركود غير معروف',
       barcode_not_in_stock: 'الدواء موجود لكن غير مُسجّل في مخزونك',
       barcode_out_of_stock: ':name نافد من المخزون',
+      barcode_ambiguous: 'الباركود يطابق أكثر من صنف في مخزونك — راجع أسطر المخزون',
       search_label: 'البحث عن دواء',
       search_placeholder: 'اكتب اسم الدواء أو المادة الفعّالة...',
       search_hint: 'اكتب حرفين على الأقل للبحث',
@@ -947,6 +967,7 @@ export const AR = {
       invalid_amount: 'أدخل مبلغًا صحيحًا',
       paid_exceeds_total: 'المدفوع أكبر من الإجمالي',
       lines_required: 'أضف صنفًا واحدًا على الأقل قبل إتمام البيع',
+      customer_required: 'لبيع بالآجل أو بدفع جزئي يجب اختيار عميل ليُسجَّل عليه المتبقي',
     },
 
     expenses: {

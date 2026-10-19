@@ -8,6 +8,7 @@ import { money } from '@/lib/format';
 import { round2 } from '@/lib/money';
 import type { ApiRefundableItems } from '@/api/pharmacyTypes';
 import { ROUTES } from '@/routes/paths';
+import { refundSettlement } from './refundSettlement';
 
 /**
  * Create a refund — live against `GET .../sales/{number}/refund-items` and
@@ -74,6 +75,13 @@ export function AccountingRefundCreatePage() {
   const refundTotal = round2(
     selected.reduce((sum, row) => sum + row.quantity * row.unit_price, 0),
   );
+
+  /*
+   * Preview of how the backend will settle the return: returned goods cancel
+   * outstanding debt first, and only the excess is paid back in cash. Mirrors
+   * `RefundService` (D1–D7); the server figure is authoritative.
+   */
+  const settlement = refundSettlement(refundTotal, data?.remaining ?? 0);
 
   function setQty(id: number, value: number, max: number) {
     const clamped = Math.max(0, Math.min(value, max));
@@ -144,8 +152,16 @@ export function AccountingRefundCreatePage() {
                   <span className="value">{money(data.total)}</span>
                 </div>
                 <div className="ph-grid-item">
+                  <span className="label">{A.common.net_total}</span>
+                  <span className="value">{money(data.net_total)}</span>
+                </div>
+                <div className="ph-grid-item">
                   <span className="label">{A.common.paid}</span>
                   <span className="value">{money(data.paid)}</span>
+                </div>
+                <div className="ph-grid-item">
+                  <span className="label">{A.common.remaining}</span>
+                  <span className="value">{money(data.remaining)}</span>
                 </div>
                 {/* Server-computed — NOT re-derived client-side (that was D-1). */}
                 <div className="ph-grid-item">
@@ -218,7 +234,7 @@ export function AccountingRefundCreatePage() {
                               min={0}
                               max={max}
                               value={chosen}
-                              disabled={max <= 0}
+                              disabled={max <= 0 || data.available_to_refund <= 0}
                               aria-label={`${A.common.qty} — ${item.medicine_name}`}
                               onChange={(e) => setQty(item.id, Number(e.target.value), max)}
                             />
@@ -278,8 +294,23 @@ export function AccountingRefundCreatePage() {
         }
       >
         <p className="ph-hint">{A.refunds.confirm}</p>
+        <div className="ph-grid" style={{ marginBlockStart: 12 }}>
+          <div className="ph-grid-item">
+            <span className="label">{A.common.total}</span>
+            <span className="value ac-strong">{money(settlement.total)}</span>
+          </div>
+          <div className="ph-grid-item">
+            <span className="label">{A.common.debt_cancelled}</span>
+            <span className="value">{money(settlement.debt_cancelled)}</span>
+          </div>
+          <div className="ph-grid-item">
+            <span className="label">{A.common.cash_refunded}</span>
+            <span className="value">{money(settlement.cash_refunded)}</span>
+          </div>
+        </div>
+        {/* The refund value is settled as debt-cancel then cash — never both. */}
         <p className="ph-hint" style={{ marginBlockStart: 8 }}>
-          {A.common.total}: <b>{money(refundTotal)}</b>
+          {A.refunds.settlement_hint}
         </p>
       </Modal>
 

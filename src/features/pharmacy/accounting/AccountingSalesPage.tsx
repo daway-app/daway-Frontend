@@ -7,7 +7,7 @@ import { useApiQuery } from '@/api/useApiQuery';
 import { money, statusBadgeClass } from '@/lib/format';
 import { useUrlState } from '@/lib/urlState';
 import type { ApiSale, ApiSalesStats } from '@/api/pharmacyTypes';
-import { ROUTES } from '@/routes/paths';
+import { ROUTES, refundCreatePath } from '@/routes/paths';
 import { SalePaymentModal } from './SalePaymentModal';
 
 /**
@@ -19,16 +19,21 @@ import { SalePaymentModal } from './SalePaymentModal';
  *
  * The mock filtered `MOCK_SALES` in memory and re-derived the summary from the
  * visible rows. The real endpoint accepts the same four axes as query params
- * (`q`, `range`, `method`, `status`) and returns an authoritative `stats` block
- * computed over the WHOLE filtered set — not just the current page. Deriving the
- * summary client-side would therefore report only the visible page and quietly
- * understate the totals.
+ * (`search`, `range`, `payment_method`, `status`) and returns an authoritative
+ * `stats` block computed over the WHOLE filtered set — not just the current
+ * page. Deriving the summary client-side would therefore report only the visible
+ * page and quietly understate the totals.
  *
  * Two contract details used here:
  *  - `method_label` / `status_label` are PRE-LOCALISED by the backend, so they
  *    are rendered verbatim (never re-derived from `AR.accounting.*`).
  *  - `items_count` is the line count; `items[]` is only present on the detail
  *    endpoint, so the list must not read `items.length`.
+ *
+ * The request keys are the backend's: `search` and `payment_method` — NOT the
+ * display keys `q`/`method` used in the URL state below. Sending `q`/`method`
+ * names the server does not validate makes the search box and the payment-method
+ * filter silently do nothing (unknown params are ignored, never a 422).
  *
  * `range` is passed through as-is; an unknown value is ignored by the server
  * (the same "silently all" semantics the Blade page documents).
@@ -122,9 +127,9 @@ export function AccountingSalesPage() {
         {
           per_page: PER_PAGE,
           page,
-          ...(committedQ ? { q: committedQ } : {}),
+          ...(committedQ ? { search: committedQ } : {}),
           ...(filterValue(range) ? { range } : {}),
-          ...(filterValue(method) ? { method } : {}),
+          ...(filterValue(method) ? { payment_method: method } : {}),
           ...(filterValue(status) ? { status } : {}),
         },
         signal,
@@ -400,10 +405,7 @@ export function AccountingSalesPage() {
                               <i className="fas fa-money-bill-wave" aria-hidden="true" />
                             </button>
                             <Link
-                              to={ROUTES.accountingRefundsCreate.replace(
-                                ':saleNumber',
-                                sale.number,
-                              )}
+                              to={refundCreatePath(sale.number)}
                               className="ac-icon-btn"
                               title={A.common.refund}
                               aria-label={`${A.common.refund} — ${sale.number}`}

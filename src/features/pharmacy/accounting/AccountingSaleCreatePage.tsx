@@ -15,6 +15,8 @@ import { readDraft, writeDraft, clearDraft } from '@/lib/drafts';
 import type { ApiCustomer, ApiInventoryItem, PaymentMethod } from '@/api/pharmacyTypes';
 import { ROUTES } from '@/routes/paths';
 import { buildSalePayload, type CartLine, type SalePayload } from './salePayload';
+import { mapAccountingBarcodeResult } from './barcodeResult';
+import { ApiError } from '@/api/errors';
 
 /**
  * POS "new sale" — live against the real endpoints.
@@ -32,18 +34,19 @@ import { buildSalePayload, type CartLine, type SalePayload } from './salePayload
  *    the inventory IS the catalogue — it is the only payload carrying the
  *    pharmacy's own `price` AND `quantity`. (`/medicines/search` returns
  *    catalogue rows with neither.)
- *  - **barcode** → `GET /api/medicines/barcode/{code}`. That endpoint returns a
- *    CATALOGUE medicine (no price/quantity), so the result is matched back onto
- *    an inventory row via `medicine.local_medicine_id` ↔
- *    `ApiInventoryItem.medicine_id`. A barcode the pharmacy does not stock is
- *    therefore reported as not-in-inventory, which is the correct POS behaviour.
+ *  - **barcode** → `GET /api/pharmacy/accounting/barcode/{code}` (auth). The
+ *    single-step resolve: it returns the pharmacy's own stock row
+ *    (`pharmacy_medicine_id`), `price` and `quantity` FROM THE SERVER, plus
+ *    one of five statuses (`found`|`out_of_stock`|`not_in_stock`|`unknown`|
+ *    `ambiguous`). The old `/medicines/barcode` → local-match chain is gone —
+ *    it depended on the row being inside the loaded inventory page.
  *  - **customers** → `GET /api/pharmacy/accounting/customers`.
  *  - **save** → `POST /api/pharmacy/accounting/sales`.
  *
- * ⚠️ Known scope limit: the catalogue is loaded one page deep
- * (`INVENTORY_PAGE_SIZE`, the backend's maximum). Name search filters that
- * loaded set, so a pharmacy with more stock lines would need paging/search
- * server-side. Reported, not hidden.
+ * ⚠️ Known scope limit: NAME search still filters the loaded catalogue page
+ * (`INVENTORY_PAGE_SIZE`, the backend's maximum). Barcode lookup does not
+ * have that limit anymore — it resolves against the whole inventory row set
+ * server-side.
  */
 
 
@@ -190,16 +193,30 @@ export function AccountingSaleCreatePage() {
   const totals = useMemo(() => {
     const subtotal = cart.reduce((a, l) => a + l.quantity * l.unit_price, 0);
     const discount = cart.reduce((a, l) => a + l.discount, 0);
-    const total = subtotal - discount;
-    const paidNum = paid === '' ? 0 : Number(paid);
+    const total = round2(subtotal - discount);
+    /*
+     * An EMPTY paid field means "not specified" — not zero.
+     *
+     * The backend (`AccountingLedger::recordSale`) defaults a missing `paid` by
+     * tender: cash/card/bank are paid in full, credit is paid 0. Sending `0`
+     * instead stored a cash sale as unpaid (remaining = total) — a state the UI
+     * cannot settle, because recording a payment needs a linked customer and a
+     * walk-in invoice has none. The panel mirrors the same rule so the shown
+     * `remaining` equals what the server will store.
+     */
+    const entered = paid === '' ? null : Number(paid);
+    const paidEntered = entered !== null && Number.isFinite(entered) ? entered : null;
+    const effectivePaid = paidEntered ?? (method === 'credit' ? 0 : total);
     return {
       subtotal: round2(subtotal),
       discount: round2(discount),
-      total: round2(total),
-      paid: Number.isFinite(paidNum) ? paidNum : 0,
-      remaining: round2(total - (Number.isFinite(paidNum) ? paidNum : 0)),
+      total,
+      paid: effectivePaid,
+      /** What the cashier typed — `null` ⇒ omit `paid` and let the server default. */
+      paidEntered,
+      remaining: round2(total - effectivePaid),
     };
-  }, [cart, paid]);
+  }, [cart, paid, method]);
 
   /** Blade `renderResults()` — 2-character minimum, name or ingredient. */
   const results = useMemo(() => {
@@ -252,16 +269,22 @@ export function AccountingSaleCreatePage() {
   }
 
   /**
-   * Barcode submit — resolves the code through the real lookup, then matches the
-   * catalogue medicine back onto a stock row.
+   * Barcode submit — resolves the code through THIS pharmacy's own endpoint.
    *
-   * `rawCode` is the bridge for the phone scanner: a remote scan delivers a code
-   * that must go through EXACTLY this path (same lookup, same stock match, same
-   * "not found" handling), never a parallel one. Omitted, it reads the input
-   * field as before — so every existing call site is unchanged.
+   * Single-step now: `GET /api/pharmacy/accounting/barcode/{code}` returns the
+   * stock row (`pharmacy_medicine_id`), the server price and the stock
+   * quantity for the authenticated pharmacy — the old two-step chain
+   * (`/medicines/barcode` → local `catalog` match) is gone. That chain used
+   * to report "not found" whenever the row did not happen to be inside the
+   * loaded 100-row inventory page, even when the pharmacy actually stocked it.
    *
-   * Returns `true` only when a stock row was found and shown to the cashier;
-   * the scanner uses that to decide whether to flash "received".
+   * `rawCode` is the bridge for the phone scanner: a remote scan delivers a
+   * code that must go through EXACTLY this path (same lookup, same statuses,
+   * same "not found" handling), never a parallel one. Omitted, it reads the
+   * input field as before — so every existing call site is unchanged.
+   *
+   * Returns `true` only when a sellable stock row was found and shown to the
+   * cashier; the scanner uses that to decide whether to flash "received".
    */
   async function submitBarcode(rawCode?: string): Promise<boolean> {
     const code = (rawCode ?? barcode).trim();
@@ -272,25 +295,40 @@ export function AccountingSaleCreatePage() {
     setScanNote(false);
     setScanFound(null);
     try {
-      const found = await api.medicineByBarcode(code);
-      const localId = found.medicine.local_medicine_id;
-      const row = catalog.find(
-        (c) =>
-          (localId !== null && c.medicineId === localId) ||
-          (found.medicine.name_en !== null &&
-            c.name.toLowerCase() === (found.medicine.name_en ?? '').toLowerCase()),
-      );
-      if (!row) {
-        setScanNote(true);
-        setMsg({ tone: 'err', text: A.pos.barcode_not_found });
-        return false;
+      const outcome = mapAccountingBarcodeResult(await api.accountingBarcode(code));
+
+      if (outcome.kind === 'found' || outcome.kind === 'out_of_stock') {
+        // `out_of_stock` keeps the item visible with quantity 0; addToCart's
+        // stock guard (`item.quantity <= 0`) blocks its addition — the
+        // decision to sell stays with the cashier, never auto-added.
+        setScanFound({ ...outcome.item, barcode: code });
+        setMsg(null);
+        return outcome.kind === 'found';
       }
-      setScanFound({ ...row, barcode: code });
-      setMsg(null);
-      return true;
-    } catch {
+
       setScanNote(true);
-      setMsg({ tone: 'err', text: A.pos.barcode_not_found });
+      if (outcome.kind === 'not_in_stock') {
+        setMsg({ tone: 'err', text: A.pos.barcode_not_in_stock });
+      } else if (outcome.kind === 'ambiguous') {
+        // Multiple inventory rows match — the backend refuses to pick one and
+        // so does the till. The cashier reviews the stock lines and rescans;
+        // guessing `candidates[0]` would decrement an arbitrary row.
+        setMsg({ tone: 'err', text: A.pos.barcode_ambiguous });
+      } else {
+        setMsg({ tone: 'err', text: A.pos.barcode_not_found });
+      }
+      return false;
+    } catch (err) {
+      setScanNote(true);
+      // 422 = unsupported barcode format (the server normalizes via the same
+      // BarcodeNormalizer as the public endpoint) — say that, not "not found".
+      setMsg({
+        tone: 'err',
+        text:
+          err instanceof ApiError && err.status === 422
+            ? A.pos.barcode_invalid
+            : A.pos.barcode_not_found,
+      });
       return false;
     }
   }
@@ -327,11 +365,22 @@ export function AccountingSaleCreatePage() {
       setMsg({ tone: 'err', text: A.pos.paid_exceeds_total });
       return;
     }
+    /*
+     * A sale with an outstanding balance (credit, or a partial cash payment)
+     * must be tied to a customer: the customer's ledger is what carries the
+     * debt, and it is the only handle the "record payment" action can later use.
+     * Allowing a walk-in invoice to stay unpaid creates a dead end — a balance
+     * nobody can ever settle.
+     */
+    if (totals.remaining > 0 && customerId === null) {
+      setMsg({ tone: 'err', text: A.pos.customer_required });
+      return;
+    }
     try {
       // Payload construction (and the double-discount rule) lives in
       // `salePayload.ts` so it can be unit-tested — see `salePayload.test.ts`.
       const sale = await createSale.run(
-        buildSalePayload({ cart, paid: totals.paid, method, customerId }),
+        buildSalePayload({ cart, paid: totals.paidEntered, method, customerId }),
       );
       /*
        * The sale result is a TOAST, not the inline `msg` block.

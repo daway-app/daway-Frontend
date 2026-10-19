@@ -547,7 +547,6 @@ export const EN = {
       results_count: ':count results',
       previous: 'Previous',
       next: 'Next',
-      mock_notice: 'Demo data — UI is ready for API wiring',
       /**
        * Not in the Laravel lang files. The backend has NO endpoint that records
        * a payment onto an EXISTING sale (`AccountingSalesController` exposes
@@ -564,6 +563,9 @@ export const EN = {
       user: 'User',
       refunded: 'Refunded',
       refundable: 'Refundable',
+      net_total: 'Net',
+      cash_refunded: 'Cash refunded',
+      debt_cancelled: 'Debt cancelled',
       select_items: 'Select items',
       processing: 'Processing…',
       confirm_refund: 'Confirm refund',
@@ -605,6 +607,8 @@ export const EN = {
       reason_placeholder: 'State the refund reason (optional)',
       confirm: 'Are you sure you want to process this refund? It cannot be undone.',
       created_success: 'Refund completed successfully',
+      settlement_hint:
+        'The returned value cancels outstanding debt first; only the remainder is refunded in cash.',
       not_found: 'Refund not found',
       empty: 'No refunds',
       empty_desc: 'Every refund processed against a sales invoice will appear here.',
@@ -661,6 +665,24 @@ export const EN = {
       outgoing: 'Outgoing',
       empty: 'No cash movements',
       empty_desc: 'All cash movements will appear here: sales, expenses, payments and adjustments.',
+      /**
+       * "Record cash movement" — live against
+       * `POST /api/pharmacy/accounting/cash/adjustments` (deposit / withdrawal /
+       * adjustment). The reason is mandatory server-side; this is the whole
+       * point versus typing a balance by hand.
+       */
+      record_movement: 'Record cash movement',
+      movement_reason_label: 'Movement reason',
+      movement_reason_placeholder: 'State the movement reason (required)',
+      confirm_hint:
+        'This movement will be written to the ledger immediately and cannot be undone.',
+      confirm_action: 'Confirm recording',
+      success: 'Cash movement recorded',
+      new_balance: 'New balance: :balance',
+      negative_warning: 'Warning: the cash balance went negative — review the withdrawal',
+      err_amount: 'The amount must be greater than zero',
+      err_reason: 'Write a clear reason — at least 3 characters',
+      err_direction: 'Choose the adjustment direction',
       direction: {
         in: 'Incoming',
         out: 'Outgoing',
@@ -763,6 +785,7 @@ export const EN = {
       barcode_invalid: 'Unrecognised barcode format',
       barcode_not_in_stock: 'Medicine found but not in your inventory',
       barcode_out_of_stock: ':name is out of stock',
+      barcode_ambiguous: 'This barcode matches more than one item in your inventory — review your stock lines',
       search_label: 'Search medicine',
       search_placeholder: 'Type a medicine name or active ingredient...',
       search_hint: 'Type at least 2 characters',
@@ -802,6 +825,7 @@ export const EN = {
       invalid_amount: 'Enter a valid amount',
       paid_exceeds_total: 'Paid amount exceeds the total',
       lines_required: 'Add at least one item before completing the sale',
+      customer_required: 'Pick a customer to carry the balance of a credit or partially paid sale',
     },
     expenses: {
       title: 'Expenses',

@@ -3,6 +3,7 @@ import type { ApiSuccess } from './types';
 import type {
   AccountingRange,
   ApiAccountingOverview,
+  ApiAccountingBarcodeResult,
   ApiAlternativeBlock,
   ApiBarcodeMedicine,
   ApiCatalogSearchResult,
@@ -242,6 +243,29 @@ export function createPharmacyApi(client: ApiClient) {
       const res = await client.get<ApiSuccess<ApiBarcodeMedicine>>(
         `/api/medicines/barcode/${encodeURIComponent(barcode)}`,
         { signal, skipAuth: true },
+      );
+      return res.data;
+    },
+
+    /**
+     * Resolve a barcode to THIS pharmacy's stock row.
+     *
+     * `GET /api/pharmacy/accounting/barcode/{barcode}` is the single-step
+     * POS lookup: the pharmacy is derived from the authenticated user (no
+     * `pharmacy_id` from the client), and `price`/`quantity` come from the
+     * stock row on the server — never echoed from the client.
+     *
+     * `data.status` carries one of five business results:
+     * `found` | `out_of_stock` | `not_in_stock` | `unknown` | `ambiguous`
+     * (`ambiguous` returns `candidates[]` and no row — never auto-pick one).
+     */
+    async accountingBarcode(
+      barcode: string,
+      signal?: AbortSignal,
+    ): Promise<ApiAccountingBarcodeResult> {
+      const res = await client.get<ApiSuccess<ApiAccountingBarcodeResult>>(
+        `/api/pharmacy/accounting/barcode/${encodeURIComponent(barcode)}`,
+        { signal },
       );
       return res.data;
     },

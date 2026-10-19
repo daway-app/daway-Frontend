@@ -44,7 +44,20 @@ export interface CartLine {
 
 export interface SalePayloadInput {
   cart: readonly CartLine[];
-  paid: number;
+  /**
+   * The amount the cashier actually collected, or `null` when the field was
+   * left empty.
+   *
+   * 🔴 `null` MUST omit the `paid` key — never send `0`.
+   *
+   * The backend (`AccountingLedger::recordSale`) defaults a MISSING `paid` by
+   * tender: cash/card/bank are paid in full, credit is paid 0. An EXPLICIT
+   * `paid: 0` overrides that default and stores a **cash sale as
+   * unpaid/remaining=total** — a state the UI cannot settle (recording a
+   * payment needs a linked customer, and a walk-in invoice has none). That is
+   * exactly how `INV-1001` ended up `cash` + `unpaid` + `customer_id = null`.
+   */
+  paid: number | null;
   method: string;
   /** Only sent when a real customer was picked — the walk-in has no id. */
   customerId?: number | null;
@@ -74,7 +87,8 @@ export function buildSalePayload({
     })),
     // ALWAYS 0 — see the header. The line discounts carry the whole discount.
     discount: 0,
-    paid,
+    // Omitted when empty so the backend applies its per-tender default.
+    ...(paid !== null ? { paid } : {}),
     payment_method: method,
   };
 }

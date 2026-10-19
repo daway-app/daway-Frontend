@@ -416,6 +416,28 @@ export interface ApiSalesStats {
   paid: number;
   remaining: number;
   discount: number;
+  /**
+   * `total` is the historical gross; `refunded` is the value of returned goods
+   * and `net_total = total − refunded`. The invoice `stats` block alone does
+   * NOT send these (it is summed by `statsFor`, not `sumSales`) — only the
+   * `sales-summary` endpoint does, hence optional.
+   */
+  refunded?: number;
+  net_total?: number;
+}
+
+/**
+ * Settlement of returned goods for a period: the goods value (`refunded_goods`)
+ * is split into cash actually paid back (`cash_refunded`) and debt wiped
+ * (`debt_cancelled`). Never treat `refunded_goods` as cash leaving the drawer.
+ */
+export interface ApiRefundTotals {
+  gross_sales: number;
+  refunded_goods: number;
+  net_sales: number;
+  cash_refunded: number;
+  debt_cancelled: number;
+  count: number;
 }
 
 export interface ApiSalesList extends Paginated<ApiSale> {
@@ -437,6 +459,8 @@ export interface ApiTopItem {
 
 export interface ApiSalesSummary {
   summary: ApiSalesStats;
+  /** Present since the D1–D7 refund work; optional for forward/back safety. */
+  refunds?: ApiRefundTotals;
   comparison: ApiComparison;
   by_payment_method: ApiPaymentMethodSlice[];
   top_items: ApiTopItem[];
@@ -476,6 +500,9 @@ export interface ApiRefundRow {
   id: number;
   sale_id: number;
   amount: number;
+  /** Cash returned vs debt cancelled — split of `amount`. */
+  cash_refunded?: number;
+  debt_cancelled?: number;
   reason: string | null;
   status: RefundStatus;
   refunded_at: string | null;
@@ -489,6 +516,10 @@ export interface ApiRefundDetail {
   sale_id: number;
   sale_number: string;
   amount: number;
+  /** Cash actually returned to the customer (0 for unpaid/credit returns). */
+  cash_refunded: number;
+  /** Debt wiped because the returned goods were never paid for. */
+  debt_cancelled: number;
   reason: string | null;
   status: RefundStatus;
   refunded_at: string | null;
@@ -512,7 +543,13 @@ export interface ApiRefundDetail {
 export interface ApiRefundableItems {
   sale_number: string;
   total: number;
+  /** Historical gross, never changes after a refund. */
+  refunded_amount: number;
+  /** `total − refunded_amount`: the invoice's live value. */
+  net_total: number;
   paid: number;
+  /** `net_total − paid`: unpaid balance a return must cancel first. */
+  remaining: number;
   already_refunded: number;
   available_to_refund: number;
   items: Array<{
@@ -529,6 +566,8 @@ export interface ApiRefundableItems {
 export interface ApiRefundForSale {
   id: number;
   amount: number;
+  cash_refunded?: number;
+  debt_cancelled?: number;
   status: RefundStatus;
   refunded_at: string | null;
   items_count: number;
@@ -640,8 +679,7 @@ export interface ApiSalePaymentResult {
 }
 
 export interface ApiCustomerDetail extends ApiCustomer {
-  sales: Array<{
-    number: string;
+  sales: Array<{    number: string;
     date: string | null;
     total: number;
     paid: number;
@@ -715,6 +753,70 @@ export interface ApiBarcodeMedicine {
     source: string | null;
   };
   image: { url: string | null; source?: string | null } | null;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// Pharmacy-scoped barcode resolve — `GET /api/pharmacy/accounting/barcode/{barcode}`
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * One candidate stock row when the resolve is `ambiguous`.
+ *
+ * The backend NEVER picks a candidate when more than one row matches — it
+ * returns all of them and the human decides. The POS must therefore never
+ * silently pick `candidates[0]`.
+ */
+export interface ApiAccountingBarcodeCandidate {
+  pharmacy_medicine_id: number;
+  medicine_id: number;
+  moh_medicine_id: number | null;
+  name: string | null;
+  price: number;
+  quantity: number;
+  is_available: boolean;
+}
+
+/**
+ * The catalog medicine attached to the barcode record (present for every
+ * status except `unknown`).
+ */
+export interface ApiAccountingBarcodeMedicine {
+  id: number | null;
+  trade_name: string | null;
+  trade_name_ar: string | null;
+  active_ingredient: string | null;
+  manufacturer: string | null;
+  dosage_form: string | null;
+  packaging: string | null;
+  official_price: number | null;
+  image_url: string | null;
+}
+
+/**
+ * `data` of `GET /api/pharmacy/accounting/barcode/{barcode}` — the single-step
+ * replacement for the old `GET /medicines/barcode` → inventory-match chain.
+ *
+ * ⚠️ `price` and `quantity` are THE PHARMACY'S STOCK VALUES read from the
+ * server (`pharmacy_medicines` row) — they are never client-echoed. For
+ * `not_in_stock` (barcode known, pharmacy doesn't stock it) and `unknown`
+ * (barcode not in the catalog) they are null.
+ *
+ * ⚠️ `ambiguous` means multiple inventory rows match this pharmacy's barcode —
+ * the response carries `candidates[]` and NO row to sell.
+ */
+export interface ApiAccountingBarcodeResult {
+  status: 'found' | 'out_of_stock' | 'not_in_stock' | 'unknown' | 'ambiguous';
+  barcode: string;
+  medicine: ApiAccountingBarcodeMedicine | null;
+  pharmacy_medicine_id: number | null;
+  local_medicine_id: number | null;
+  moh_medicine_id: number | null;
+  price: number | null;
+  quantity: number | null;
+  is_available: boolean | null;
+  is_out_of_stock: boolean;
+  is_low_stock: boolean;
+  candidates: ApiAccountingBarcodeCandidate[];
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -799,6 +901,11 @@ export interface ApiSalePayload {
   customer_id?: number;
   items: ApiSalePayloadItem[];
   discount: number;
-  paid: number;
+  /**
+   * Omitted when the cashier left the field empty — the backend then defaults
+   * per tender (cash/card/bank paid in full, credit paid 0). Sending `0` would
+   * store a cash sale as unpaid. See `salePayload.ts`.
+   */
+  paid?: number;
   payment_method: string;
 }

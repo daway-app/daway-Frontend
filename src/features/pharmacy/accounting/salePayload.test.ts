@@ -119,3 +119,33 @@ describe('buildSalePayload — contract shape', () => {
     expect(payload.items.map((i) => i.medicine_name)).toEqual(['A', 'B', 'C']);
   });
 });
+
+describe('buildSalePayload — empty paid must not be sent as 0', () => {
+  /**
+   * 🔴 The defect this pins: the POS used to send `paid: 0` whenever the
+   * cashier left the field empty. The backend treats an EXPLICIT `paid` as
+   * authoritative, so a CASH sale was stored `paid=0 / status=unpaid /
+   * remaining=total`. That invoice is unpayable from the UI (recording a
+   * payment needs a linked customer and a walk-in has none) — the real
+   * production row `INV-1001` (cash / unpaid / customer_id = null).
+   *
+   * An empty field means "not specified": the key must be ABSENT so the
+   * backend applies its per-tender default (cash/card/bank → paid in full,
+   * credit → 0).
+   */
+  it('omits paid when the field is empty (null)', () => {
+    const payload = buildSalePayload({ cart: [line()], paid: null, method: 'cash' });
+    expect(payload).not.toHaveProperty('paid');
+  });
+
+  it('still sends an explicit 0 when the cashier really typed 0', () => {
+    // 0 is a deliberate amount, not "unspecified" — only `null` omits.
+    const payload = buildSalePayload({ cart: [line()], paid: 0, method: 'cash' });
+    expect(payload.paid).toBe(0);
+  });
+
+  it('sends the collected amount when the cashier typed one', () => {
+    const payload = buildSalePayload({ cart: [line()], paid: 100, method: 'cash' });
+    expect(payload.paid).toBe(100);
+  });
+});

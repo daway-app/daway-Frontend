@@ -3,6 +3,7 @@ import type {
   AdminCategoriesResponse,
   AdminCategoryLinksResponse,
   AdminDashboardResponse,
+  AdminDeliveryPricingResponse,
   AdminLogsResponse,
   AdminMedicineRequestsResponse,
   AdminMedicinesResponse,
@@ -12,6 +13,7 @@ import type {
   AdminProfile,
   AdminSettingsResponse,
   AdminUsersResponse,
+  DeliveryFeeTier,
   AdminUserDetail,
   DeliveredCredentials,
 } from './adminTypes';
@@ -49,6 +51,13 @@ export const ADMIN_ENDPOINTS = {
   categoryLinks: (id: number) => `/api/admin/categories/${id}/links`,
   logs: '/api/admin/logs',
   settings: '/api/admin/settings',
+  deliveryPricing: '/api/admin/delivery-pricing',
+  deliveryPricingStatus: '/api/admin/delivery-pricing/status',
+  deliveryPricingSettings: '/api/admin/delivery-pricing/settings',
+  deliveryPricingTiers: '/api/admin/delivery-pricing/tiers',
+  deliveryPricingTier: (id: number) => `/api/admin/delivery-pricing/tiers/${id}`,
+  deliveryPricingTierToggle: (id: number) =>
+    `/api/admin/delivery-pricing/tiers/${id}/toggle-status`,
   /**
    * Own profile + password change.
    *
@@ -358,6 +367,68 @@ export function createAdminApi(client: ApiClient) {
 
     async updateSettings(body: Record<string, unknown>) {
       return client.post<{ success: boolean; message: string }>(ADMIN_ENDPOINTS.settings, body);
+    },
+
+    // ── Delivery pricing ────────────────────────────────────────────────────
+    async deliveryPricing(signal?: AbortSignal) {
+      const res = await client.get<{ success: boolean; data: AdminDeliveryPricingResponse }>(
+        ADMIN_ENDPOINTS.deliveryPricing,
+        { signal },
+      );
+      return res.data;
+    },
+
+    async setDeliveryPricingEnabled(enabled: boolean) {
+      return client.post<{ success: boolean; message: string; data: { enabled: boolean } }>(
+        ADMIN_ENDPOINTS.deliveryPricingStatus,
+        { enabled },
+      );
+    },
+
+    async updateDeliveryPricingSettings(body: Record<string, unknown>) {
+      const res = await client.post<{
+        success: boolean;
+        message: string;
+        data: {
+          mode: AdminDeliveryPricingResponse['mode'];
+          base_fee: number | null;
+          per_km_rate: number | null;
+        };
+      }>(ADMIN_ENDPOINTS.deliveryPricingSettings, body);
+      return res.data;
+    },
+
+    async createDeliveryFeeTier(body: Record<string, unknown>) {
+      const res = await client.post<{
+        success: boolean;
+        message: string;
+        data: { tier: DeliveryFeeTier };
+      }>(ADMIN_ENDPOINTS.deliveryPricingTiers, body);
+      return res;
+    },
+
+    async updateDeliveryFeeTier(id: number, body: Record<string, unknown>) {
+      const res = await client.put<{
+        success: boolean;
+        message: string;
+        data: { tier: DeliveryFeeTier };
+      }>(ADMIN_ENDPOINTS.deliveryPricingTier(id), body);
+      return res;
+    },
+
+    async toggleDeliveryFeeTier(id: number) {
+      const res = await client.patch<{
+        success: boolean;
+        message: string;
+        data: { is_active: boolean };
+      }>(ADMIN_ENDPOINTS.deliveryPricingTierToggle(id));
+      return res.data;
+    },
+
+    async deleteDeliveryFeeTier(id: number) {
+      return client.delete<{ success: boolean; message: string }>(
+        ADMIN_ENDPOINTS.deliveryPricingTier(id),
+      );
     },
 
     // ── Own profile ─────────────────────────────────────────────────────────

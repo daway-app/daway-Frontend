@@ -46,6 +46,8 @@ const PRELOAD_MAP: Record<string, () => Promise<unknown>> = {
   '/admin/users/create': () => import('@/features/admin/users/AdminUserFormPage'),
   '/admin/logs': () => import('@/features/admin/logs/AdminLogsPage'),
   '/admin/settings': () => import('@/features/admin/settings/AdminSettingsPage'),
+  '/admin/delivery-pricing': () =>
+    import('@/features/admin/deliveryPricing/AdminDeliveryPricingPage'),
   '/admin/profile': () => import('@/features/admin/profile/AdminProfilePage'),
 };
 

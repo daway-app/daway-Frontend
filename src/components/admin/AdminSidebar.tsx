@@ -56,6 +56,12 @@ const MANAGEMENT_NAV: NavItem[] = [
 /** Settings group (layout.php: settings_section). */
 const SETTINGS_NAV: NavItem[] = [
   { to: ADMIN_ROUTES.settings, labelKey: 'system_settings', icon: <IconSettings />, activePrefix: true },
+  {
+    to: ADMIN_ROUTES.deliveryPricing,
+    labelKey: 'delivery_pricing',
+    icon: <IconTruck />,
+    activePrefix: true,
+  },
   { to: ADMIN_ROUTES.logs, labelKey: 'activity_log', icon: <IconList />, activePrefix: true },
   { to: ADMIN_ROUTES.profile, labelKey: 'profile', icon: <IconUser />, activePrefix: true },
 ];
@@ -304,6 +310,18 @@ function IconUser() {
     <svg {...iconProps()}>
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+/** Delivery truck — the "delivery pricing" nav entry. */
+function IconTruck() {
+  return (
+    <svg {...iconProps()}>
+      <rect x="1" y="3" width="15" height="13" />
+      <path d="M16 8h4l3 3v5h-7V8z" />
+      <circle cx="5.5" cy="18.5" r="2.5" />
+      <circle cx="18.5" cy="18.5" r="2.5" />
     </svg>
   );
 }

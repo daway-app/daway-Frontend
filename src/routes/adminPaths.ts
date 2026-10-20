@@ -25,6 +25,7 @@ export const ADMIN_ROUTES = {
   userEdit: (id: number | string) => `/admin/users/${id}/edit`,
   logs: '/admin/logs',
   settings: '/admin/settings',
+  deliveryPricing: '/admin/delivery-pricing',
   profile: '/admin/profile',
   /**
    * Password change is a SEPARATE route, not a modal on the profile page.

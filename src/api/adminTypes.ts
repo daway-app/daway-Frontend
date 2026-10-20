@@ -300,6 +300,33 @@ export interface AdminSettingsResponse {
   catalog_file_size: number;
 }
 
+/** One distance fee tier from `GET /api/admin/delivery-pricing`. */
+export interface DeliveryFeeTier {
+  id: number;
+  min_distance_meters: number;
+  /** `null` = open-ended (no upper bound) — allowed only on the LAST active tier. */
+  max_distance_meters: number | null;
+  /** Server-computed convenience value: `min_distance_meters / 1000`. */
+  min_distance_km: number;
+  max_distance_km: number | null;
+  fee: number;
+  is_active: boolean;
+}
+
+/** The active pricing mode — one mode only, never combined. */
+export type DeliveryPricingMode = 'tiers' | 'per_km';
+
+/** `GET /api/admin/delivery-pricing` → `data`. */
+export interface AdminDeliveryPricingResponse {
+  enabled: boolean;
+  mode: DeliveryPricingMode;
+  /** Fallback final fee when no active tier matches (`tiers` mode). `null` = reject. */
+  base_fee: number | null;
+  /** Charged as `rate × distance(km)` in `per_km` mode. `null` = not configured. */
+  per_km_rate: number | null;
+  tiers: DeliveryFeeTier[];
+}
+
 /**
  * The signed-in admin's own profile — `GET /api/admin/profile`.
  *

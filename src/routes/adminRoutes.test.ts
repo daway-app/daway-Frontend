@@ -72,6 +72,7 @@ function buildTree(adminFirst: boolean): RouteObject[] {
     ADMIN_ROUTES.users,
     ADMIN_ROUTES.logs,
     ADMIN_ROUTES.settings,
+    ADMIN_ROUTES.deliveryPricing,
     ADMIN_ROUTES.profile,
     ADMIN_ROUTES.profilePassword,
   ].map((path) => ({ path, element: `ADMIN_PAGE:${path}` }));

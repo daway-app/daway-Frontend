@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Btn, FormField, LoadingState, Notice, PageHeader } from '@/components/ui';
 import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
-import { useAdminApi } from '@/auth/adminContext';
+import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { toast } from '@/lib/toast';
@@ -44,6 +44,7 @@ import type { AdminMedicineDetail, AdminMedicineOption, AdminMedicinesResponse }
 export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const { STR } = useLang();
   const api = useAdminApi();
+  const keys = useAdminKeys();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEdit = mode === 'edit';
@@ -78,7 +79,10 @@ export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const detail = useApiQuery<AdminMedicineDetail>(
     (signal) => api.admin.medicine(Number(id), signal),
     [id, isEdit],
-    { enabled: isEdit && Number.isFinite(Number(id)) },
+    {
+      enabled: isEdit && Number.isFinite(Number(id)),
+      queryKey: keys.medicines.detail(Number(id)),
+    },
   );
 
   /*
@@ -127,7 +131,10 @@ export function AdminMedicineFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const altQuery = useApiQuery<AdminMedicinesResponse>(
     (signal) => api.admin.medicines({ q: altDebounced, per_page: 20 }, signal),
     [altDebounced],
-    { enabled: altDebounced.length >= 2 },
+    {
+      enabled: altDebounced.length >= 2,
+      queryKey: keys.medicines.list({ q: altDebounced, per_page: 20 }),
+    },
   );
 
   /** Search results, minus this medicine itself — it cannot be its own alternative. */

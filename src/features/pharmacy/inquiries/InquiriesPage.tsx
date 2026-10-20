@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { AsyncBoundary, Notice } from '@/components/ui';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
-import { usePharmacyApi } from '@/auth/authHooks';
+import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { formatDate, formatTime } from '@/lib/format';
 import { markInquiriesSeen } from '@/lib/pushPermission';
@@ -40,6 +40,7 @@ export function InquiriesPage() {
     closed: I.status_closed,
   };
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
 
   // Phase 3: status tab + search in the URL (shareable, back/forward-safe).
   const { state, set } = useUrlState({
@@ -73,7 +74,7 @@ export function InquiriesPage() {
   const query = useApiQuery<{ data: ApiInquiry[]; counts: ApiInquiryCounts }>(
     (signal) => api.inquiries({ per_page: 50 }, signal),
     [],
-    { isEmpty: (r) => r.data.length === 0 },
+    { queryKey: keys.inquiries.list({ per_page: 50 }), isEmpty: (r) => r.data.length === 0 },
   );
 
   const update = useApiMutation((id: number, next: ApiInquiryStatus) =>

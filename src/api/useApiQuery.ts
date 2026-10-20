@@ -20,9 +20,8 @@ import { PRESET_STALE_TIMES } from '@/api/queryClient';
  * dedup + staleTime + cache come for free. The old infinite-fetch-loop bug is
  * also eliminated — React Query owns the lifecycle.
  *
- * Migration path: Phase 2b replaces `deps`-derived keys with explicit
- * `pharmacyKeys(id).xxx` keys so mutations can invalidate precisely. Until then
- * the adapter derives a stable key from serialized deps — safe and dedup-safe.
+ * Migration complete: `queryKey` is required; call sites pass `pharmacyKeys`/
+ * `adminKeys`/`publicKeys` keys so mutations invalidate precisely.
  *
  * Why not the OLD "why not react-query?" note?  See queryClient.ts — the B7
  * exception is documented there (no suitable cache existed; a hand-rolled
@@ -37,13 +36,10 @@ export interface UseApiQueryOptions<T> {
   /** Stale lifetime (ms). Falls back to a sensible default. */
   staleTime?: number;
   /**
-   * Optional explicit query key. When provided, the query is deduped and
-   * cacheable under this key — enabling precise invalidation between screens
-   * (e.g. AdminLayout and AdminSidebar sharing one `admin.profile` key).
-   * When omitted, a stable key is derived from `deps` (zero-break fallback
-   * for the 30 un-migrated call sites).
+   * Required explicit query key — build it from `pharmacyKeys`/`adminKeys`/
+   * `publicKeys` so screens dedupe and invalidate precisely.
    */
-  queryKey?: QueryKey;
+  queryKey: QueryKey;
   /** Called once per successful load — for side effects, not for state. */
   onSuccess?: (data: T) => void;
   /** Treat a result as empty for the empty-state UI. */
@@ -81,7 +77,7 @@ function serializeDeps(deps: readonly unknown[]): string {
 export function useApiQuery<T>(
   fetcher: (signal: AbortSignal) => Promise<T>,
   deps: readonly unknown[],
-  options: UseApiQueryOptions<T> = {},
+  options: UseApiQueryOptions<T>,
 ): UseApiQueryResult<T> {
   const {
     enabled = true,

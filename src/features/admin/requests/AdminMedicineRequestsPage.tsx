@@ -11,7 +11,7 @@ import {
   StatCard,
 } from '@/components/ui';
 import { toast } from '@/lib/toast';
-import { useAdminApi } from '@/auth/adminContext';
+import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
@@ -42,6 +42,7 @@ import type { AdminMedicineRequestsResponse, AdminMedicineRequest } from '@/api/
 export function AdminMedicineRequestsPage() {
   const { STR } = useLang();
   const api = useAdminApi();
+  const keys = useAdminKeys();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
   const { state, set } = useUrlState({
@@ -81,6 +82,7 @@ export function AdminMedicineRequestsPage() {
   const query = useApiQuery<AdminMedicineRequestsResponse>(
     (signal) => api.admin.medicineRequests({ q: committedQ, status, page, per_page: 25 }, signal),
     [committedQ, status, page],
+    { queryKey: keys.medicineRequests.list({ q: committedQ, status, page, per_page: 25 }) },
   );
 
   const rows = useMemo(() => query.data?.requests ?? [], [query.data]);

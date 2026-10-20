@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { AsyncBoundary, Badge, Btn, PageHeader } from '@/components/ui';
-import { useAdminApi } from '@/auth/adminContext';
+import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { thumbUrl } from '@/lib/format';
@@ -52,12 +52,13 @@ export function AdminProfilePage() {
   const { STR } = useLang();
   const P = STR.admin.profile;
   const api = useAdminApi();
+  const keys = useAdminKeys();
 
   const query = useApiQuery<{ user: AdminProfile }>(
     (signal) => api.admin.profile(signal),
     [],
     // A profile always has content; never flash an empty state for it.
-    { isEmpty: () => false },
+    { queryKey: keys.profile, isEmpty: () => false },
   );
 
   const profile = query.data?.user;

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, Notice } from '@/components/ui';
-import { usePharmacyApi, useAuth } from '@/auth/authHooks';
+import { usePharmacyApi, useAuth, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { readDraft, writeDraft, clearDraft } from '@/lib/drafts';
 import { formatDateTime, formatTime } from '@/lib/format';
@@ -50,6 +50,7 @@ export function InquiryChatPage() {
   const { id } = useParams<{ id: string }>();
   const api = usePharmacyApi();
   const { user } = useAuth();
+  const keys = usePharmacyKeys();
 
   /*
    * Phase 3: unsent-message draft (sessionStorage, per user + per inquiry).
@@ -82,13 +83,14 @@ export function InquiryChatPage() {
   }, [draft]);
 
   const inquiryQuery = useApiQuery<ApiInquiry>((signal) => api.inquiry(String(id), signal), [id], {
+    queryKey: keys.inquiries.detail(Number(id)),
     isEmpty: () => false,
   });
 
   const messagesQuery = useApiQuery<{ data: ApiInquiryMessage[] }>(
     (signal) => api.inquiryMessages(String(id), { markRead: true, signal }),
     [id],
-    { isEmpty: (r) => r.data.length === 0 },
+    { queryKey: keys.inquiries.messages(Number(id)), isEmpty: (r) => r.data.length === 0 },
   );
 
   const sendMessage = useApiMutation((body: { message: string }) =>

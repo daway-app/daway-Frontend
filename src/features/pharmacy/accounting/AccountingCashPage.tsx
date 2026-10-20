@@ -3,7 +3,7 @@ import { labelOf } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { AsyncBoundary, Btn, EmptyState, Modal } from '@/components/ui';
-import { usePharmacyApi } from '@/auth/authHooks';
+import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { money } from '@/lib/format';
 import { ROUTES } from '@/routes/paths';
@@ -77,6 +77,7 @@ export function AccountingCashPage() {
     out: A.cash_registers.outgoing,
   };
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
   const { state, set } = useUrlState({
@@ -94,24 +95,22 @@ export function AccountingCashPage() {
     set({ page: typeof value === 'function' ? value(page) : value });
   };
 
+  const cashParams = {
+    per_page: PER_PAGE,
+    page,
+    ...(sourceType !== 'all' ? { source_type: sourceType } : {}),
+    ...(direction !== 'all' ? { direction } : {}),
+  };
+
   const query = useApiQuery<{
     data: ApiCashMovement[];
     stats: ApiCashStats;
     period: { from: string; to: string };
     pagination: { current_page: number; last_page: number; total: number };
   }>(
-    (signal) =>
-      api.cash(
-        {
-          per_page: PER_PAGE,
-          page,
-          ...(sourceType !== 'all' ? { source_type: sourceType } : {}),
-          ...(direction !== 'all' ? { direction } : {}),
-        },
-        signal,
-      ),
+    (signal) => api.cash(cashParams, signal),
     [sourceType, direction, page],
-    { isEmpty: (r) => r.data.length === 0 },
+    { queryKey: keys.cash(cashParams), isEmpty: (r) => r.data.length === 0 },
   );
 
   const rows = useMemo(() => query.data?.data ?? [], [query.data]);

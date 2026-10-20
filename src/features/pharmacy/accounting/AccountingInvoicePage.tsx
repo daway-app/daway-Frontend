@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary } from '@/components/ui';
-import { useAuth, usePharmacyApi } from '@/auth/authHooks';
+import { useAuth, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { money, statusBadgeClass } from '@/lib/format';
 import type { ApiSale } from '@/api/pharmacyTypes';
@@ -36,10 +36,12 @@ export function AccountingInvoicePage() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
 
   const [payOpen, setPayOpen] = useState(false);
 
   const query = useApiQuery<ApiSale>((signal) => api.sale(String(number), signal), [number], {
+    queryKey: keys.sale(String(number)),
     isEmpty: () => false,
   });
 

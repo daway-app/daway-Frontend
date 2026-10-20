@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useLang } from '@/lib/lang/LanguageContext';
 import type { Strings } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary } from '@/components/ui';
-import { usePharmacyApi, useAuth } from '@/auth/authHooks';
+import { usePharmacyApi, useAuth, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { formatDate } from '@/lib/format';
 import type { ApiRating } from '@/api/pharmacyTypes';
@@ -37,12 +37,13 @@ export function RatingsPage() {
   const { STR } = useLang();
   const R = STR.pharmacy.ratings;
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
   const { user } = useAuth();
 
   const query = useApiQuery<{ data: ApiRating[] }>(
     (signal) => api.ratings({ per_page: 100 }, signal),
     [],
-    { isEmpty: (r) => r.data.length === 0 },
+    { queryKey: keys.ratings, isEmpty: (r) => r.data.length === 0 },
   );
 
   /** Memoised so the `?? []` fallback does not break downstream memo identity. */

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { AsyncBoundary, Btn, EmptyState, Modal, Notice } from '@/components/ui';
-import { usePharmacyApi } from '@/auth/authHooks';
+import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import type { ApiAlternativeBlock, ApiAlternativeRef } from '@/api/pharmacyTypes';
 
@@ -34,6 +34,7 @@ export function AlternativesPage() {
   const { STR } = useLang();
   const A = STR.pharmacy.alternatives.index;
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
 
   // Phase 3: the search term lives in the URL (shareable, back/forward-safe).
   const { state, set } = useUrlState({
@@ -58,7 +59,7 @@ export function AlternativesPage() {
   const query = useApiQuery<ApiAlternativeBlock[]>(
     (signal) => api.alternatives(signal),
     [],
-    { isEmpty: (rows) => rows.length === 0 },
+    { queryKey: keys.alternatives.all, isEmpty: (rows) => rows.length === 0 },
   );
 
   const blocks = useMemo(() => query.data ?? [], [query.data]);

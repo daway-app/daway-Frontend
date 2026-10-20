@@ -51,10 +51,16 @@ export function pharmacyKeys(id: string | number) {
     },
     ratings: [...base, 'ratings'] as const,
     sales: (q?: ListQuery) => [...base, 'sales', q] as const,
+    sale: (saleNumber: string) => [...base, 'sales', 'detail', saleNumber] as const,
+    refundableItems: (saleNumber: string) =>
+      [...base, 'sales', 'refund-items', saleNumber] as const,
     refunds: (q?: ListQuery) => [...base, 'refunds', q] as const,
+    refund: (refundId: number) => [...base, 'refunds', 'detail', refundId] as const,
+    accountingOverview: (range: string) => [...base, 'accounting', 'overview', range] as const,
     cash: (q?: ListQuery) => [...base, 'cash', q] as const,
     expenses: (q?: ListQuery) => [...base, 'expenses', q] as const,
     customers: [...base, 'customers'] as const,
+    customersPicker: [...base, 'customers', 'picker'] as const,
     suppliers: [...base, 'suppliers'] as const,
     // Sidebar badges: unread inquiries + low stock
     sidebarCounts: [...base, 'sidebar', 'counts'] as const,
@@ -71,23 +77,29 @@ export function adminKeys(id: string | number) {
     profile: [...base, 'profile'] as const,
     pharmacies: {
       list: (q?: ListQuery) => [...base, 'pharmacies', 'list', q] as const,
+      passwordResetRequests: [...base, 'pharmacies', 'password-reset-requests'] as const,
     },
     medicines: {
       list: (q?: ListQuery) => [...base, 'medicines', 'list', q] as const,
+      detail: (medicineId: number) => [...base, 'medicines', 'detail', medicineId] as const,
     },
     medicineRequests: {
       list: (q?: ListQuery) => [...base, 'medicine-requests', 'list', q] as const,
     },
     categories: {
       list: (q?: ListQuery) => [...base, 'categories', 'list', q] as const,
+      links: (categoryId: number, q?: ListQuery) =>
+        [...base, 'categories', categoryId, 'links', q] as const,
     },
     users: {
       list: (q?: ListQuery) => [...base, 'users', 'list', q] as const,
+      detail: (userId: number) => [...base, 'users', 'detail', userId] as const,
     },
     logs: {
       list: (q?: ListQuery) => [...base, 'logs', 'list', q] as const,
     },
     settings: [...base, 'settings'] as const,
+    deliveryPricing: [...base, 'delivery-pricing'] as const,
   };
 }
 

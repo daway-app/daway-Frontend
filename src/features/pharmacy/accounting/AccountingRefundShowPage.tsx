@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary } from '@/components/ui';
-import { usePharmacyApi } from '@/auth/authHooks';
+import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { money } from '@/lib/format';
 import type { ApiRefundDetail, ApiSale } from '@/api/pharmacyTypes';
@@ -34,11 +34,12 @@ export function AccountingRefundShowPage() {
   const A = STR.accounting;
   const { id } = useParams<{ id: string }>();
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
 
   const query = useApiQuery<ApiRefundDetail>(
     (signal) => api.refund(Number(id), signal),
     [id],
-    { isEmpty: () => false },
+    { queryKey: keys.refund(Number(id)), isEmpty: () => false },
   );
 
   const refund = query.data;
@@ -47,7 +48,11 @@ export function AccountingRefundShowPage() {
   const saleQuery = useApiQuery<ApiSale>(
     (signal) => api.sale(refund!.sale_number, signal),
     [refund?.sale_number ?? ''],
-    { enabled: Boolean(refund?.sale_number), isEmpty: () => false },
+    {
+      enabled: Boolean(refund?.sale_number),
+      queryKey: keys.sale(refund?.sale_number ?? ''),
+      isEmpty: () => false,
+    },
   );
   const sale = saleQuery.data;
 

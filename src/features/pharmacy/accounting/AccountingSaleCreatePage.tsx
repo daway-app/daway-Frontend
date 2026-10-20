@@ -151,11 +151,13 @@ export function AccountingSaleCreatePage() {
     // 3-screen check never touched this page.
     (signal) => api.inventory({ per_page: INVENTORY_PAGE_SIZE }, signal),
     [],
+    { queryKey: keys.inventory.list({ per_page: INVENTORY_PAGE_SIZE }) },
   );
 
   const customers = useApiQuery<ApiCustomer[]>(
     (signal) => api.customersForPicker({}, signal),
     [],
+    { queryKey: keys.customersPicker },
   );
 
   const createSale = useApiMutation(

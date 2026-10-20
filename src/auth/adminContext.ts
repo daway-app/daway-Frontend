@@ -1,6 +1,7 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useMemo } from 'react';
 import { createAdminApiStack, type AdminApiStack } from './session';
 import type { AdminUser } from '@/api/adminTypes';
+import { adminKeys } from '@/api/queryKeys';
 
 /**
  * Admin contexts, the singleton stack, and the two hooks.
@@ -78,4 +79,10 @@ export function useAdminAuth(): AdminAuthContextValue {
     throw new Error('[useAdminAuth] Must be used inside <AdminAuthProvider>.');
   }
   return context;
+}
+
+/** Identity-scoped admin cache keys; stable for the signed-in admin. */
+export function useAdminKeys() {
+  const { user } = useAdminAuth();
+  return useMemo(() => adminKeys(user?.id ?? 'anon'), [user?.id]);
 }

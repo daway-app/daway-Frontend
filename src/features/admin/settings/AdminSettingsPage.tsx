@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { AsyncBoundary, Badge, Btn, Card, Notice, PageHeader } from '@/components/ui';
 import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 import { toast } from '@/lib/toast';
-import { useAdminApi } from '@/auth/adminContext';
+import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import type { AR } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
@@ -98,6 +98,7 @@ const TABS: { key: SettingsTab; labelKey: keyof typeof AR.admin.settings }[] = [
 export function AdminSettingsPage() {
   const { STR } = useLang();
   const api = useAdminApi();
+  const keys = useAdminKeys();
   const S = STR.admin.settings;
 
   const [tab, setTab] = useState<SettingsTab>('general');
@@ -106,6 +107,7 @@ export function AdminSettingsPage() {
   const query = useApiQuery<AdminSettingsResponse>(
     (signal) => api.admin.settings(signal),
     [],
+    { queryKey: keys.settings },
   );
 
   const settings = query.data?.settings;

@@ -3,6 +3,7 @@ import type { ApiStack } from './session';
 import type { AuthUser } from './authContract';
 import type { PharmacyApi } from '@/api/pharmacyApi';
 import type { ScanSessionApi } from '@/api/scanSessionApi';
+import { pharmacyKeys } from '@/api/queryKeys';
 
 /**
  * Bind every method of an API object to its owner.
@@ -77,4 +78,10 @@ export function useAuth(): AuthContextValue {
     throw new Error('[useAuth] Must be used inside <AuthProvider>.');
   }
   return context;
+}
+
+/** Identity-scoped pharmacy cache keys; stable for the signed-in user. */
+export function usePharmacyKeys() {
+  const { user } = useAuth();
+  return useMemo(() => pharmacyKeys(user?.id ?? 'anon'), [user?.id]);
 }

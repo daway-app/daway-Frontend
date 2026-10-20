@@ -9,7 +9,7 @@ import {
   StatCard,
 } from '@/components/ui';
 import { toast } from '@/lib/toast';
-import { useAdminApi } from '@/auth/adminContext';
+import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
@@ -70,6 +70,7 @@ function hasCoords(lat: number | string | null, lng: number | string | null): bo
 export function AdminPharmaciesPage() {
   const { STR } = useLang();
   const api = useAdminApi();
+  const keys = useAdminKeys();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
   const { state, set } = useUrlState({
@@ -140,6 +141,7 @@ export function AdminPharmaciesPage() {
   const query = useApiQuery<AdminPharmaciesResponse>(
     (signal) => api.admin.pharmacies({ q: committedQ, status, page, per_page: 50 }, signal),
     [committedQ, status, page],
+    { queryKey: keys.pharmacies.list({ q: committedQ, status, page, per_page: 50 }) },
   );
 
   const data = query.data;
@@ -179,6 +181,7 @@ export function AdminPharmaciesPage() {
   }>(
     (signal) => api.admin.pharmacyPasswordResetRequests(signal),
     ['pharmacy-password-reset-requests'],
+    { queryKey: keys.pharmacies.passwordResetRequests },
   );
   const approveResetRequestMutation = useApiMutation((id: number) =>
     api.admin.approvePharmacyPasswordResetRequest(id),

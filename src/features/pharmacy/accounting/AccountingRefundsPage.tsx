@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary } from '@/components/ui';
-import { usePharmacyApi } from '@/auth/authHooks';
+import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { money } from '@/lib/format';
 import { useUrlState } from '@/lib/urlState';
@@ -53,6 +53,7 @@ export function AccountingRefundsPage() {
     cancelled: A.refunds.status.cancelled,
   };
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
   const { state, set } = useUrlState({
@@ -72,22 +73,20 @@ export function AccountingRefundsPage() {
     set({ page: typeof value === 'function' ? value(page) : value });
   };
 
+  const refundsParams = {
+    per_page: PER_PAGE,
+    page,
+    ...(committedQ ? { q: committedQ } : {}),
+    ...(status !== 'all' ? { status } : {}),
+  };
+
   const query = useApiQuery<{
     data: ApiRefundRow[];
     pagination: { current_page: number; last_page: number; total: number };
   }>(
-    (signal) =>
-      api.refunds(
-        {
-          per_page: PER_PAGE,
-          page,
-          ...(committedQ ? { q: committedQ } : {}),
-          ...(status !== 'all' ? { status } : {}),
-        },
-        signal,
-      ),
+    (signal) => api.refunds(refundsParams, signal),
     [committedQ, status, page],
-    { isEmpty: (r) => r.data.length === 0 },
+    { queryKey: keys.refunds(refundsParams), isEmpty: (r) => r.data.length === 0 },
   );
 
   const rows = useMemo(() => query.data?.data ?? [], [query.data]);

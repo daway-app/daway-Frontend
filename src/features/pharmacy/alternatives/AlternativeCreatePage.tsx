@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '@/components/ui';
 import { useLang } from '@/lib/lang/LanguageContext';
-import { usePharmacyApi } from '@/auth/authHooks';
+import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { useAuth } from '@/auth/authHooks';
 import type { ApiInventoryItem, ApiSearchableMedicine } from '@/api/pharmacyTypes';
@@ -29,6 +29,7 @@ export function AlternativeCreatePage() {
   const C = STR.pharmacy.alternatives.create;
   const api = usePharmacyApi();
   const { user } = useAuth();
+  const keys = usePharmacyKeys();
 
   const [baseId, setBaseId] = useState('');
   const [altId, setAltId] = useState('');
@@ -41,6 +42,7 @@ export function AlternativeCreatePage() {
   const inventory = useApiQuery<{ data: ApiInventoryItem[] }>(
     (signal) => api.inventory({ per_page: 100 }, signal),
     [],
+    { queryKey: keys.inventory.list({ per_page: 100 }) },
   );
   const baseOptions = useMemo(() => inventory.data?.data ?? [], [inventory.data]);
 

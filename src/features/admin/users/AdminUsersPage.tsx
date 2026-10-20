@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AsyncBoundary, Badge, Btn, DataTable, EmptyState, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
-import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
+import { useAdminApi, useAdminAuth, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { roleLabel } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
@@ -79,6 +79,7 @@ function relativeTime(value: string | null): string {
 export function AdminUsersPage() {
   const { STR } = useLang();
   const api = useAdminApi();
+  const keys = useAdminKeys();
   const { user: currentUser } = useAdminAuth();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
@@ -114,6 +115,7 @@ export function AdminUsersPage() {
   const query = useApiQuery<AdminUsersResponse>(
     (signal) => api.admin.users({ q: committedQ, role, page, per_page: 50 }, signal),
     [committedQ, role, page],
+    { queryKey: keys.users.list({ q: committedQ, role, page, per_page: 50 }) },
   );
 
   const rows = useMemo(() => query.data?.users ?? [], [query.data]);

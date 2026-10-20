@@ -4,6 +4,7 @@ import { AsyncBoundary, Btn, FormField, PageHeader } from '@/components/ui';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
+import { publicKeys } from '@/api/queryKeys';
 import type { ApiCategory } from '@/api/pharmacyTypes';
 
 /**
@@ -44,6 +45,7 @@ export function MedicineRequestPage() {
   const [done, setDone] = useState(false);
 
   const categories = useApiQuery<ApiCategory[]>((signal) => api.categories(signal), [], {
+    queryKey: publicKeys.categories,
     isEmpty: (rows) => rows.length === 0,
   });
 

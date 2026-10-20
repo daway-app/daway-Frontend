@@ -9,6 +9,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
+import { publicKeys } from '@/api/queryKeys';
 import type { ApiCategory } from '@/api/pharmacyTypes';
 import { AsyncBoundary, Btn, FormField, Notice, PageHeader } from '@/components/ui';
 import { useLang } from '@/lib/lang/LanguageContext';
@@ -71,7 +72,10 @@ export function MedicineCreatePage() {
   const [ingredient, setIngredient] = useState('');
   const [barcode, setBarcode] = useState('');
   const [categoryId, setCategoryId] = useState('');
-  const categories = useApiQuery<ApiCategory[]>((s) => api.categories(s), [], { enabled: manualOpen });
+  const categories = useApiQuery<ApiCategory[]>((s) => api.categories(s), [], {
+    enabled: manualOpen,
+    queryKey: publicKeys.categories,
+  });
   const categoryOptions = useMemo(() => categories.data ?? [], [categories.data]);
   const save = useApiMutation((b: Record<string, unknown>) => api.addMedicine(b));
   const saveByName = useApiMutation((b: Record<string, unknown>) => api.addMedicineByName(b));

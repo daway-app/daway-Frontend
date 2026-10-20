@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Btn, FormField, LoadingState, Notice } from '@/components/ui';
 import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
-import { useAdminApi } from '@/auth/adminContext';
+import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { toast } from '@/lib/toast';
@@ -44,6 +44,7 @@ import type { AdminUserDetail } from '@/api/adminTypes';
  * such guard, so the honest move is to let the server answer.
  */
 export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
+  const keys = useAdminKeys();
   const { STR } = useLang();
   const api = useAdminApi();
   const navigate = useNavigate();
@@ -82,7 +83,10 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const detail = useApiQuery<AdminUserDetail>(
     (signal) => api.admin.user(Number(id), signal),
     [id, isEdit],
-    { enabled: isEdit && Number.isFinite(Number(id)) },
+    {
+      enabled: isEdit && Number.isFinite(Number(id)),
+      queryKey: keys.users.detail(Number(id)),
+    },
   );
 
   const seeded = useRef(false);

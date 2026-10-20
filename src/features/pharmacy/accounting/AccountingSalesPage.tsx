@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary } from '@/components/ui';
-import { usePharmacyApi } from '@/auth/authHooks';
+import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { money, statusBadgeClass } from '@/lib/format';
 import { useUrlState } from '@/lib/urlState';
@@ -81,6 +81,7 @@ export function AccountingSalesPage() {
     cancelled: A.statuses.cancelled,
   };
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
 
   /*
    * Phase 3: list state lives in the URL (q/range/method/status/page).
@@ -121,21 +122,19 @@ export function AccountingSalesPage() {
 
   const hasFilters = committedQ !== '' || status !== 'all' || method !== 'all' || range !== 'all';
 
+  const salesParams = {
+    per_page: PER_PAGE,
+    page,
+    ...(committedQ ? { search: committedQ } : {}),
+    ...(filterValue(range) ? { range } : {}),
+    ...(filterValue(method) ? { payment_method: method } : {}),
+    ...(filterValue(status) ? { status } : {}),
+  };
+
   const query = useApiQuery<{ data: ApiSale[]; stats: ApiSalesStats; pagination: { current_page: number; last_page: number; total: number } }>(
-    (signal) =>
-      api.sales(
-        {
-          per_page: PER_PAGE,
-          page,
-          ...(committedQ ? { search: committedQ } : {}),
-          ...(filterValue(range) ? { range } : {}),
-          ...(filterValue(method) ? { payment_method: method } : {}),
-          ...(filterValue(status) ? { status } : {}),
-        },
-        signal,
-      ),
+    (signal) => api.sales(salesParams, signal),
     [committedQ, range, method, status, page],
-    { isEmpty: (r) => r.data.length === 0 },
+    { queryKey: keys.sales(salesParams), isEmpty: (r) => r.data.length === 0 },
   );
 
   const rows = useMemo(() => query.data?.data ?? [], [query.data]);

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AsyncBoundary, Btn, EmptyState, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
-import { useAdminApi } from '@/auth/adminContext';
+import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
@@ -83,6 +83,7 @@ function StatusPill({ active, disabled, onClick, title }: {
 export function AdminCategoriesPage() {
   const { STR } = useLang();
   const api = useAdminApi();
+  const keys = useAdminKeys();
   const [searchParams, setSearchParams] = useSearchParams();
 
   /**
@@ -134,6 +135,7 @@ export function AdminCategoriesPage() {
   const query = useApiQuery<AdminCategoriesResponse>(
     (signal) => api.admin.categories({ q: debouncedQ, page, per_page: 50 }, signal),
     [debouncedQ, page],
+    { queryKey: keys.categories.list({ q: debouncedQ, page, per_page: 50 }) },
   );
 
   const rows = useMemo(() => query.data?.categories ?? [], [query.data]);
@@ -492,6 +494,7 @@ function CategoryLinksModalInner({
 }) {
   const { STR } = useLang();
   const api = useAdminApi();
+  const keys = useAdminKeys();
   const [page, setPage] = useState(1);
   const [confirmDetach, setConfirmDetach] = useState<AdminCategoryLink | null>(null);
 
@@ -500,6 +503,7 @@ function CategoryLinksModalInner({
   const query = useApiQuery<AdminCategoryLinksResponse>(
     (signal) => api.admin.categoryLinks(category.id, { page, per_page: 50 }, signal),
     [category.id, page],
+    { queryKey: keys.categories.links(category.id, { page, per_page: 50 }) },
   );
 
   const links = useMemo(() => query.data?.links ?? [], [query.data]);

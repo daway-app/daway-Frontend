@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AsyncBoundary } from '@/components/ui';
 import { useLang } from '@/lib/lang/LanguageContext';
-import { useAuth, usePharmacyApi } from '@/auth/authHooks';
+import { useAuth, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
 import type { ApiDayKey, ApiPharmacyProfile } from '@/api/pharmacyTypes';
@@ -42,9 +42,11 @@ export function ProfileCompletePage() {
   const C = P.complete;
   const HQ = P.hours_quick;
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
   const { user } = useAuth();
 
   const query = useApiQuery<ApiPharmacyProfile>((signal) => api.profile(signal), [], {
+    queryKey: keys.profile,
     isEmpty: () => false,
   });
   const profile = query.data;

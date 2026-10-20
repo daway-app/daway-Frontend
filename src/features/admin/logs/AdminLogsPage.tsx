@@ -8,7 +8,7 @@ import {
   EmptyState,
   PageHeader,
 } from '@/components/ui';
-import { useAdminApi } from '@/auth/adminContext';
+import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { labelOf } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
@@ -38,6 +38,7 @@ import type { AdminLogsResponse, AdminLogRow } from '@/api/adminTypes';
  */
 export function AdminLogsPage() {
   const api = useAdminApi();
+  const keys = useAdminKeys();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
   const { state, set } = useUrlState({
@@ -80,21 +81,20 @@ export function AdminLogsPage() {
     logout: L.event_logout,
   };
 
+  const logsParams = {
+    q: committedQ,
+    // `auth` is a client-side grouping the API does not know; the two
+    // real tokens behind it are sent as-is only when one is chosen.
+    event: event === 'all' || event === 'auth' ? '' : event,
+    date,
+    page,
+    per_page: 50,
+  };
+
   const query = useApiQuery<AdminLogsResponse>(
-    (signal) =>
-      api.admin.logs(
-        {
-          q: committedQ,
-          // `auth` is a client-side grouping the API does not know; the two
-          // real tokens behind it are sent as-is only when one is chosen.
-          event: event === 'all' || event === 'auth' ? '' : event,
-          date,
-          page,
-          per_page: 50,
-        },
-        signal,
-      ),
+    (signal) => api.admin.logs(logsParams, signal),
     [committedQ, event, date, page],
+    { queryKey: keys.logs.list(logsParams) },
   );
 
   const rows = useMemo(() => query.data?.logs ?? [], [query.data]);

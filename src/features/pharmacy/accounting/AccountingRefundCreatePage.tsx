@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, Modal } from '@/components/ui';
-import { usePharmacyApi } from '@/auth/authHooks';
+import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { money } from '@/lib/format';
 import { round2 } from '@/lib/money';
@@ -39,6 +39,7 @@ export function AccountingRefundCreatePage() {
   const A = STR.accounting;
   const { saleNumber } = useParams<{ saleNumber: string }>();
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
 
   const [reason, setReason] = useState('');
   /** sale_item_id → chosen quantity. Absent = not selected. */
@@ -49,7 +50,7 @@ export function AccountingRefundCreatePage() {
   const query = useApiQuery<ApiRefundableItems>(
     (signal) => api.refundableItems(String(saleNumber), signal),
     [saleNumber],
-    { isEmpty: () => false },
+    { queryKey: keys.refundableItems(String(saleNumber)), isEmpty: () => false },
   );
 
   const data = query.data;

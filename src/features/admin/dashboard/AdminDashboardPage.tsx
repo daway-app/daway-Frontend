@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AsyncBoundary, Badge, Card, PageHeader, StatCard } from '@/components/ui';
 import { Chart } from '@/components/ui/Chart';
-import { useAdminApi } from '@/auth/adminContext';
+import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { timeAgo, tpl } from '../shared';
@@ -30,11 +30,13 @@ import type { AdminDashboardResponse } from '@/api/adminTypes';
 export function AdminDashboardPage() {
   const { STR } = useLang();
   const api = useAdminApi();
+  const keys = useAdminKeys();
   const [filter, setFilter] = useState<'all' | 'searches' | 'patients' | 'pharmacies'>('all');
 
   const query = useApiQuery<AdminDashboardResponse>(
     (signal) => api.admin.dashboard(signal),
     [],
+    { queryKey: keys.dashboard },
   );
 
   const data = query.data;

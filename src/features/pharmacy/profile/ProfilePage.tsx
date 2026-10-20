@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, FormField, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
-import { useAuth, usePharmacyApi } from '@/auth/authHooks';
+import { useAuth, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
 import {
@@ -76,9 +76,11 @@ export function ProfilePage() {
   const P = STR.pharmacy.profile;
   const HQ = P.hours_quick;
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
   const { user } = useAuth();
 
   const query = useApiQuery<ApiPharmacyProfile>((signal) => api.profile(signal), [], {
+    queryKey: keys.profile,
     isEmpty: () => false,
   });
 

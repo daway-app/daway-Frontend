@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
-import { usePharmacyApi } from '@/auth/authHooks';
+import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { AsyncBoundary, Btn, EmptyState } from '@/components/ui';
 import { countStock, stockStatus, LOW_STOCK_THRESHOLD } from '@/lib/stock';
@@ -44,6 +44,7 @@ export function MedicinesPage() {
     out: S.out,
   };
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
 
   // Phase 3: tab + committed search live in the URL (shareable, back/forward-safe).
   const { state, set } = useUrlState({
@@ -75,7 +76,7 @@ export function MedicinesPage() {
   const query = useApiQuery<{ data: ApiInventoryItem[] }>(
     (signal) => api.inventory({ per_page: 100 }, signal),
     [],
-    { isEmpty: (r) => r.data.length === 0 },
+    { queryKey: keys.inventory.list({ per_page: 100 }), isEmpty: (r) => r.data.length === 0 },
   );
 
   /** Memoised so the `?? []` fallback does not break downstream memo identity. */

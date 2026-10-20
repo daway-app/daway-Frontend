@@ -8,7 +8,7 @@ import {
   EmptyState,
   Modal,
 } from '@/components/ui';
-import { useAdminApi } from '@/auth/adminContext';
+import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
@@ -41,6 +41,7 @@ import type { AdminMedicinesResponse, AdminMedicine } from '@/api/adminTypes';
 export function AdminMedicinesPage() {
   const { STR } = useLang();
   const api = useAdminApi();
+  const keys = useAdminKeys();
 
   // Phase 3: filters + pagination in the URL (shareable, back/forward-safe).
   const { state, set } = useUrlState({
@@ -76,6 +77,7 @@ export function AdminMedicinesPage() {
   const query = useApiQuery<AdminMedicinesResponse>(
     (signal) => api.admin.medicines({ q: committedQ, status, page, per_page: 50 }, signal),
     [committedQ, status, page],
+    { queryKey: keys.medicines.list({ q: committedQ, status, page, per_page: 50 }) },
   );
 
   const rows = useMemo(() => query.data?.medicines ?? [], [query.data]);

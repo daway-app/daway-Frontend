@@ -4,7 +4,7 @@ import { labelOf } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary } from '@/components/ui';
-import { useAuth, usePharmacyApi } from '@/auth/authHooks';
+import { useAuth, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { money, num, statusBadgeClass } from '@/lib/format';
 import { toAppRoute } from '@/lib/appRoute';
@@ -58,6 +58,7 @@ export function AccountingOverviewPage() {
   };
   const api = usePharmacyApi();
   const { user } = useAuth();
+  const keys = usePharmacyKeys();
 
   const [chartRange, setChartRange] = useState<AccountingRange>('7d');
 
@@ -66,7 +67,7 @@ export function AccountingOverviewPage() {
   const query = useApiQuery<ApiAccountingOverview>(
     (signal) => api.accountingOverview('7d', signal),
     [],
-    { isEmpty: () => false },
+    { queryKey: keys.accountingOverview('7d'), isEmpty: () => false },
   );
 
   const data = query.data;

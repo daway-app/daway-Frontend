@@ -13,7 +13,7 @@ import {
 } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { ApiError } from '@/api/errors';
-import { useAdminApi } from '@/auth/adminContext';
+import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { money } from '../shared';
@@ -69,11 +69,13 @@ function formatKmRange(
 export function AdminDeliveryPricingPage() {
   const { STR } = useLang();
   const api = useAdminApi();
+  const keys = useAdminKeys();
   const S = STR.admin.delivery_pricing;
 
   const query = useApiQuery<AdminDeliveryPricingResponse>(
     (signal) => api.admin.deliveryPricing(signal),
     [],
+    { queryKey: keys.deliveryPricing },
   );
 
   const tiers = query.data?.tiers ?? [];

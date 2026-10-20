@@ -826,6 +826,11 @@ export const EN = {
       paid_exceeds_total: 'Paid amount exceeds the total',
       lines_required: 'Add at least one item before completing the sale',
       customer_required: 'Pick a customer to carry the balance of a credit or partially paid sale',
+      customer_select_hint: 'Select the customer from the search results to link the sale',
+      customer_searching: 'Searching...',
+      customer_no_results: 'No matching customer',
+      customer_add: 'Add ":name" as a new customer',
+      customer_add_failed: 'Could not add the customer',
     },
     expenses: {
       title: 'Expenses',

@@ -60,7 +60,7 @@ export function pharmacyKeys(id: string | number) {
     cash: (q?: ListQuery) => [...base, 'cash', q] as const,
     expenses: (q?: ListQuery) => [...base, 'expenses', q] as const,
     customers: [...base, 'customers'] as const,
-    customersPicker: [...base, 'customers', 'picker'] as const,
+    customerSearch: (term: string) => [...base, 'customers', 'search', term] as const,
     suppliers: [...base, 'suppliers'] as const,
     // Sidebar badges: unread inquiries + low stock
     sidebarCounts: [...base, 'sidebar', 'counts'] as const,

@@ -968,6 +968,11 @@ export const AR = {
       paid_exceeds_total: 'المدفوع أكبر من الإجمالي',
       lines_required: 'أضف صنفًا واحدًا على الأقل قبل إتمام البيع',
       customer_required: 'لبيع بالآجل أو بدفع جزئي يجب اختيار عميل ليُسجَّل عليه المتبقي',
+      customer_select_hint: 'اختر العميل من نتائج البحث ليُربط بالفاتورة',
+      customer_searching: 'جارٍ البحث...',
+      customer_no_results: 'لا يوجد عميل مطابق',
+      customer_add: 'إضافة «:name» كعميل جديد',
+      customer_add_failed: 'تعذّر إضافة العميل',
     },
 
     expenses: {

@@ -16,6 +16,7 @@ import type { ApiCustomer, ApiInventoryItem, PaymentMethod } from '@/api/pharmac
 import { ROUTES } from '@/routes/paths';
 import { buildSalePayload, type CartLine, type SalePayload } from './salePayload';
 import { mapAccountingBarcodeResult } from './barcodeResult';
+import { pickExactCustomer } from './customerPicker';
 import { ApiError } from '@/api/errors';
 
 /**
@@ -87,6 +88,7 @@ export function AccountingSaleCreatePage() {
   const [scanFound, setScanFound] = useState<CatalogItem | null>(null);
   const [search, setSearch] = useState('');
   const [customerQuery, setCustomerQuery] = useState('');
+  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
   const [customerId, setCustomerId] = useState<number | null>(null);
   const [customerName, setCustomerName] = useState('');
   const [paid, setPaid] = useState('');
@@ -126,6 +128,7 @@ export function AccountingSaleCreatePage() {
       if (saved.customerId != null) {
         setCustomerId(saved.customerId);
         setCustomerName(saved.customerName ?? '');
+        setCustomerQuery(saved.customerName ?? '');
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- restore-once on purpose
@@ -144,6 +147,13 @@ export function AccountingSaleCreatePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- cart is the trigger
   }, [cart, customerId, user?.id]);
 
+  const customerTerm = customerQuery.trim();
+
+  useEffect(() => {
+    const timer = setTimeout(() => setCustomerSearchTerm(customerTerm), 250);
+    return () => clearTimeout(timer);
+  }, [customerTerm]);
+
   const inventory = useApiQuery<{ data: ApiInventoryItem[] }>(
     // 🔴 `per_page` is CAPPED AT 100 by the backend (`max:100`). Sending 200
     // returns HTTP 422 "يجب ألا تكون قيمة الحقل per page أكبر من 100" and the
@@ -155,23 +165,33 @@ export function AccountingSaleCreatePage() {
   );
 
   const customers = useApiQuery<ApiCustomer[]>(
-    (signal) => api.customersForPicker({}, signal),
-    [],
-    { queryKey: keys.customersPicker },
+    (signal) => api.customersForPicker({ search: customerSearchTerm }, signal),
+    [customerSearchTerm],
+    {
+      queryKey: keys.customerSearch(customerSearchTerm),
+      enabled: customerSearchTerm.length >= 2,
+    },
+  );
+
+  const addCustomer = useApiMutation(
+    (name: string) => api.createCustomer({ name }),
+    { invalidates: [keys.customers] },
   );
 
   const createSale = useApiMutation(
     (body: SalePayload) => api.createSale(body),
     {
       // A completed sale affects: this sale's inventory (stock ↓), the sales
-      // list, the cash register, and the dashboard summary. All refresh via
-      // one invalidation — no manual refetch() calls needed.
+      // list, the cash register, the dashboard summary, and the customer's
+      // ledger balance. All refresh via one invalidation — no manual refetch()
+      // calls needed.
       invalidates: [
         keys.inventory.all,
         keys.sales({ per_page: 50 }),
         keys.cash({ per_page: 50 }),
         keys.dashboardStats,
         keys.sidebarCounts,
+        keys.customers,
       ],
     },
   );
@@ -229,11 +249,19 @@ export function AccountingSaleCreatePage() {
     );
   }, [search, catalog]);
 
-  const customerMatches = useMemo(() => {
-    const q = customerQuery.trim().toLowerCase();
-    if (q.length < 2) return [];
-    return (customers.data ?? []).filter((c) => c.name.toLowerCase().includes(q));
-  }, [customerQuery, customers.data]);
+  const customerMatches = customers.data ?? [];
+
+  useEffect(() => {
+    if (customerId !== null) return;
+    if (customerTerm !== customerSearchTerm) return;
+    if (customerSearchTerm.length < 2) return;
+    const exact = pickExactCustomer(customers.data ?? [], customerTerm);
+    if (!exact) return;
+    setCustomerId(exact.id);
+    setCustomerName(exact.name);
+    setCustomerQuery(exact.name);
+    setMsg(null);
+  }, [customerId, customerTerm, customerSearchTerm, customers.data]);
 
   /** Blade `addToCart()` — merges into an existing line when already present. */
   function addToCart(item: CatalogItem) {
@@ -355,6 +383,16 @@ export function AccountingSaleCreatePage() {
     setCustomerId(c.id);
     setCustomerName(c.name);
     setCustomerQuery(c.name);
+    setMsg(null);
+  }
+
+  async function addCustomerFromSearch() {
+    try {
+      const created = await addCustomer.run(customerTerm);
+      pickCustomer(created);
+    } catch {
+      toast.error(addCustomer.error?.message || A.pos.customer_add_failed);
+    }
   }
 
   async function completeSale() {
@@ -708,23 +746,47 @@ export function AccountingSaleCreatePage() {
                     autoComplete="off"
                     placeholder={A.pos.customer_search_placeholder}
                   />
-                  {customerMatches.length > 0 ? (
+                  {customerTerm.length >= 2 &&
+                  customerTerm === customerSearchTerm &&
+                  customerTerm !== customerName ? (
                     <div className="ac-search-results ac-customer-matches">
-                      {customerMatches.map((c) => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          className="ac-search-result"
-                          onClick={() => pickCustomer(c)}
-                        >
-                          <span className="ac-result-name">{c.name}</span>
-                          <span className="ac-result-meta">{c.phone ?? ''}</span>
-                        </button>
-                      ))}
+                      {customers.isLoading ? (
+                        <div className="ac-search-empty">{A.pos.customer_searching}</div>
+                      ) : customerMatches.length > 0 ? (
+                        customerMatches.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            className="ac-search-result"
+                            onClick={() => pickCustomer(c)}
+                          >
+                            <span className="ac-result-name">{c.name}</span>
+                            <span className="ac-result-meta">{c.phone ?? ''}</span>
+                          </button>
+                        ))
+                      ) : (
+                        <>
+                          <div className="ac-search-empty">{A.pos.customer_no_results}</div>
+                          <button
+                            type="button"
+                            className="ac-search-result"
+                            onClick={() => void addCustomerFromSearch()}
+                            disabled={addCustomer.isPending}
+                          >
+                            <span className="ac-result-name">
+                              {A.pos.customer_add.replace(':name', customerTerm)}
+                            </span>
+                          </button>
+                        </>
+                      )}
                     </div>
                   ) : null}
                   <span className="ph-hint">
-                    {customerId ? customerName : A.pos.customer_walk_in}
+                    {customerId
+                      ? customerName
+                      : customerTerm
+                        ? A.pos.customer_select_hint
+                        : A.pos.customer_walk_in}
                   </span>
                 </div>
 

@@ -1688,6 +1688,11 @@ body.dark-mode .ph-bulk-bar { background: var(--teal-mist); }
    ========================================================== */
 
 /* صفوف نتائج البحث (الدواء + العميل) — كانت بلا نمط */
+.ac-search-empty {
+    padding: 10px 14px;
+    color: var(--ac-ink-faint);
+    font-size: var(--fs-xs);
+}
 .ac-search-result {
     display: flex;
     flex-direction: column;

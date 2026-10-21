@@ -123,6 +123,9 @@ html.dark-mode {
 .ph-table th { background: var(--ph-canvas); color: var(--ph-ink-soft); font-weight: 600; padding: 14px 18px; text-align: start; border-block-end: 1px solid var(--ph-line); white-space: nowrap; }
 .ph-table td { padding: 14px 18px; border-block-end: 1px solid var(--ph-line-soft); vertical-align: middle; }
 .ph-table tr:last-child td { border-block-end: none; }
+.ph-table th.ph-col-center,
+.ph-table td.ph-col-center { text-align: center; }
+.ph-table td.ph-col-center .ph-stepper { margin-inline: auto; }
 .ph-table tr:hover td { background: rgba(123,193,183,.04); }
 .ph-table-wrap { overflow-x: auto; }
 

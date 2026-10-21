@@ -217,7 +217,7 @@ export function MedicinesPage() {
                   <th>{M.col_ingredient}</th>
                   <th>{M.col_price}</th>
                   <th>{M.col_status}</th>
-                  <th>{M.col_quantity}</th>
+                  <th className="ph-col-center">{M.col_quantity}</th>
                   <th>{M.col_actions}</th>
                 </tr>
               </thead>
@@ -254,7 +254,7 @@ export function MedicinesPage() {
                         <td>
                           <span className={`ph-badge ${s}`}>{STATUS_TEXT[s]}</span>
                         </td>
-                        <td>
+                        <td className="ph-col-center">
                           <div className="ph-stepper">
                             <button type="button" className="dec" onClick={() => step(row, -1)} aria-label="−">
                               <i className="fas fa-minus" />

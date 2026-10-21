@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { matchRoutes, type RouteObject } from 'react-router-dom';
-import { ROUTES, refundCreatePath } from './paths';
+import { medicineEditPath, ROUTES, refundCreatePath } from './paths';
 
 /**
  * Regression guard for the refund link.
@@ -72,5 +72,15 @@ describe('refund-create link resolution', () => {
 
   it('the refunds list route is unaffected', () => {
     expect(resolve(ROUTES.accountingRefunds)).toBe(REFUNDS_LIST);
+  });
+});
+
+describe('medicineEditPath', () => {
+  it('builds the edit URL from the pharmacy-medicine id', () => {
+    expect(medicineEditPath(23)).toBe('/medicines/23/edit');
+  });
+
+  it('encodes an id that needs it', () => {
+    expect(medicineEditPath('23/edit')).toBe('/medicines/23%2Fedit/edit');
   });
 });

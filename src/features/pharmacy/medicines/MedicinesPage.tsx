@@ -8,7 +8,7 @@ import { AsyncBoundary, Btn, EmptyState } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { stockStatus, LOW_STOCK_THRESHOLD } from '@/lib/stock';
 import { money, thumbUrl } from '@/lib/format';
-import { ROUTES } from '@/routes/paths';
+import { medicineEditPath, ROUTES } from '@/routes/paths';
 import type { ApiInventoryItem } from '@/api/pharmacyTypes';
 
 type Tab = 'all' | 'out' | 'low' | 'ok';
@@ -18,6 +18,7 @@ export function MedicinesPage() {
   const M = STR.pharmacy.medicines.index;
   const S = STR.pharmacy.status;
   const I = STR.pharmacy.inventory;
+  const T = STR.pharmacy.toast;
   const STATUS_TEXT: Record<'ok' | 'low' | 'out', string> = {
     ok: S.available,
     low: S.low,
@@ -90,6 +91,13 @@ export function MedicinesPage() {
       ],
     },
   );
+  const remove = useApiMutation((id: number) => api.deleteMedicine(id), {
+    invalidates: [
+      keys.inventory.list({ per_page: 100 }),
+      keys.dashboardStats,
+      keys.sidebarCounts,
+    ],
+  });
 
   const step = (row: ApiInventoryItem, delta: number) =>
     setDrafts((prev) => ({
@@ -116,13 +124,29 @@ export function MedicinesPage() {
     }
   }
 
+  async function handleDelete(row: ApiInventoryItem) {
+    if (!window.confirm(M.delete_confirm)) return;
+    try {
+      await remove.run(row.id);
+      toast.success(T.deleted);
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[row.id];
+        return next;
+      });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : T.delete_failed);
+    }
+  }
+
   const hasFilters = q !== '' || status !== 'all';
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return rows.filter((row) => {
       const quantity = drafts[row.id] ?? row.quantity;
-      if (status !== 'all' && stockStatus(quantity) !== status) return false;
+      const rowStatus = row.is_available ? stockStatus(quantity) : 'out';
+      if (status !== 'all' && rowStatus !== status) return false;
       if (needle === '') return true;
       const name = row.medicine?.trade_name ?? '';
       const ingredient = row.medicine?.active_ingredient ?? '';
@@ -182,19 +206,6 @@ export function MedicinesPage() {
               name="q"
             />
           </div>
-          {hasFilters && (
-            <button
-              type="button"
-              className="ph-btn ghost"
-              onClick={() => {
-                setDraft('');
-                setQ('');
-                setStatus('all');
-              }}
-            >
-              <i className="fas fa-xmark" /> {I.clear_filters}
-            </button>
-          )}
         </form>
 
         <div className="ph-card ph-medicine-table">
@@ -202,44 +213,34 @@ export function MedicinesPage() {
             <table className="ph-table">
               <thead>
                 <tr>
+                  <th>{M.col_status}</th>
+                  <th>{M.col_quantity}</th>
+                  <th>{M.col_actions}</th>
                   <th>{M.col_medicine}</th>
                   <th>{M.col_ingredient}</th>
                   <th>{M.col_price}</th>
-                  <th>{M.col_quantity}</th>
-                  <th>{M.col_status}</th>
-                  <th>{M.col_actions}</th>
                 </tr>
               </thead>
               <tbody>
                 {visible.length > 0 ? (
                   visible.map((row) => {
                     const effective = effectiveQty(row);
-                    const s = stockStatus(effective);
+                    const s = row.is_available ? stockStatus(effective) : 'out';
                     const name = row.medicine?.trade_name ?? '';
                     const ingredient = row.medicine?.active_ingredient ?? '';
                     const image = thumbUrl(row.medicine?.image_url, 88, 88);
                     return (
                       <tr key={row.id} data-status={s} data-min={LOW_STOCK_THRESHOLD}>
                         <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div className="ph-med-thumb">
-                              {image ? (
-                                <img src={image} alt={name} width={44} height={44} loading="lazy" decoding="async" />
-                              ) : (
-                                <i className="fas fa-pills" />
-                              )}
-                            </div>
-                            <div className="med-cell-text">
-                              <strong title={name}>{name}</strong>
-                            </div>
-                          </div>
+                          <Link
+                            to={medicineEditPath(row.id)}
+                            className={`ph-badge ${s}`}
+                            title={M.edit_tooltip}
+                            style={{ textDecoration: 'none' }}
+                          >
+                            {STATUS_TEXT[s]}
+                          </Link>
                         </td>
-                        <td>
-                          <span className="med-ingredient-text" title={ingredient}>
-                            {ingredient}
-                          </span>
-                        </td>
-                        <td>{money(row.price)}</td>
                         <td>
                           <div className="ph-stepper">
                             <button type="button" className="dec" onClick={() => step(row, -1)} aria-label="−">
@@ -260,12 +261,9 @@ export function MedicinesPage() {
                           </div>
                         </td>
                         <td>
-                          <span className={`ph-badge ${s}`}>{STATUS_TEXT[s]}</span>
-                        </td>
-                        <td>
                           <div style={{ display: 'flex', gap: 8 }}>
                             <Link
-                              to={`/medicines/${row.medicine_id ?? row.id}`}
+                              to={medicineEditPath(row.id)}
                               className="ph-btn icon outline"
                               title={M.edit_tooltip}
                             >
@@ -274,14 +272,35 @@ export function MedicinesPage() {
                             <button
                               type="button"
                               className="ph-btn icon danger"
-                              title={M.delete_unavailable}
-                              aria-label={M.delete_unavailable}
-                              disabled
+                              title={M.delete_tooltip}
+                              aria-label={M.delete_tooltip}
+                              disabled={remove.isPending || save.isPending}
+                              onClick={() => void handleDelete(row)}
                             >
                               <i className="fas fa-trash" />
                             </button>
                           </div>
                         </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div className="ph-med-thumb">
+                              {image ? (
+                                <img src={image} alt={name} width={44} height={44} loading="lazy" decoding="async" />
+                              ) : (
+                                <i className="fas fa-pills" />
+                              )}
+                            </div>
+                            <div className="med-cell-text">
+                              <strong title={name}>{name}</strong>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="med-ingredient-text" title={ingredient}>
+                            {ingredient}
+                          </span>
+                        </td>
+                        <td>{money(row.price)}</td>
                       </tr>
                     );
                   })
@@ -325,7 +344,7 @@ export function MedicinesPage() {
               <Btn
                 type="button"
                 variant="primary"
-                disabled={!hasChanges || save.isPending}
+                disabled={!hasChanges || save.isPending || remove.isPending}
                 onClick={() => void handleSave()}
               >
                 <i className="fas fa-save" /> {I.save_button}

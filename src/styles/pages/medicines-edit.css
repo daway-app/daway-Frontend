@@ -80,6 +80,23 @@
 .req {
     color: var(--danger-text);
 }
+.med-availability {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+    font-size: var(--fs-md);
+    color: var(--ph-ink);
+    cursor: pointer;
+}
+.med-availability input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--ph-teal-text);
+}
+.med-edit-delete {
+    margin-inline-end: auto;
+}
 /* Field surface comes from the shared input group in ui-system.css — it was a
    44px-tall, 11px-radius box with its own focus glow, matching nothing else. */
 

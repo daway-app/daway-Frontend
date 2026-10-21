@@ -44,6 +44,7 @@ export function pharmacyKeys(id: string | number) {
     },
     medicines: {
       search: (term: string) => [...base, 'medicines', 'search', term] as const,
+      detail: (id: number) => [...base, 'medicines', 'detail', id] as const,
     },
     alternatives: {
       all: [...base, 'alternatives'] as const,

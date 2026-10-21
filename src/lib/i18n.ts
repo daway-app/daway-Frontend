@@ -250,12 +250,6 @@ export const AR = {
         delete_confirm: 'هل أنت متأكد من حذف هذا الدواء؟',
         edit_tooltip: 'تعديل',
         delete_tooltip: 'حذف',
-        /**
-         * ADDED. The delete button called `window.confirm()` and then did
-         * nothing — there is no delete endpoint. This replaces a fake
-         * confirmation with the truth, and the button is disabled.
-         */
-        delete_unavailable: 'حذف الدواء غير متاح بعد',
       },
       request: {
         title: 'طلب دواء جديد',
@@ -326,6 +320,30 @@ export const AR = {
         ingredient_required: 'المادة الفعالة مطلوبة للإضافة اليدوية.',
         category_required: 'القسم مطلوب.',
         request_new_button: 'اطلب دواءً جديداً من الإدارة',
+      },
+      edit: {
+        title: 'تعديل دواء',
+        heading_page: 'تعديل الدواء',
+        subtitle: 'حدّث السعر والكمية وحالة التوفر.',
+        info_section: 'بيانات الدواء',
+        stock_section: 'السعر والمخزون',
+        trade_name: 'اسم الدواء',
+        active_ingredient: 'المادة الفعالة',
+        price_label: 'السعر (شيقل)',
+        quantity_label: 'الكمية',
+        status_hint: 'الحالة تُحتسب تلقائياً من الكمية والتوفر. الحالة الحالية: :status',
+        available_now: 'متوفر الآن',
+        update_button: 'حفظ التعديلات',
+        saving: 'جاري الحفظ...',
+        cancel_button: 'إلغاء',
+        back_to_medicines: 'العودة إلى الأدوية',
+        success: 'تم تحديث الدواء بنجاح.',
+        not_found: 'الدواء غير موجود في مخزون الصيدلية.',
+        price_required: 'السعر مطلوب.',
+        quantity_required: 'الكمية مطلوبة.',
+        delete_button: 'حذف الدواء',
+        deleting: 'جاري الحذف...',
+        delete_confirm: 'هل أنت متأكد من حذف هذا الدواء من صيدليتك؟',
       },
     },
 

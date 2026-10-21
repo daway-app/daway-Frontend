@@ -31,6 +31,7 @@ const DashboardPage = lazyPage(() => import('@/features/pharmacy/dashboard/Dashb
 const MedicinesPage = lazyPage(() => import('@/features/pharmacy/medicines/MedicinesPage'));
 const MedicineRequestPage = lazyPage(() => import('@/features/pharmacy/medicines/MedicineRequestPage'));
 const MedicineCreatePage = lazyPage(() => import('@/features/pharmacy/medicines/MedicineCreatePage'));
+const MedicineEditPage = lazyPage(() => import('@/features/pharmacy/medicines/MedicineEditPage'));
 const InquiriesPage = lazyPage(() => import('@/features/pharmacy/inquiries/InquiriesPage'));
 const InquiryChatPage = lazyPage(() => import('@/features/pharmacy/inquiries/InquiryChatPage'));
 const AlternativesPage = lazyPage(() => import('@/features/pharmacy/alternatives/AlternativesPage'));
@@ -206,6 +207,10 @@ export const router = createBrowserRouter([
               {
                 path: 'medicines/create',
                 element: <MedicineCreatePage />,
+              },
+              {
+                path: 'medicines/:id/edit',
+                element: <MedicineEditPage />,
               },
               {
                 path: 'medicines/*',

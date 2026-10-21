@@ -584,7 +584,9 @@ body.dark-mode .ph-pill.active {
 .ph-search { position: relative; min-width: 260px; }
 .ph-search input {
     width: 100%;
-    padding: 9px 14px 9px 38px;
+    padding-block: 9px;
+    padding-inline-start: 38px;
+    padding-inline-end: 14px;
     border-radius: 999px;
     border: 1.5px solid var(--line-strong);
     background: var(--ph-paper);

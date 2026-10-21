@@ -214,6 +214,25 @@ export function createPharmacyApi(client: ApiClient) {
     },
 
 
+    async getMedicine(id: number, signal?: AbortSignal): Promise<ApiInventoryItem> {
+      const res = await client.get<ApiSuccess<ApiInventoryItem>>(`${P.medicines}/${id}`, {
+        signal,
+      });
+      return res.data;
+    },
+
+    async updateMedicine(id: number, body: Record<string, unknown>): Promise<ApiInventoryItem> {
+      const res = await client.put<ApiSuccess<ApiInventoryItem>>(
+        `${P.medicines}/${id}`,
+        body,
+      );
+      return res.data;
+    },
+
+    async deleteMedicine(id: number): Promise<void> {
+      await client.delete<ApiSuccess<null>>(`${P.medicines}/${id}`);
+    },
+
     /** Add a catalogue/MOH pick to the stock (`POST /api/pharmacy/medicines`). */
     async addMedicine(body: Record<string, unknown>): Promise<ApiInventoryItem> {
       const res = await client.post<ApiSuccess<ApiInventoryItem>>(P.medicines, body);

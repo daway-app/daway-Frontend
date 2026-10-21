@@ -53,6 +53,10 @@ export const ROUTES = {
 
 export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES];
 
+export function medicineEditPath(id: number | string): string {
+  return `/medicines/${encodeURIComponent(String(id))}/edit`;
+}
+
 /**
  * `/accounting/refunds/create/<saleNumber>` — the refund form for ONE sale.
  *

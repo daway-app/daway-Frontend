@@ -57,6 +57,7 @@ html[dir="rtl"] .nav-section {
     background: var(--sidebar-bg);
     padding: 24px 16px;
 
+    display: flex;
     flex-direction: column;
     box-sizing: border-box;
     user-select: none;

@@ -98,6 +98,7 @@ html.dark-mode {
 .ph-card-head h2 i, .ph-card-head h2 svg { color: var(--ph-teal-text); }
 .ph-card-head p { margin: 4px 0 0; font-size: var(--fs-sm); color: var(--ph-ink-faint); flex-basis: 100%; }
 .ph-card-body { padding: 22px; }
+.ph-dash-grid > .ph-card + .ph-card { margin-block-start: 0; }
 
 .ph-donut-wrap { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
 .ph-donut-chart { position: relative; flex: 0 0 200px; height: 200px; }

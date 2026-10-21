@@ -217,6 +217,7 @@ export function DashboardPage() {
         </div>
 
         <div
+          className="ph-dash-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit,minmax(340px,1fr))',
@@ -260,7 +261,10 @@ export function DashboardPage() {
           </Card>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(340px,1fr))', gap: 20 }}>
+        <div
+          className="ph-dash-grid"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(340px,1fr))', gap: 20 }}
+        >
           <Card
             title={D.low_stock_title}
             icon="fas fa-bell"

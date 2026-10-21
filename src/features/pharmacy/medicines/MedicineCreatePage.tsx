@@ -7,7 +7,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth, usePharmacyApi } from '@/auth/authHooks';
+import { useAuth, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { publicKeys } from '@/api/queryKeys';
 import type { ApiCategory } from '@/api/pharmacyTypes';
@@ -33,6 +33,7 @@ export function MedicineCreatePage() {
   const { STR } = useLang();
   const C = STR.pharmacy.medicines.create;
   const api = usePharmacyApi();
+  const keys = usePharmacyKeys();
   const { user } = useAuth();
   const [term, setTerm] = useState('');
   const [debounced, setDebounced] = useState('');
@@ -77,8 +78,17 @@ export function MedicineCreatePage() {
     queryKey: publicKeys.categories,
   });
   const categoryOptions = useMemo(() => categories.data ?? [], [categories.data]);
-  const save = useApiMutation((b: Record<string, unknown>) => api.addMedicine(b));
-  const saveByName = useApiMutation((b: Record<string, unknown>) => api.addMedicineByName(b));
+  const afterAdd = [
+    keys.inventory.list({ per_page: 100 }),
+    keys.dashboardStats,
+    keys.sidebarCounts,
+  ];
+  const save = useApiMutation((b: Record<string, unknown>) => api.addMedicine(b), {
+    invalidates: afterAdd,
+  });
+  const saveByName = useApiMutation((b: Record<string, unknown>) => api.addMedicineByName(b), {
+    invalidates: afterAdd,
+  });
   const [doneName, setDoneName] = useState<string | null>(null);
   function pick(o: CatalogOption) {
     setSelected(o); setResults([]); setSearchError(false);

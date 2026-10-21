@@ -3,33 +3,13 @@ import { Link } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { useUrlState } from '@/lib/urlState';
 import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
-import { useApiQuery } from '@/api/useApiQuery';
+import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { AsyncBoundary, Btn, EmptyState } from '@/components/ui';
-import { countStock, stockStatus, LOW_STOCK_THRESHOLD } from '@/lib/stock';
+import { toast } from '@/lib/toast';
+import { stockStatus, LOW_STOCK_THRESHOLD } from '@/lib/stock';
 import { money, thumbUrl } from '@/lib/format';
+import { ROUTES } from '@/routes/paths';
 import type { ApiInventoryItem } from '@/api/pharmacyTypes';
-
-/**
- * Pharmacy medicines index — live against `GET /api/pharmacy/medicines`.
- *
- * Structure still mirrors `resources/views/pharmacy/medicines/index.blade.php`
- * 1:1 (same wrappers, same `.ph-*` classes).
- *
- * Deliberate changes from the mock version:
- *
- *  1. **Counts are derived, not trusted.** `countStock(rows)` applies the
- *     approved quantity-only rule. The API's `stats.available_count` double
- *     counts low rows (DEFECT-1, see `src/lib/stock.ts`).
- *
- *  2. **Search is server-side.** Unlike the inventory screen, this endpoint
- *     exposes a `q` filter, so a search is a real request rather than a filter
- *     over the current page only. The status tabs stay client-side, because the
- *     API has no status parameter here.
- *
- *  3. The delete action keeps Blade's `confirm()` gate but performs nothing —
- *     deleting a medicine is a write the patient-facing catalogue depends on,
- *     and is out of scope for this wiring pass.
- */
 
 type Tab = 'all' | 'out' | 'low' | 'ok';
 
@@ -37,7 +17,7 @@ export function MedicinesPage() {
   const { STR } = useLang();
   const M = STR.pharmacy.medicines.index;
   const S = STR.pharmacy.status;
-  const D = STR.pharmacy.dashboard;
+  const I = STR.pharmacy.inventory;
   const STATUS_TEXT: Record<'ok' | 'low' | 'out', string> = {
     ok: S.available,
     low: S.low,
@@ -81,14 +61,68 @@ export function MedicinesPage() {
 
   /** Memoised so the `?? []` fallback does not break downstream memo identity. */
   const rows = useMemo(() => query.data?.data ?? [], [query.data]);
-  const { total, out, low, available } = useMemo(() => countStock(rows), [rows]);
+
+  /** Local quantity edits, keyed by pharmacy_medicine id. */
+  const [drafts, setDrafts] = useState<Record<number, number>>({});
+
+  const effectiveQty = (row: ApiInventoryItem) => drafts[row.id] ?? row.quantity;
+
+  const dirtyChanges = useMemo(
+    () =>
+      rows
+        .filter((row) => drafts[row.id] !== undefined && drafts[row.id] !== row.quantity)
+        .map((row) => {
+          const quantity = drafts[row.id] ?? row.quantity;
+          return { id: row.id, quantity, is_available: quantity > 0 };
+        }),
+    [rows, drafts],
+  );
+  const hasChanges = dirtyChanges.length > 0;
+
+  const save = useApiMutation(
+    (changes: Array<{ id: number; quantity: number; is_available: boolean }>) =>
+      api.bulkUpdateInventory(changes),
+    {
+      invalidates: [
+        keys.inventory.list({ per_page: 100 }),
+        keys.dashboardStats,
+        keys.sidebarCounts,
+      ],
+    },
+  );
+
+  const step = (row: ApiInventoryItem, delta: number) =>
+    setDrafts((prev) => ({
+      ...prev,
+      [row.id]: Math.max(0, (prev[row.id] ?? row.quantity) + delta),
+    }));
+
+  const setQty = (row: ApiInventoryItem, value: number) =>
+    setDrafts((prev) => ({
+      ...prev,
+      [row.id]: Math.max(0, Number.isFinite(value) ? Math.trunc(value) : 0),
+    }));
+
+  async function handleSave() {
+    if (!hasChanges) return;
+    try {
+      const result = await save.run(dirtyChanges);
+      toast.success(I.toast_saved.replace(':count', String(result.updated_count)));
+      setDrafts({});
+    } catch (err) {
+      const serverMessage = save.error?.message;
+      const thrown = err instanceof Error ? err.message : undefined;
+      toast.error(serverMessage || thrown || I.toast_error);
+    }
+  }
 
   const hasFilters = q !== '' || status !== 'all';
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return rows.filter((row) => {
-      if (status !== 'all' && stockStatus(row.quantity) !== status) return false;
+      const quantity = drafts[row.id] ?? row.quantity;
+      if (status !== 'all' && stockStatus(quantity) !== status) return false;
       if (needle === '') return true;
       const name = row.medicine?.trade_name ?? '';
       const ingredient = row.medicine?.active_ingredient ?? '';
@@ -96,7 +130,7 @@ export function MedicinesPage() {
         name.toLowerCase().includes(needle) || ingredient.toLowerCase().includes(needle)
       );
     });
-  }, [rows, status, q]);
+  }, [rows, status, q, drafts]);
 
   function submitSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -111,13 +145,7 @@ export function MedicinesPage() {
           <p>{M.subtitle_page}</p>
         </div>
         <div className="ph-actions">
-          {/*
-            Was `/medicines/create`, which has NO route in this SPA — the router
-            only declares `medicines/*` → a placeholder, so the button opened an
-            empty page. The working destination for adding a medicine is the
-            request form, which posts to `/api/pharmacy/medicine-requests`.
-          */}
-          <Link to="/medicines/request" className="ph-btn primary">
+          <Link to={ROUTES.medicineCreate} className="ph-btn primary">
             <i className="fas fa-plus" /> {M.add_medicine}
           </Link>
         </div>
@@ -130,41 +158,6 @@ export function MedicinesPage() {
         onRetry={query.refetch}
         loadingRows={4}
       >
-        <div className="ph-stats">
-          <div className="ph-stat">
-            <i className="fas fa-xmark red" />
-            <div>
-              <strong>{out}</strong>
-              <span>{S.out}</span>
-            </div>
-            <span className="ph-stat-progress" />
-          </div>
-          <div className="ph-stat">
-            <i className="fas fa-triangle-exclamation orange" />
-            <div>
-              <strong>{low}</strong>
-              <span>{S.low_stock}</span>
-            </div>
-            <span className="ph-stat-progress" />
-          </div>
-          <div className="ph-stat">
-            <i className="fas fa-check green" />
-            <div>
-              <strong>{available}</strong>
-              <span>{S.available}</span>
-            </div>
-            <span className="ph-stat-progress" />
-          </div>
-          <div className="ph-stat">
-            <i className="fas fa-pills teal" />
-            <div>
-              <strong>{total}</strong>
-              <span>{D.stat_total}</span>
-            </div>
-            <span className="ph-stat-progress" />
-          </div>
-        </div>
-
         <form className="ph-filters" onSubmit={submitSearch}>
           <div className="ph-tabs">
             {(['all', 'out', 'low', 'ok'] as Tab[]).map((t) => (
@@ -199,7 +192,7 @@ export function MedicinesPage() {
                 setStatus('all');
               }}
             >
-              <i className="fas fa-xmark" /> {STR.pharmacy.inventory.clear_filters}
+              <i className="fas fa-xmark" /> {I.clear_filters}
             </button>
           )}
         </form>
@@ -220,7 +213,8 @@ export function MedicinesPage() {
               <tbody>
                 {visible.length > 0 ? (
                   visible.map((row) => {
-                    const s = stockStatus(row.quantity);
+                    const effective = effectiveQty(row);
+                    const s = stockStatus(effective);
                     const name = row.medicine?.trade_name ?? '';
                     const ingredient = row.medicine?.active_ingredient ?? '';
                     const image = thumbUrl(row.medicine?.image_url, 88, 88);
@@ -246,19 +240,30 @@ export function MedicinesPage() {
                           </span>
                         </td>
                         <td>{money(row.price)}</td>
-                        <td>{row.quantity}</td>
+                        <td>
+                          <div className="ph-stepper">
+                            <button type="button" className="dec" onClick={() => step(row, -1)} aria-label="−">
+                              <i className="fas fa-minus" />
+                            </button>
+                            <input
+                              type="number"
+                              name={`quantities[${row.id}]`}
+                              min={0}
+                              step={1}
+                              inputMode="numeric"
+                              value={effective}
+                              onChange={(e) => setQty(row, Number(e.target.value))}
+                            />
+                            <button type="button" className="inc" onClick={() => step(row, 1)} aria-label="+">
+                              <i className="fas fa-plus" />
+                            </button>
+                          </div>
+                        </td>
                         <td>
                           <span className={`ph-badge ${s}`}>{STATUS_TEXT[s]}</span>
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: 8 }}>
-                            {/*
-                              ⚠️ There is no medicine-edit screen in this SPA yet,
-                              so this lands on the `medicines/*` placeholder. It is
-                              a `Link` (not a raw <a>) so the click stays inside
-                              the SPA and does not trigger a full page reload.
-                              Building the edit screen is an open follow-up.
-                            */}
                             <Link
                               to={`/medicines/${row.medicine_id ?? row.id}`}
                               className="ph-btn icon outline"
@@ -266,18 +271,6 @@ export function MedicinesPage() {
                             >
                               <i className="fas fa-pen" />
                             </Link>
-                            {/*
-                              🔴 This button used to call `window.confirm("…delete
-                              this medicine?")` and then DO NOTHING — there is no
-                              delete endpoint (`routes/api.php` only exposes GET
-                              for medicines). Confirming a destructive action and
-                              having nothing happen is worse than not offering it.
-
-                              The button is kept (removing it would drop a piece
-                              of the UI the Blade page has) but disabled, with a
-                              title that states the truth instead of a fake
-                              confirmation.
-                            */}
                             <button
                               type="button"
                               className="ph-btn icon danger"
@@ -295,17 +288,10 @@ export function MedicinesPage() {
                 ) : (
                   <tr>
                     <td colSpan={6}>
-                      {/*
-                        First-use: a brand-new pharmacy sees an empty table with
-                        no way forward. The unfiltered case now carries the one
-                        action that resolves it. The FILTERED case must NOT — the
-                        user already knows how to add; they just searched for
-                        something that is not there. (Phase 2.)
-                      */}
                       {hasFilters ? (
                         <div className="ph-empty">
                           <i className="fas fa-magnifying-glass" />
-                          <h3>{STR.pharmacy.inventory.no_results}</h3>
+                          <h3>{I.no_results}</h3>
                         </div>
                       ) : (
                         <EmptyState
@@ -313,7 +299,7 @@ export function MedicinesPage() {
                           title={M.empty_title}
                           description={M.empty_desc}
                           action={
-                            <Btn variant="primary" to="/medicines/request">
+                            <Btn variant="primary" to={ROUTES.medicineCreate}>
                               <i className="fas fa-plus" /> {M.add_medicine}
                             </Btn>
                           }
@@ -325,6 +311,28 @@ export function MedicinesPage() {
               </tbody>
             </table>
           </div>
+
+          {rows.length > 0 && (
+            <div
+              style={{
+                padding: '18px 22px',
+                borderBlockStart: '1px solid var(--ph-line-soft)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+              }}
+            >
+              <Btn
+                type="button"
+                variant="primary"
+                disabled={!hasChanges || save.isPending}
+                onClick={() => void handleSave()}
+              >
+                <i className="fas fa-save" /> {I.save_button}
+              </Btn>
+              {save.isPending && <span style={{ color: 'var(--ph-ink-faint)' }}>…</span>}
+            </div>
+          )}
         </div>
       </AsyncBoundary>
     </div>

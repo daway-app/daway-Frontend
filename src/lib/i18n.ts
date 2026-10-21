@@ -248,7 +248,6 @@ export const AR = {
         empty_title: 'لا توجد أدوية',
         empty_desc: 'ابدأ بإضافة دواء جديد',
         delete_confirm: 'هل أنت متأكد من حذف هذا الدواء؟',
-        edit_tooltip: 'تعديل',
         delete_tooltip: 'حذف',
       },
       request: {

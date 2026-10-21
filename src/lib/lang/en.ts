@@ -187,7 +187,6 @@ export const EN = {
         empty_title: 'No medicines found',
         empty_desc: 'Start by adding a new medicine',
         delete_confirm: 'Are you sure you want to remove this medicine from your pharmacy?',
-        edit_tooltip: 'Edit',
         delete_tooltip: 'Delete',
       },
       create: {

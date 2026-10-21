@@ -8,7 +8,7 @@ import { AsyncBoundary, Btn, EmptyState } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { stockStatus, LOW_STOCK_THRESHOLD } from '@/lib/stock';
 import { money, thumbUrl } from '@/lib/format';
-import { medicineEditPath, ROUTES } from '@/routes/paths';
+import { ROUTES } from '@/routes/paths';
 import type { ApiInventoryItem } from '@/api/pharmacyTypes';
 
 type Tab = 'all' | 'out' | 'low' | 'ok';
@@ -213,12 +213,12 @@ export function MedicinesPage() {
             <table className="ph-table">
               <thead>
                 <tr>
-                  <th>{M.col_status}</th>
-                  <th>{M.col_quantity}</th>
-                  <th>{M.col_actions}</th>
                   <th>{M.col_medicine}</th>
                   <th>{M.col_ingredient}</th>
                   <th>{M.col_price}</th>
+                  <th>{M.col_status}</th>
+                  <th>{M.col_quantity}</th>
+                  <th>{M.col_actions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -232,14 +232,27 @@ export function MedicinesPage() {
                     return (
                       <tr key={row.id} data-status={s} data-min={LOW_STOCK_THRESHOLD}>
                         <td>
-                          <Link
-                            to={medicineEditPath(row.id)}
-                            className={`ph-badge ${s}`}
-                            title={M.edit_tooltip}
-                            style={{ textDecoration: 'none' }}
-                          >
-                            {STATUS_TEXT[s]}
-                          </Link>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div className="ph-med-thumb">
+                              {image ? (
+                                <img src={image} alt={name} width={44} height={44} loading="lazy" decoding="async" />
+                              ) : (
+                                <i className="fas fa-pills" />
+                              )}
+                            </div>
+                            <div className="med-cell-text">
+                              <strong title={name}>{name}</strong>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <span className="med-ingredient-text" title={ingredient}>
+                            {ingredient}
+                          </span>
+                        </td>
+                        <td>{money(row.price)}</td>
+                        <td>
+                          <span className={`ph-badge ${s}`}>{STATUS_TEXT[s]}</span>
                         </td>
                         <td>
                           <div className="ph-stepper">
@@ -261,46 +274,17 @@ export function MedicinesPage() {
                           </div>
                         </td>
                         <td>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <Link
-                              to={medicineEditPath(row.id)}
-                              className="ph-btn icon outline"
-                              title={M.edit_tooltip}
-                            >
-                              <i className="fas fa-pen" />
-                            </Link>
-                            <button
-                              type="button"
-                              className="ph-btn icon danger"
-                              title={M.delete_tooltip}
-                              aria-label={M.delete_tooltip}
-                              disabled={remove.isPending || save.isPending}
-                              onClick={() => void handleDelete(row)}
-                            >
-                              <i className="fas fa-trash" />
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            className="ph-btn icon danger"
+                            title={M.delete_tooltip}
+                            aria-label={M.delete_tooltip}
+                            disabled={remove.isPending || save.isPending}
+                            onClick={() => void handleDelete(row)}
+                          >
+                            <i className="fas fa-trash" />
+                          </button>
                         </td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div className="ph-med-thumb">
-                              {image ? (
-                                <img src={image} alt={name} width={44} height={44} loading="lazy" decoding="async" />
-                              ) : (
-                                <i className="fas fa-pills" />
-                              )}
-                            </div>
-                            <div className="med-cell-text">
-                              <strong title={name}>{name}</strong>
-                            </div>
-                          </div>
-                        </td>
-                        <td>
-                          <span className="med-ingredient-text" title={ingredient}>
-                            {ingredient}
-                          </span>
-                        </td>
-                        <td>{money(row.price)}</td>
                       </tr>
                     );
                   })

@@ -16,6 +16,14 @@ import type {
   DeliveryFeeTier,
   AdminUserDetail,
   DeliveredCredentials,
+  AdminPaymentBanksResponse,
+  AdminPaymentDetail,
+  AdminPaymentProblemsResponse,
+  AdminPaymentRow,
+  AdminPaymentsResponse,
+  PaymentBank,
+  PaymentProblemStatus,
+  PaymentStatus,
 } from './adminTypes';
 
 /**
@@ -58,6 +66,17 @@ export const ADMIN_ENDPOINTS = {
   deliveryPricingTier: (id: number) => `/api/admin/delivery-pricing/tiers/${id}`,
   deliveryPricingTierToggle: (id: number) =>
     `/api/admin/delivery-pricing/tiers/${id}/toggle-status`,
+  paymentBanks: '/api/admin/payment-banks',
+  paymentBank: (id: number) => `/api/admin/payment-banks/${id}`,
+  paymentBankToggle: (id: number) => `/api/admin/payment-banks/${id}/toggle-status`,
+  payments: '/api/admin/payments',
+  payment: (orderId: number) => `/api/admin/payments/${orderId}`,
+  paymentApprove: (orderId: number) => `/api/admin/payments/${orderId}/approve`,
+  paymentReject: (orderId: number) => `/api/admin/payments/${orderId}/reject`,
+  paymentReceipt: (orderId: number, submissionId: number) =>
+    `/api/admin/payments/${orderId}/submissions/${submissionId}/receipt`,
+  paymentProblems: '/api/admin/payment-problems',
+  paymentProblemResolve: (id: number) => `/api/admin/payment-problems/${id}/resolve`,
   /**
    * Own profile + password change.
    *
@@ -73,6 +92,7 @@ export const ADMIN_ENDPOINTS = {
 export interface AdminListParams {
   q?: string;
   status?: string;
+  payment_status?: PaymentStatus | 'all';
   role?: string;
   event?: string;
   date?: string;
@@ -428,6 +448,102 @@ export function createAdminApi(client: ApiClient) {
     async deleteDeliveryFeeTier(id: number) {
       return client.delete<{ success: boolean; message: string }>(
         ADMIN_ENDPOINTS.deliveryPricingTier(id),
+      );
+    },
+
+    // ── Payments ────────────────────────────────────────────────────────────
+    async paymentBanks(signal?: AbortSignal) {
+      const res = await client.get<{ success: boolean; data: AdminPaymentBanksResponse }>(
+        ADMIN_ENDPOINTS.paymentBanks,
+        { signal },
+      );
+      return res.data;
+    },
+
+    async createPaymentBank(body: Record<string, unknown>) {
+      const res = await client.post<{
+        success: boolean;
+        message: string;
+        data: { bank: PaymentBank };
+      }>(ADMIN_ENDPOINTS.paymentBanks, body);
+      return res;
+    },
+
+    async updatePaymentBank(id: number, body: Record<string, unknown>) {
+      const res = await client.patch<{
+        success: boolean;
+        message: string;
+        data: { bank: PaymentBank };
+      }>(ADMIN_ENDPOINTS.paymentBank(id), body);
+      return res;
+    },
+
+    async togglePaymentBank(id: number) {
+      const res = await client.patch<{
+        success: boolean;
+        message: string;
+        data: { bank: PaymentBank };
+      }>(ADMIN_ENDPOINTS.paymentBankToggle(id));
+      return res;
+    },
+
+    async deletePaymentBank(id: number) {
+      return client.delete<{ success: boolean; message: string }>(
+        ADMIN_ENDPOINTS.paymentBank(id),
+      );
+    },
+
+    async payments(params: AdminListParams = {}, signal?: AbortSignal) {
+      const res = await client.get<{
+        success: boolean;
+        data: AdminPaymentRow[];
+        pagination: AdminPaymentsResponse['pagination'];
+      }>(ADMIN_ENDPOINTS.payments, { query: clean(params), signal });
+      return { payments: res.data, pagination: res.pagination };
+    },
+
+    async payment(orderId: number, signal?: AbortSignal) {
+      const res = await client.get<{ success: boolean; data: AdminPaymentDetail }>(
+        ADMIN_ENDPOINTS.payment(orderId),
+        { signal },
+      );
+      return res.data;
+    },
+
+    async approvePayment(orderId: number, reviewNote = '') {
+      return client.post<{ success: boolean; message: string }>(
+        ADMIN_ENDPOINTS.paymentApprove(orderId),
+        { review_note: reviewNote.trim() || null },
+      );
+    },
+
+    async rejectPayment(orderId: number, reason: string) {
+      return client.post<{ success: boolean; message: string }>(
+        ADMIN_ENDPOINTS.paymentReject(orderId),
+        { reason },
+      );
+    },
+
+    async downloadPaymentReceipt(orderId: number, submissionId: number) {
+      return client.download(ADMIN_ENDPOINTS.paymentReceipt(orderId, submissionId));
+    },
+
+    async paymentProblems(
+      params: { status?: PaymentProblemStatus | 'all'; page?: number; per_page?: number } = {},
+      signal?: AbortSignal,
+    ) {
+      const res = await client.get<{
+        success: boolean;
+        data: AdminPaymentProblemsResponse['problems'];
+        pagination: AdminPaymentProblemsResponse['pagination'];
+      }>(ADMIN_ENDPOINTS.paymentProblems, { query: clean(params), signal });
+      return { problems: res.data, pagination: res.pagination };
+    },
+
+    async resolvePaymentProblem(id: number, adminNote: string) {
+      return client.post<{ success: boolean; message: string }>(
+        ADMIN_ENDPOINTS.paymentProblemResolve(id),
+        { admin_note: adminNote },
       );
     },
 

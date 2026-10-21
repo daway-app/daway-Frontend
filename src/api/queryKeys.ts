@@ -101,6 +101,14 @@ export function adminKeys(id: string | number) {
     },
     settings: [...base, 'settings'] as const,
     deliveryPricing: [...base, 'delivery-pricing'] as const,
+    paymentBanks: [...base, 'payment-banks'] as const,
+    payments: {
+      list: (q?: ListQuery) => [...base, 'payments', 'list', q] as const,
+      detail: (orderId: number) => [...base, 'payments', 'detail', orderId] as const,
+    },
+    paymentProblems: {
+      list: (q?: ListQuery) => [...base, 'payment-problems', 'list', q] as const,
+    },
   };
 }
 

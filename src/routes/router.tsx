@@ -65,6 +65,13 @@ const AdminSettingsPage = lazyPage(() => import('@/features/admin/settings/Admin
 const AdminDeliveryPricingPage = lazyPage(
   () => import('@/features/admin/deliveryPricing/AdminDeliveryPricingPage'),
 );
+const AdminPaymentBanksPage = lazyPage(
+  () => import('@/features/admin/payments/AdminPaymentBanksPage'),
+);
+const AdminPaymentsPage = lazyPage(() => import('@/features/admin/payments/AdminPaymentsPage'));
+const AdminPaymentProblemsPage = lazyPage(
+  () => import('@/features/admin/payments/AdminPaymentProblemsPage'),
+);
 const AdminProfilePage = lazyPage(() => import('@/features/admin/profile/AdminProfilePage'));
 const AdminPasswordChangePage = lazyPage(() => import('@/features/admin/profile/AdminPasswordChangePage'));
 
@@ -140,6 +147,9 @@ export const router = createBrowserRouter([
               { path: ADMIN_ROUTES.logs, element: <AdminLogsPage /> },
               { path: ADMIN_ROUTES.settings, element: <AdminSettingsPage /> },
               { path: ADMIN_ROUTES.deliveryPricing, element: <AdminDeliveryPricingPage /> },
+              { path: ADMIN_ROUTES.paymentBanks, element: <AdminPaymentBanksPage /> },
+              { path: ADMIN_ROUTES.payments, element: <AdminPaymentsPage /> },
+              { path: ADMIN_ROUTES.paymentProblems, element: <AdminPaymentProblemsPage /> },
               { path: ADMIN_ROUTES.profile, element: <AdminProfilePage /> },
               {
                 // Declared AFTER `profile` — the literal `/admin/profile/password`

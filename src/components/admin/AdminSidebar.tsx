@@ -51,6 +51,13 @@ const MANAGEMENT_NAV: NavItem[] = [
     icon: <IconClipboard />,
     activePrefix: true,
   },
+  { to: ADMIN_ROUTES.payments, labelKey: 'payments', icon: <IconWallet />, activePrefix: true },
+  {
+    to: ADMIN_ROUTES.paymentProblems,
+    labelKey: 'payment_problems',
+    icon: <IconAlert />,
+    activePrefix: true,
+  },
 ];
 
 /** Settings group (layout.php: settings_section). */
@@ -60,6 +67,12 @@ const SETTINGS_NAV: NavItem[] = [
     to: ADMIN_ROUTES.deliveryPricing,
     labelKey: 'delivery_pricing',
     icon: <IconTruck />,
+    activePrefix: true,
+  },
+  {
+    to: ADMIN_ROUTES.paymentBanks,
+    labelKey: 'payment_banks',
+    icon: <IconBank />,
     activePrefix: true,
   },
   { to: ADMIN_ROUTES.logs, labelKey: 'activity_log', icon: <IconList />, activePrefix: true },
@@ -322,6 +335,44 @@ function IconTruck() {
       <path d="M16 8h4l3 3v5h-7V8z" />
       <circle cx="5.5" cy="18.5" r="2.5" />
       <circle cx="18.5" cy="18.5" r="2.5" />
+    </svg>
+  );
+}
+
+/** Wallet — payment review nav entry. */
+function IconWallet() {
+  return (
+    <svg {...iconProps()}>
+      <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+      <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+      <path d="M18 12a2 2 0 0 0 0 4h4v-4z" />
+    </svg>
+  );
+}
+
+/** Alert triangle — payment problems nav entry. */
+function IconAlert() {
+  return (
+    <svg {...iconProps()}>
+      <path d="m10.29 3.86-8.18 14A2 2 0 0 0 3.84 21h16.32a2 2 0 0 0 1.73-3.14l-8.18-14a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
+/** Bank building — payment banks nav entry. */
+function IconBank() {
+  return (
+    <svg {...iconProps()}>
+      <path d="M3 21h18" />
+      <path d="M3 10h18" />
+      <path d="M5 6l7-3 7 3" />
+      <path d="M4 10v11" />
+      <path d="M20 10v11" />
+      <path d="M8 14v3" />
+      <path d="M12 14v3" />
+      <path d="M16 14v3" />
     </svg>
   );
 }

@@ -49,6 +49,9 @@ export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle
     { path: ADMIN_ROUTES.users, title: STR.admin.nav.users },
     { path: ADMIN_ROUTES.logs, title: STR.admin.nav.activity_log },
     { path: ADMIN_ROUTES.settings, title: STR.admin.nav.system_settings },
+    { path: ADMIN_ROUTES.paymentBanks, title: STR.admin.nav.payment_banks },
+    { path: ADMIN_ROUTES.payments, title: STR.admin.nav.payments },
+    { path: ADMIN_ROUTES.paymentProblems, title: STR.admin.nav.payment_problems },
     { path: ADMIN_ROUTES.profile, title: STR.admin.nav.profile },
   ];
 

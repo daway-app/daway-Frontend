@@ -348,3 +348,126 @@ export interface AdminProfile {
   avatar_url: string | null;
   role: string;
 }
+
+// ?? Payments ????????????????????????????????????????????????????????????????
+
+export type PaymentStatus =
+  | 'pending'
+  | 'under_review'
+  | 'paid'
+  | 'rejected'
+  | 'problem_reported';
+
+export type PaymentSubmissionStatus = 'under_review' | 'approved' | 'rejected';
+export type PaymentProblemStatus = 'open' | 'resolved';
+export type PaymentProblemCategory = 'bank_details' | 'amount' | 'receipt' | 'other';
+
+export interface PaymentBank {
+  id: number;
+  bank_name: string;
+  account_holder: string;
+  account_number: string;
+  iban: string | null;
+  branch: string | null;
+  instructions: string | null;
+  is_active: boolean;
+  sort_order: number;
+}
+
+export interface AdminPaymentBanksResponse {
+  banks: PaymentBank[];
+  active_count: number;
+  max_active: number;
+}
+
+export interface AdminPaymentPatient {
+  id: number;
+  name: string;
+  phone: string | null;
+  email: string | null;
+}
+
+export interface AdminPaymentSubmission {
+  id: number;
+  order_id: number;
+  bank_id: number | null;
+  bank_name: string;
+  account_holder: string;
+  account_number: string;
+  iban: string | null;
+  amount: number;
+  sender_name: string | null;
+  transfer_reference: string | null;
+  transferred_at: string | null;
+  receipt_original_name: string;
+  receipt_mime: string;
+  receipt_size: number;
+  status: PaymentSubmissionStatus;
+  review_note: string | null;
+  rejection_reason: string | null;
+  reviewed_at: string | null;
+  created_at: string | null;
+}
+
+export interface AdminPaymentProblem {
+  id: number;
+  order_id: number;
+  submission_id: number | null;
+  category: PaymentProblemCategory;
+  message: string;
+  status: PaymentProblemStatus;
+  admin_note: string | null;
+  resolved_by: number | null;
+  resolved_at: string | null;
+  created_at: string | null;
+  payment_status?: PaymentStatus | null;
+  patient?: AdminPaymentPatient | null;
+}
+
+export interface AdminPaymentRow {
+  order_id: number;
+  payment_status: PaymentStatus;
+  payment_method: string | null;
+  grand_total: number;
+  patient: AdminPaymentPatient | null;
+  latest_submission_id: number | null;
+  latest_submission_status: PaymentSubmissionStatus | null;
+  open_problem_id: number | null;
+  created_at: string | null;
+}
+
+export interface AdminPaymentOrderSummary {
+  order_id: number;
+  status: string;
+  payment_status: PaymentStatus;
+  payment_method: string | null;
+  subtotal: number;
+  discount: number;
+  total: number;
+  delivery_fee: number;
+  grand_total: number;
+  patient: AdminPaymentPatient | null;
+  created_at: string | null;
+}
+
+export interface AdminPaymentDetail {
+  order: AdminPaymentOrderSummary;
+  payment: {
+    can_approve: boolean;
+    can_reject: boolean;
+    latest_submission_id: number | null;
+  };
+  submissions: AdminPaymentSubmission[];
+  problems: AdminPaymentProblem[];
+  banks: PaymentBank[];
+}
+
+export interface AdminPaymentsResponse {
+  payments: AdminPaymentRow[];
+  pagination: Pagination;
+}
+
+export interface AdminPaymentProblemsResponse {
+  problems: AdminPaymentProblem[];
+  pagination: Pagination;
+}

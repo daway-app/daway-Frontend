@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   AsyncBoundary,
   Badge,
@@ -73,6 +74,7 @@ export function AdminPaymentsPage() {
   const { STR } = useLang();
   const api = useAdminApi();
   const keys = useAdminKeys();
+  const queryClient = useQueryClient();
   const S = STR.admin.payments;
   const P = STR.admin.payment_problems;
 
@@ -85,7 +87,12 @@ export function AdminPaymentsPage() {
       serialize: String,
       default: 'all',
     },
-    q: { key: 'q', parse: String, serialize: String, default: '' },
+    q: {
+      key: 'q',
+      parse: (raw) => raw.slice(0, 100),
+      serialize: String,
+      default: '',
+    },
     page: { key: 'page', parse: (r) => Number(r) || 1, serialize: String, default: 1 },
   });
 
@@ -102,6 +109,10 @@ export function AdminPaymentsPage() {
   const [approveNote, setApproveNote] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
+  useEffect(() => {
+    setQ(committedQ);
+  }, [committedQ]);
 
   // Commit the live search after a pause, and reset to page 1 on a real change.
   useEffect(() => {
@@ -145,6 +156,11 @@ export function AdminPaymentsPage() {
     [pagination, STR],
   );
 
+  useEffect(() => {
+    if (!pagination || pagination.current_page <= pagination.last_page) return;
+    set({ page: Math.max(1, pagination.last_page) });
+  }, [pagination, set]);
+
   const detailData = detail.data;
   const hasOpenProblem = detailData?.problems.some((problem) => problem.status === 'open') ?? false;
 
@@ -178,6 +194,7 @@ export function AdminPaymentsPage() {
   }
 
   function openReview(orderId: number) {
+    queryClient.removeQueries({ queryKey: keys.payments.detail(orderId) });
     setApproveNote('');
     setRejectReason('');
     setSelectedId(orderId);
@@ -190,13 +207,12 @@ export function AdminPaymentsPage() {
   }
 
   async function handleApprove() {
-    if (selectedId === null) return;
+    if (selectedId === null || approveMutation.isPending || rejectMutation.isPending) return;
 
     try {
       await approveMutation.run({ orderId: selectedId, note: approveNote.trim() });
       toast.success(S.approved_msg);
-      query.refetch();
-      detail.refetch();
+      await refreshAfterReview();
       closeReview();
     } catch (err) {
       toast.error(errorMessage(err, S.action_failed));
@@ -204,7 +220,7 @@ export function AdminPaymentsPage() {
   }
 
   async function handleReject() {
-    if (selectedId === null) return;
+    if (selectedId === null || approveMutation.isPending || rejectMutation.isPending) return;
 
     const reason = rejectReason.trim();
     if (!reason) return;
@@ -212,12 +228,24 @@ export function AdminPaymentsPage() {
     try {
       await rejectMutation.run({ orderId: selectedId, reason });
       toast.success(S.rejected_msg);
-      query.refetch();
-      detail.refetch();
+      await refreshAfterReview();
       closeReview();
     } catch (err) {
       toast.error(errorMessage(err, S.action_failed));
     }
+  }
+
+  async function refreshAfterReview() {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: keys.payments.all,
+        refetchType: 'all',
+      }),
+      queryClient.invalidateQueries({
+        queryKey: keys.paymentProblems.all,
+        refetchType: 'all',
+      }),
+    ]);
   }
 
   async function handleDownload(submission: AdminPaymentSubmission) {
@@ -253,6 +281,7 @@ export function AdminPaymentsPage() {
                   className="admin-search"
                   placeholder={S.search_hint}
                   value={q}
+                  maxLength={100}
                   onChange={(e) => setQ(e.target.value)}
                   aria-label={S.search_hint}
                 />
@@ -431,7 +460,14 @@ export function AdminPaymentsPage() {
                 </li>
                 <li>
                   <span className="admin-muted">{S.payment_method}</span>
-                  <strong>{detailData.order.payment_method ?? '—'}</strong>
+                  <strong>
+                    {detailData.order.payment_method
+                      ? (STR.accounting.payment_methods[
+                          detailData.order
+                            .payment_method as keyof typeof STR.accounting.payment_methods
+                        ] ?? detailData.order.payment_method)
+                      : '—'}
+                  </strong>
                 </li>
                 <li>
                   <span className="admin-muted">{S.col_payment_status}</span>
@@ -561,7 +597,7 @@ export function AdminPaymentsPage() {
                     variant="primary"
                     icon="fas fa-circle-check"
                     onClick={handleApprove}
-                    disabled={approveMutation.isPending}
+                    disabled={approveMutation.isPending || rejectMutation.isPending}
                   >
                     {S.approve}
                   </Btn>
@@ -590,7 +626,11 @@ export function AdminPaymentsPage() {
                     variant="danger"
                     icon="fas fa-circle-xmark"
                     onClick={handleReject}
-                    disabled={rejectMutation.isPending || !rejectReason.trim()}
+                    disabled={
+                      rejectMutation.isPending ||
+                      approveMutation.isPending ||
+                      !rejectReason.trim()
+                    }
                   >
                     {S.reject}
                   </Btn>

@@ -326,6 +326,7 @@ export function AdminPaymentBanksPage() {
           >
             <input
               type="text"
+              required
               value={draft.bankName}
               onChange={(e) => setDraft((d) => ({ ...d, bankName: e.target.value }))}
             />
@@ -340,6 +341,7 @@ export function AdminPaymentBanksPage() {
           >
             <input
               type="text"
+              required
               value={draft.accountHolder}
               onChange={(e) => setDraft((d) => ({ ...d, accountHolder: e.target.value }))}
             />
@@ -355,6 +357,7 @@ export function AdminPaymentBanksPage() {
             <input
               type="text"
               dir="ltr"
+              required
               value={draft.accountNumber}
               onChange={(e) => setDraft((d) => ({ ...d, accountNumber: e.target.value }))}
             />

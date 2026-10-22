@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   AsyncBoundary,
   Badge,
@@ -45,6 +46,7 @@ export function AdminPaymentProblemsPage() {
   const { STR } = useLang();
   const api = useAdminApi();
   const keys = useAdminKeys();
+  const queryClient = useQueryClient();
 
   const P = STR.admin.payment_problems;
   const Payments = STR.admin.payments;
@@ -83,6 +85,11 @@ export function AdminPaymentProblemsPage() {
     [pagination, STR],
   );
 
+  useEffect(() => {
+    if (!pagination || pagination.current_page <= pagination.last_page) return;
+    set({ page: Math.max(1, pagination.last_page) });
+  }, [pagination, set]);
+
   const isFiltered = status !== 'open';
 
   const resolveMutation = useApiMutation(
@@ -117,7 +124,16 @@ export function AdminPaymentProblemsPage() {
       await resolveMutation.run({ id: resolving.id, note });
       toast.success(P.resolved_msg);
       closeResolve();
-      query.refetch();
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: keys.paymentProblems.all,
+          refetchType: 'all',
+        }),
+        queryClient.invalidateQueries({
+          queryKey: keys.payments.all,
+          refetchType: 'all',
+        }),
+      ]);
     } catch (err) {
       toast.error(errorMessage(err, P.action_failed));
     }
@@ -191,7 +207,7 @@ export function AdminPaymentProblemsPage() {
                   P.col_status,
                   Payments.col_payment_status,
                   P.col_date,
-                  P.col_actions,
+                  { label: P.col_actions, className: 'ac-actions' },
                 ]}
               >
                 {rows.map((problem) => (

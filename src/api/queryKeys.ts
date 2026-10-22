@@ -45,6 +45,10 @@ export function pharmacyKeys(id: string | number) {
     medicines: {
       search: (term: string) => [...base, 'medicines', 'search', term] as const,
       detail: (id: number) => [...base, 'medicines', 'detail', id] as const,
+      /** Prefix matching every uncategorized list + banner-count query. */
+      uncategorizedAll: [...base, 'medicines', 'uncategorized'] as const,
+      uncategorized: (q?: ListQuery) =>
+        [...base, 'medicines', 'uncategorized', 'list', q] as const,
     },
     alternatives: {
       all: [...base, 'alternatives'] as const,

@@ -222,6 +222,25 @@ export interface ApiCatalogSearchResult {
   moh_catalog: ApiCatalogMohHit[];
 }
 
+/**
+ * One row of `GET /api/pharmacy/medicines/uncategorized`.
+ *
+ * `id` is the PHARMACY medicine row (what the category assignment targets),
+ * not the catalogue medicine id.
+ */
+export interface ApiUncategorizedMedicine {
+  id: number;
+  medicine_id: number | null;
+  trade_name: string | null;
+  trade_name_ar: string | null;
+  description: string | null;
+  active_ingredient: string | null;
+  image_url: string | null;
+  quantity: number;
+}
+
+export type ApiUncategorizedList = Paginated<ApiUncategorizedMedicine>;
+
 
 // ══════════════════════════════════════════════════════════════════════
 // Profile

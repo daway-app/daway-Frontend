@@ -30,6 +30,7 @@ export const ROUTES = {
   /** Bulk inventory import (pharmacy/import/*). */
   inventoryImport: '/inventory/import',
   medicines: '/medicines',
+  medicinesUncategorized: '/medicines/uncategorized',
   medicineCreate: '/medicines/create',
   /** `pharmacy.medicines.request.create` — request a medicine absent from the catalogue. */
   medicineRequests: '/medicines/request',

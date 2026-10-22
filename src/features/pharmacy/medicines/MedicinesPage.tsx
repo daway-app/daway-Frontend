@@ -9,7 +9,7 @@ import { toast } from '@/lib/toast';
 import { stockStatus, LOW_STOCK_THRESHOLD } from '@/lib/stock';
 import { money, thumbUrl } from '@/lib/format';
 import { ROUTES } from '@/routes/paths';
-import type { ApiInventoryItem } from '@/api/pharmacyTypes';
+import type { ApiInventoryItem, ApiUncategorizedList } from '@/api/pharmacyTypes';
 
 type Tab = 'all' | 'out' | 'low' | 'ok';
 
@@ -19,6 +19,7 @@ export function MedicinesPage() {
   const S = STR.pharmacy.status;
   const I = STR.pharmacy.inventory;
   const T = STR.pharmacy.toast;
+  const D = STR.pharmacy.medicines.uncategorized;
   const STATUS_TEXT: Record<'ok' | 'low' | 'out', string> = {
     ok: S.available,
     low: S.low,
@@ -59,6 +60,17 @@ export function MedicinesPage() {
     [],
     { queryKey: keys.inventory.list({ per_page: 100 }), isEmpty: (r) => r.data.length === 0 },
   );
+
+  /**
+   * Banner count only — `per_page: 1` keeps this to a single row on the wire.
+   * It is a separate request from the inventory list above.
+   */
+  const uncategorized = useApiQuery<ApiUncategorizedList>(
+    (signal) => api.uncategorizedMedicines({ per_page: 1 }, signal),
+    [],
+    { queryKey: keys.medicines.uncategorized({ per_page: 1 }) },
+  );
+  const uncategorizedTotal = uncategorized.data?.pagination.total ?? 0;
 
   /** Memoised so the `?? []` fallback does not break downstream memo identity. */
   const rows = useMemo(() => query.data?.data ?? [], [query.data]);
@@ -174,6 +186,25 @@ export function MedicinesPage() {
           </Link>
         </div>
       </div>
+
+      {uncategorizedTotal > 0 && (
+        <div className="ph-card ph-uncat-banner">
+          <div className="ph-card-body">
+            <p>
+              <i className="fas fa-tags" aria-hidden="true" />
+              {D.banner.replace('{count}', String(uncategorizedTotal))}
+            </p>
+            <Btn
+              to={ROUTES.medicinesUncategorized}
+              variant="outline"
+              size="sm"
+              icon="fas fa-arrow-left"
+            >
+              {D.title}
+            </Btn>
+          </div>
+        </div>
+      )}
 
       <AsyncBoundary
         isLoading={query.isLoading}

@@ -38,6 +38,8 @@ import type {
   ApiSalesSummary,
   ApiSearchableMedicine,
   ApiSuppliersList,
+  ApiUncategorizedList,
+  ApiUncategorizedMedicine,
   Paginated,
 } from './pharmacyTypes';
 
@@ -63,6 +65,7 @@ const P = {
 
   medicines: '/api/pharmacy/medicines',
   medicinesSearch: '/api/pharmacy/medicines/search',
+  medicinesUncategorized: '/api/pharmacy/medicines/uncategorized',
   medicinesByName: '/api/pharmacy/medicines/by-name',
   medicineRequests: '/api/pharmacy/medicine-requests',
 
@@ -213,6 +216,44 @@ export function createPharmacyApi(client: ApiClient) {
       return res.data;
     },
 
+    /**
+     * Pharmacy medicines that still have no category.
+     *
+     * The backend paginates and searches server-side (`q`), so the page can
+     * work with more rows than fit in one response.
+     */
+    async uncategorizedMedicines(
+      query?: Query,
+      signal?: AbortSignal,
+    ): Promise<ApiUncategorizedList> {
+      const res = await client.get<ApiSuccess<ApiUncategorizedMedicine[]>>(
+        P.medicinesUncategorized,
+        { query, signal },
+      );
+      return paginated(res);
+    },
+
+    /**
+     * Assign a category (and optional subcategory) to ONE pharmacy medicine.
+     * On success the row is no longer returned by the uncategorized endpoint.
+     */
+    async assignMedicineCategory(
+      id: number,
+      body: { category_id: number; subcategory_id?: number },
+    ): Promise<{
+      medicine_id: number;
+      category_id: number;
+      subcategory_id: number | null;
+    }> {
+      const res = await client.patch<
+        ApiSuccess<{
+          medicine_id: number;
+          category_id: number;
+          subcategory_id: number | null;
+        }>
+      >(`${P.medicines}/${id}/category`, body);
+      return res.data;
+    },
 
     async getMedicine(id: number, signal?: AbortSignal): Promise<ApiInventoryItem> {
       const res = await client.get<ApiSuccess<ApiInventoryItem>>(`${P.medicines}/${id}`, {

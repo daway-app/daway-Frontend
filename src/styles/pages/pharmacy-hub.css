@@ -1285,3 +1285,74 @@ body.dark-mode .ph-modal { border: 1px solid var(--line); }
   .admin-list-row__actions { display: grid; grid-template-columns: 1fr 1fr; }
   .admin-list-row__actions .ph-btn { justify-content: center; }
 }
+
+/* ----------------------------------------------------------
+   أدوية بحاجة لتصنيف — لافتة صفحة الأدوية + بطاقات الصفحة
+   ---------------------------------------------------------- */
+.ph-uncat-banner { margin-block-end: 18px; }
+.ph-uncat-banner .ph-card-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-block: 14px;
+}
+.ph-uncat-banner p {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ph-ink-soft);
+  font-size: var(--fs-md);
+}
+.ph-uncat-banner p i { color: var(--ph-teal-text); }
+
+.ph-uncat-card { margin-block-end: 0; }
+.ph-uncat-card .ph-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ph-uncat-head { display: flex; align-items: flex-start; gap: 12px; }
+.ph-uncat-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ph-uncat-names h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.ph-uncat-latin {
+  font-size: var(--fs-sm);
+  color: var(--ph-ink-faint);
+  overflow-wrap: anywhere;
+}
+.ph-uncat-ingredient {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--ph-ink-soft);
+}
+.ph-uncat-desc {
+  margin: 0;
+  color: var(--ph-ink-soft);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.ph-uncat-desc.is-empty { color: var(--ph-ink-faint); font-style: italic; }
+.ph-uncat-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+.ph-uncat-form .ph-field { min-width: 0; }
+.ph-uncat-form .ph-btn { grid-column: 1 / -1; justify-content: center; }
+@media (max-width: 600px) {
+  .ph-uncat-form { grid-template-columns: 1fr; }
+}

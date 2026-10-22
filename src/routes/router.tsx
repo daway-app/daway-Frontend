@@ -29,6 +29,9 @@ const PasswordChangePage = lazyPage(() => import('@/features/auth/PasswordChange
 // ── Pharmacy pages (split by feature area) ───────────────────────────────────
 const DashboardPage = lazyPage(() => import('@/features/pharmacy/dashboard/DashboardPage'));
 const MedicinesPage = lazyPage(() => import('@/features/pharmacy/medicines/MedicinesPage'));
+const UncategorizedMedicinesPage = lazyPage(
+  () => import('@/features/pharmacy/medicines/UncategorizedMedicinesPage'),
+);
 const MedicineRequestPage = lazyPage(() => import('@/features/pharmacy/medicines/MedicineRequestPage'));
 const MedicineCreatePage = lazyPage(() => import('@/features/pharmacy/medicines/MedicineCreatePage'));
 const MedicineEditPage = lazyPage(() => import('@/features/pharmacy/medicines/MedicineEditPage'));
@@ -213,6 +216,10 @@ export const router = createBrowserRouter([
               {
                 path: 'medicines/request',
                 element: <MedicineRequestPage />,
+              },
+              {
+                path: 'medicines/uncategorized',
+                element: <UncategorizedMedicinesPage />,
               },
               {
                 path: 'medicines/create',

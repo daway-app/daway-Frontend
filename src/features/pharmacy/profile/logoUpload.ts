@@ -1,19 +1,16 @@
 /**
- * Shared logo-file validation for the pharmacy profile screens.
+ * Logo-file validation for the pharmacy profile screens.
  *
- * Mirrors the backend rule (`image|mimes:jpeg,png,jpg,webp|max:2048` on
- * `logo_file`): the check runs locally FIRST so an invalid pick fails with
- * an Arabic message before any network request. Callers map the returned
- * code to `STR.pharmacy.profile.logo_{type,size}_error`.
+ * The actual checks live in `src/lib/imageFile.ts` so medicine images and
+ * logos share one rule. Keep this module as the profile-facing alias because
+ * the profile screens and their messages use `logo_file` naming.
  */
-export const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+import {
+  IMAGE_MAX_BYTES,
+  validateImageFile,
+  type ImageFileError,
+} from '@/lib/imageFile';
 
-const LOGO_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
-
-export type LogoFileError = 'type' | 'size' | null;
-
-export function validateLogoFile(file: File): LogoFileError {
-  if (!LOGO_MIME.has(file.type.toLowerCase())) return 'type';
-  if (file.size > LOGO_MAX_BYTES) return 'size';
-  return null;
-}
+export const LOGO_MAX_BYTES = IMAGE_MAX_BYTES;
+export type LogoFileError = ImageFileError;
+export const validateLogoFile = validateImageFile;

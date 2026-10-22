@@ -233,14 +233,23 @@ export function createPharmacyApi(client: ApiClient) {
       await client.delete<ApiSuccess<null>>(`${P.medicines}/${id}`);
     },
 
-    /** Add a catalogue/MOH pick to the stock (`POST /api/pharmacy/medicines`). */
-    async addMedicine(body: Record<string, unknown>): Promise<ApiInventoryItem> {
+    /**
+     * Add a catalogue/MOH pick to the stock (`POST /api/pharmacy/medicines`).
+     *
+     * Accepts `FormData` when the screen uploads an image file; the client
+     * leaves the multipart boundary to the browser.
+     */
+    async addMedicine(
+      body: Record<string, unknown> | FormData,
+    ): Promise<ApiInventoryItem> {
       const res = await client.post<ApiSuccess<ApiInventoryItem>>(P.medicines, body);
       return res.data;
     },
 
     /** Manual add by names (`POST /api/pharmacy/medicines/by-name`). */
-    async addMedicineByName(body: Record<string, unknown>): Promise<ApiInventoryItem> {
+    async addMedicineByName(
+      body: Record<string, unknown> | FormData,
+    ): Promise<ApiInventoryItem> {
       const res = await client.post<ApiSuccess<ApiInventoryItem>>(P.medicinesByName, body);
       return res.data;
     },

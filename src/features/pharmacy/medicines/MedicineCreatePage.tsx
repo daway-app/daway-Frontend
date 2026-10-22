@@ -8,7 +8,8 @@ import { AsyncBoundary, Btn, FormField, Notice, PageHeader } from '@/components/
 import { useLang } from '@/lib/lang/LanguageContext';
 import { ROUTES } from '@/routes/paths';
 import { stockStatus } from '@/lib/stock';
-import { money, thumbUrl } from '@/lib/format';
+import { money } from '@/lib/format';
+import { validateImageFile } from '@/lib/imageFile';
 import { ApiError } from '@/api/errors';
 
 interface CatalogOption {
@@ -22,6 +23,23 @@ interface CatalogOption {
 }
 
 const ARABIC_RE = /[؀-ۿ]/;
+
+type MedicineFields = Record<string, string | number | boolean>;
+
+/**
+ * Send JSON unless an image was picked. Only then build `FormData`, so the
+ * common path keeps the existing JSON contract and the multipart path gives
+ * Laravel an `image_file` upload (the client adds no Content-Type boundary).
+ */
+function withImageFile(fields: MedicineFields, file: File | null): MedicineFields | FormData {
+  if (!file) return fields;
+  const form = new FormData();
+  for (const [key, value] of Object.entries(fields)) {
+    form.append(key, typeof value === 'boolean' ? (value ? '1' : '0') : String(value));
+  }
+  form.append('image_file', file);
+  return form;
+}
 
 export function MedicineCreatePage() {
   const { STR } = useLang();
@@ -99,8 +117,9 @@ export function MedicineCreatePage() {
 
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [imageBroken, setImageBroken] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePickError, setImagePickError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
   const [tradeName, setTradeName] = useState('');
   const [tradeNameAr, setTradeNameAr] = useState('');
@@ -109,6 +128,13 @@ export function MedicineCreatePage() {
   const [categoryId, setCategoryId] = useState('');
   const [doneName, setDoneName] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview);
+    };
+  }, [imagePreview]);
 
   const categories = useApiQuery<ApiCategory[]>((s) => api.categories(s), [], {
     enabled: !selected,
@@ -120,12 +146,13 @@ export function MedicineCreatePage() {
     keys.dashboardStats,
     keys.sidebarCounts,
   ];
-  const save = useApiMutation((b: Record<string, unknown>) => api.addMedicine(b), {
+  const save = useApiMutation((b: MedicineFields | FormData) => api.addMedicine(b), {
     invalidates: afterAdd,
   });
-  const saveByName = useApiMutation((b: Record<string, unknown>) => api.addMedicineByName(b), {
-    invalidates: afterAdd,
-  });
+  const saveByName = useApiMutation(
+    (b: MedicineFields | FormData) => api.addMedicineByName(b),
+    { invalidates: afterAdd },
+  );
 
   function pick(option: CatalogOption) {
     setSelected(option);
@@ -153,6 +180,31 @@ export function MedicineCreatePage() {
     requestAnimationFrame(() => searchRef.current?.focus());
   }
 
+  function clearImage() {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview(null);
+    setImagePickError(null);
+    if (imageInputRef.current) imageInputRef.current.value = '';
+  }
+
+  function pickImage(file: File | undefined) {
+    if (!file) return;
+    const problem = validateImageFile(file);
+    if (problem === 'type') {
+      setImagePickError(C.image_type_error);
+      return;
+    }
+    if (problem === 'size') {
+      setImagePickError(C.image_size_error);
+      return;
+    }
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePickError(null);
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  }
+
   function resetForm() {
     setSelected(null);
     setTerm('');
@@ -161,8 +213,7 @@ export function MedicineCreatePage() {
     setSearchError(false);
     setPrice('');
     setQuantity('');
-    setImageUrl('');
-    setImageBroken(false);
+    clearImage();
     setTouched(false);
     setTradeName('');
     setTradeNameAr('');
@@ -199,9 +250,6 @@ export function MedicineCreatePage() {
       ingredient.trim() === '' ||
       categoryId === '');
   const displayName = selected ? selected.name : tradeName.trim();
-  const imageSrc = imageUrl.trim()
-    ? (thumbUrl(imageUrl.trim(), 120, 120) ?? imageUrl.trim())
-    : null;
   const isSaving = save.isPending || saveByName.isPending;
   const summarySource = selected
     ? selected.kind === 'moh'
@@ -222,6 +270,8 @@ export function MedicineCreatePage() {
     merge(saveByName.error);
     return out;
   }, [save.error, saveByName.error]);
+  const imageError =
+    imagePickError ?? fieldErrors.image_file ?? fieldErrors.image_url ?? null;
 
   function finish(name: string) {
     setDoneName(name);
@@ -235,16 +285,19 @@ export function MedicineCreatePage() {
     if (!priceValid || !qtyValid) return;
     if (selected) {
       try {
-        const image = imageUrl.trim();
-        await save.run({
-          ...(selected.kind === 'medicine'
-            ? { medicine_id: selected.id }
-            : { moh_medicine_id: selected.id }),
-          price: priceNum,
-          quantity: qtyNum,
-          is_available: qtyNum > 0,
-          ...(image ? { image_url: image } : {}),
-        });
+        await save.run(
+          withImageFile(
+            {
+              ...(selected.kind === 'medicine'
+                ? { medicine_id: selected.id }
+                : { moh_medicine_id: selected.id }),
+              price: priceNum,
+              quantity: qtyNum,
+              is_available: qtyNum > 0,
+            },
+            imageFile,
+          ),
+        );
         const name = selected.name || C.title;
         resetForm();
         finish(name);
@@ -255,18 +308,21 @@ export function MedicineCreatePage() {
     }
     if (manualInvalid) return;
     try {
-      const image = imageUrl.trim();
-      await saveByName.run({
-        trade_name: tradeName.trim(),
-        ...(tradeNameAr.trim() ? { trade_name_ar: tradeNameAr.trim() } : {}),
-        active_ingredient: ingredient.trim(),
-        price: priceNum,
-        quantity: qtyNum,
-        is_available: qtyNum > 0,
-        category_id: Number(categoryId),
-        ...(barcode.trim() ? { barcode: barcode.trim() } : {}),
-        ...(image ? { image_url: image } : {}),
-      });
+      await saveByName.run(
+        withImageFile(
+          {
+            trade_name: tradeName.trim(),
+            ...(tradeNameAr.trim() ? { trade_name_ar: tradeNameAr.trim() } : {}),
+            active_ingredient: ingredient.trim(),
+            price: priceNum,
+            quantity: qtyNum,
+            is_available: qtyNum > 0,
+            category_id: Number(categoryId),
+            ...(barcode.trim() ? { barcode: barcode.trim() } : {}),
+          },
+          imageFile,
+        ),
+      );
       const name = tradeName.trim();
       resetForm();
       finish(name);
@@ -276,18 +332,17 @@ export function MedicineCreatePage() {
   }
 
   return (
-    <div className="edit-medicine-page-wrapper med-create med-create-v2">
+    <div className="ph-page edit-medicine-page-wrapper med-create med-create-v2">
       <PageHeader
         title={C.heading.replace(':pharmacy', user?.name ?? '')}
         subtitle={C.subtitle}
-        iconChip={<i className="fas fa-pills" />}
         actions={
           <div className="med-create-head-actions">
             <Btn to={ROUTES.medicines} variant="ghost" icon="fas fa-arrow-right">
               {C.back_to_medicines}
             </Btn>
-            <Btn to={ROUTES.medicineRequests} variant="outline" icon="fas fa-plus">
-              {C.request_new_button}
+            <Btn to={ROUTES.inventoryImport} variant="outline" icon="fas fa-file-excel">
+              {C.import_inventory_button}
             </Btn>
           </div>
         }
@@ -423,8 +478,8 @@ export function MedicineCreatePage() {
                     <div>
                       <strong>{C.no_results_title}</strong>
                       <p>{C.no_results_desc}</p>
-                      <Link to={ROUTES.medicineRequests} className="med-create-inline-link">
-                        {C.request_new_button}
+                      <Link to={ROUTES.inventoryImport} className="med-create-inline-link">
+                        {C.import_inventory_button}
                       </Link>
                     </div>
                   </div>
@@ -646,33 +701,64 @@ export function MedicineCreatePage() {
                   </FormField>
                 </div>
                 <div className="med-create-image-row">
-                  <FormField label={C.image_label} id="create_image" hint={C.image_hint}>
+                  <div
+                    className={`ph-field med-create-image-field${
+                      imageError ? ' is-invalid' : ''
+                    }`}
+                  >
+                    <label className="ph-form-label" htmlFor="create_image">
+                      {C.image_label}
+                    </label>
                     <input
-                      className="fc"
-                      type="url"
-                      name="image_url"
-                      dir="ltr"
-                      placeholder="https://"
-                      value={imageUrl}
-                      onChange={(e) => {
-                        setImageUrl(e.target.value);
-                        setImageBroken(false);
-                      }}
+                      ref={imageInputRef}
+                      id="create_image"
+                      className="med-create-file-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => pickImage(e.target.files?.[0])}
+                      aria-invalid={imageError ? true : undefined}
+                      aria-describedby="create_image-msg"
                     />
-                  </FormField>
+                    <div className="med-create-upload-actions">
+                      <button
+                        type="button"
+                        className="ph-btn outline sm"
+                        onClick={() => imageInputRef.current?.click()}
+                      >
+                        <i className="fas fa-arrow-up-from-bracket" aria-hidden="true" />{' '}
+                        {imageFile ? C.image_change : C.image_choose}
+                      </button>
+                      {imageFile && (
+                        <>
+                          <span className="med-create-file-name" title={imageFile.name}>
+                            {imageFile.name}
+                          </span>
+                          <button
+                            type="button"
+                            className="ph-btn ghost sm"
+                            onClick={clearImage}
+                          >
+                            {C.image_remove}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    <p
+                      className="ph-field-msg"
+                      id="create_image-msg"
+                      role={imageError ? 'alert' : undefined}
+                    >
+                      {imageError ?? C.image_hint}
+                    </p>
+                  </div>
                   <div className="med-create-image-preview" aria-hidden="true">
-                    {imageSrc && !imageBroken ? (
-                      <img src={imageSrc} alt="" onError={() => setImageBroken(true)} />
+                    {imagePreview ? (
+                      <img src={imagePreview} alt="" />
                     ) : (
                       <i className="fas fa-image" />
                     )}
                   </div>
                 </div>
-                {fieldErrors.image_url && (
-                  <p className="med-create-status is-error" role="alert">
-                    {fieldErrors.image_url}
-                  </p>
-                )}
               </div>
             </section>
             {serverError && serverError.kind !== 'validation' && (
@@ -740,8 +826,8 @@ export function MedicineCreatePage() {
                 <Btn to={ROUTES.medicines} variant="outline" className="med-create-cancel">
                   {C.cancel_button}
                 </Btn>
-                <Link to={ROUTES.medicineRequests} className="med-create-request-link">
-                  {C.request_new_button}
+                <Link to={ROUTES.inventoryImport} className="med-create-request-link">
+                  {C.import_inventory_button}
                 </Link>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary, Card, Btn, DataTable, EmptyState, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
@@ -317,9 +318,9 @@ export function InventoryPage() {
           <p>{I.subtitle}</p>
         </div>
         <div className="ph-actions">
-          <a href="/inventory/import" className="ph-btn outline">
+          <Link to={ROUTES.inventoryImport} className="ph-btn outline">
             <i className="fas fa-file-import" /> {STR.pharmacy.sidebar.bulk_import}
-          </a>
+          </Link>
         </div>
       </div>
 

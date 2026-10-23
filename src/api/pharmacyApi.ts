@@ -8,6 +8,8 @@ import type {
   ApiBarcodeMedicine,
   ApiCatalogSearchResult,
   ApiCategory,
+  ApiImportCommitResult,
+  ApiImportDecisionPayload,
   ApiImportSession,
   ApiSalePayload,
   ApiCashResponse,
@@ -502,8 +504,8 @@ export function createPharmacyApi(client: ApiClient) {
     /**
      * Absolute URL of the xlsx template download.
      *
-     * This is a file download, not a JSON call, so it must be a plain link —
-     * fetching it through the API client would try to parse a binary body.
+     * The route is authenticated, so the page must fetch it with the token via
+     * `client.download()` rather than rendering a plain `<a href>`.
      * `mode: 'current'` exports the pharmacy's existing inventory instead of an
      * empty template.
      */
@@ -533,7 +535,7 @@ export function createPharmacyApi(client: ApiClient) {
 
     async decideImport(
       uuid: string,
-      body: Record<string, unknown>,
+      body: ApiImportDecisionPayload,
     ): Promise<ApiImportSession> {
       const res = await client.post<ApiSuccess<ApiImportSession>>(
         `${P.inventoryImport}/${encodeURIComponent(uuid)}/decide`,
@@ -542,11 +544,22 @@ export function createPharmacyApi(client: ApiClient) {
       return res.data;
     },
 
-    async commitImport(uuid: string): Promise<ApiImportSession> {
-      const res = await client.post<ApiSuccess<ApiImportSession>>(
+    async commitImport(uuid: string): Promise<ApiImportCommitResult> {
+      const res = await client.post<ApiSuccess<ApiImportCommitResult>>(
         `${P.inventoryImport}/${encodeURIComponent(uuid)}/commit`,
       );
       return res.data;
+    },
+
+    async cancelImport(uuid: string): Promise<void> {
+      await client.post<ApiSuccess<unknown>>(
+        `${P.inventoryImport}/${encodeURIComponent(uuid)}/cancel`,
+      );
+    },
+
+    /** Authenticated xlsx report of the rows that failed validation. */
+    importErrorsPath(uuid: string): string {
+      return `${P.inventoryImport}/${encodeURIComponent(uuid)}/errors`;
     },
 
     // ══════════════════════════════════════════════════════════════════

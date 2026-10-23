@@ -219,6 +219,15 @@
     margin-block-start: 2px;
 }
 
+.pi-review-table td {
+    vertical-align: top;
+}
+
+.pi-review-table .pi-inline-note {
+    max-width: 300px;
+    line-height: 1.6;
+}
+
 .pi-resolved {
     font-size: var(--fs-md);
     color: var(--ph-ink-soft);
@@ -370,6 +379,29 @@
 }
 
 .pi-merge-options input[type="radio"] { accent-color: var(--ph-teal-text); }
+
+.pi-decide label:has(input:disabled) {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+/* --- ترقيم الصفحات --- */
+.pi-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 14px 22px;
+    border-block-start: 1px solid var(--ph-line-soft);
+}
+
+.pi-empty {
+    padding: 28px 22px;
+    text-align: center;
+    color: var(--ph-ink-faint);
+    font-size: var(--fs-md);
+}
 
 /* --- شريط التأكيد --- */
 .pi-confirm-bar {

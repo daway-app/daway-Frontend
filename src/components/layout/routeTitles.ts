@@ -56,6 +56,8 @@ export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle
   ];
 
   const PHARMACY_ENTRIES: Entry[] = [
+    { path: ROUTES.inventory, title: STR.pharmacy.inventory.heading },
+    { path: ROUTES.inventoryImport, title: STR.pharmacyImport.title },
     { path: ROUTES.medicines, title: STR.pharmacy.medicines.index.heading_page },
     { path: ROUTES.inquiries, title: STR.pharmacy.inquiries.heading },
     { path: ROUTES.alternatives, title: STR.pharmacy.alternatives.index.heading_page },

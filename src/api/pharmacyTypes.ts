@@ -864,32 +864,120 @@ export interface ApiCategory {
 // Inventory import — `GET/POST /api/pharmacy/inventory/import*`
 // ══════════════════════════════════════════════════════════════════════
 
+export type ApiImportRowStatus =
+  | 'EXACT_EN'
+  | 'EXACT_AR_NORMALIZED'
+  | 'ALIAS_MATCH'
+  | 'MOH_MATCH'
+  | 'FUZZY_MATCH'
+  | 'REVIEW_REQUIRED'
+  | 'UNMATCHED'
+  | 'INVALID_ROW'
+  | 'DUPLICATE';
+
+export type ApiImportDecision = 'pending' | 'link' | 'create' | 'skip';
+
+export type ApiImportMergeDecision = 'keep_last' | 'keep_first' | 'skip_all';
+
+export interface ApiImportInput {
+  trade_name: string;
+  trade_name_ar: string | null;
+  active_ingredient: string | null;
+  price: number | null;
+  quantity: number | null;
+  barcode: string | null;
+  min_stock: number | null;
+  is_available: boolean;
+}
+
+export interface ApiImportSuggestion {
+  medicine_id: number | null;
+  moh_id: number | null;
+  name: string | null;
+  name_ar: string | null;
+  active_ingredient: string | null;
+  official_price: number | null;
+  source: 'catalog' | 'moh' | string;
+}
+
 export interface ApiImportRow {
-  row_number: number;
-  status: string;
-  trade_name: string | null;
-  message: string | null;
+  row: number;
+  input: ApiImportInput;
+  status: ApiImportRowStatus;
+  match_method: string | null;
+  medicine_id: number | null;
+  proposed_moh_id: number | null;
+  resolved_name: string | null;
+  resolved_name_ar: string | null;
+  official_price: number | null;
+  suggestions: ApiImportSuggestion[];
+  warnings: string[];
+  errors: string[];
+  decision: ApiImportDecision;
+  duplicate_group: string | null;
+}
+
+export interface ApiImportSummary {
+  total: number;
+  matched: number;
+  review: number;
+  unmatched: number;
+  duplicate: number;
+  error: number;
+}
+
+export interface ApiImportDecisionSummary {
+  pending: number;
+  to_link: number;
+  to_create: number;
+  to_skip: number;
+  ready: boolean;
+}
+
+export interface ApiImportCommitSummary {
+  committed_rows: number;
+  skipped_rows: number;
+  created_medicines: number;
+  learned_aliases: number;
+  low_stock_rows: number;
 }
 
 /**
  * An import session, as returned by `preview` / `show` / `decide` / `commit`.
+ *
+ * `preview` and `decide` omit `rows`; only `show` includes them. The session
+ * has no `original_filename` — keep the local `File` name in the page.
  *
  * NOTE: there is **no list endpoint** for import sessions, so a "recent
  * sessions" table has no server source (GAP-12).
  */
 export interface ApiImportSession {
   uuid: string;
-  original_filename: string | null;
-  status: string | null;
-  total_rows: number;
-  valid_rows?: number;
-  invalid_rows?: number;
-  is_committed?: boolean;
-  is_expired?: boolean;
-  can_commit?: boolean;
-  expires_at?: string | null;
-  created_at?: string | null;
+  status: 'uploaded' | 'previewed' | 'ready' | 'committed' | 'expired' | 'failed' | string;
+  can_commit: boolean;
+  expires_at: string | null;
+  summary: ApiImportSummary;
+  decisions: ApiImportDecisionSummary;
+  groups: Record<string, number[]>;
+  merges: Record<string, ApiImportMergeDecision>;
+  unknown_columns: string[];
+  commit_summary?: ApiImportCommitSummary;
   rows?: ApiImportRow[];
+}
+
+export interface ApiImportDecisionPayload {
+  rows: Array<{
+    row: number;
+    action: ApiImportDecision;
+    medicine_id?: number;
+    moh_id?: number;
+  }>;
+  merges: Record<string, ApiImportMergeDecision>;
+}
+
+export interface ApiImportCommitResult {
+  summary: ApiImportCommitSummary;
+  import: ApiImportSession;
 }
 
 // ══════════════════════════════════════════════════════════════════════

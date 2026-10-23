@@ -12,6 +12,7 @@ import { ROUTES } from '@/routes/paths';
 import { useSidebarCounts } from './useSidebarCounts';
 import {
   IconAlertTriangle,
+  IconBox,
   IconCapsule,
   IconCart,
   IconCash,
@@ -59,6 +60,7 @@ interface NavItem {
 
 const PHARMACY_NAV: NavItem[] = [
   { to: ROUTES.dashboard, labelKey: 'dashboard', icon: <IconDashboard /> },
+  { to: ROUTES.inventory, labelKey: 'inventory', icon: <IconBox />, activePrefix: true },
   { to: ROUTES.medicines, labelKey: 'manage_medicines', icon: <IconCapsule /> },
   { to: `${ROUTES.medicines}/create`, labelKey: 'add_medicine', icon: <IconPlus /> },
   {

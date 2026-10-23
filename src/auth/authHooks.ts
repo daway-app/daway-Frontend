@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo } from 'react';
 import type { ApiStack } from './session';
 import type { AuthUser } from './authContract';
 import type { PharmacyApi } from '@/api/pharmacyApi';
+import type { NotificationsApi } from '@/api/notificationsApi';
 import type { ScanSessionApi } from '@/api/scanSessionApi';
 import { pharmacyKeys } from '@/api/queryKeys';
 
@@ -58,6 +59,12 @@ export function useApi(): ApiStack {
 export function usePharmacyApi(): PharmacyApi {
   const stack = useApi();
   return useMemo(() => bindAll(stack.pharmacy), [stack]);
+}
+
+/** The notification API for the current pharmacy session, fully bound. */
+export function useNotificationsApi(): NotificationsApi {
+  const stack = useApi();
+  return useMemo(() => bindAll(stack.notifications), [stack]);
 }
 
 /**

@@ -3,6 +3,7 @@ import { createAuthApi, type AuthApi } from '@/api/authApi';
 import { createPharmacyApi, type PharmacyApi } from '@/api/pharmacyApi';
 import { createScanSessionApi, type ScanSessionApi } from '@/api/scanSessionApi';
 import { createAdminApi, type AdminApi } from '@/api/adminApi';
+import { createNotificationsApi, type NotificationsApi } from '@/api/notificationsApi';
 import { queryClient } from '@/api/queryClient';
 import {
   browserAdminTokenStorage,
@@ -82,6 +83,10 @@ export function createApiStack(options?: {
 
   const auth: AuthApi = createAuthApi(client);
   const pharmacy: PharmacyApi = createPharmacyApi(client);
+  // Shared notification surface, bound to the pharmacy token. The same API
+  // module is instantiated with the admin client below — the two instances
+  // never share state, because they wrap different clients.
+  const notifications: NotificationsApi = createNotificationsApi(client);
   // Web half of the phone-as-scanner feature. Kept beside `pharmacy` because it
   // shares the same Bearer token, but SEGREGATED because it is session-scoped
   // ephemeral state (a 5-minute pairing) rather than a data resource.
@@ -94,6 +99,7 @@ export function createApiStack(options?: {
     client,
     auth,
     pharmacy,
+    notifications,
     scanSessions,
     tokens,
 
@@ -220,10 +226,14 @@ export function createAdminApiStack(options?: {
   });
 
   const admin: AdminApi = createAdminApi(client);
+  // Notifications belong to whoever owns the token, so the admin stack gets its
+  // own instance over its own isolated client.
+  const notifications: NotificationsApi = createNotificationsApi(client);
 
   return {
     client,
     admin,
+    notifications,
     tokens,
 
     getUser: (): AdminUser | null => user,

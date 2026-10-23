@@ -6,11 +6,11 @@ import { roleLabel } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { initTheme } from '@/lib/theme';
 import { topbarTitleFor } from '@/components/layout/routeTitles';
-import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
+import { useAdminApi, useAdminAuth, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
-import { adminKeys } from '@/api/queryKeys';
 import { PRESET_STALE_TIMES } from '@/api/queryClient';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 import type { AdminProfile } from '@/api/adminTypes';
 
 /**
@@ -23,9 +23,8 @@ import type { AdminProfile } from '@/api/adminTypes';
  *
  *   · the sidebar shows ADMIN navigation;
  *   · the topbar shows the panel name, not a pharmacy dashboard title;
- *   · there is NO notification bell and NO command palette — both are bound to
- *     pharmacy data (inquiries, medicines) that an admin has no use for, and an
- *     empty dropdown is worse than none.
+ *   · the notification bell uses the admin session's own token and cache keys;
+ *   · there is NO command palette — it is bound to pharmacy routes.
  *
  * The skip link keeps the same two requirements documented in AppLayout: it must
  * be first in the DOM, and its target `<main>` must carry `tabIndex={-1}` — the
@@ -34,6 +33,7 @@ import type { AdminProfile } from '@/api/adminTypes';
 export function AdminLayout() {
   const { STR, lang } = useLang();
   const api = useAdminApi();
+  const keys = useAdminKeys();
   const { user } = useAdminAuth();
   const { pathname } = useLocation();
   const heading = topbarTitleFor(pathname, STR);
@@ -45,7 +45,7 @@ export function AdminLayout() {
     (signal) => api.admin.profile(signal),
     [user?.id],
     {
-      queryKey: adminKeys(user?.id ?? 'anon').profile,
+      queryKey: keys.profile,
       staleTime: PRESET_STALE_TIMES.settings,
       isEmpty: () => false,
     },
@@ -84,6 +84,12 @@ export function AdminLayout() {
               <p>{heading.subtitle}</p>
             </div>
             <div className="topbar-actions">
+              <NotificationBell
+                api={api.notifications}
+                queryKeys={keys.notifications}
+                buttonId="adminNotificationBtn"
+              />
+
               {/* الاسم والصورة بالشريط العلوي — زر الخروج مقره فوتر السايدبار */}
               <div className="user-profile-btn" title={STR.layout.edit_profile_modal_title}>
                 <div

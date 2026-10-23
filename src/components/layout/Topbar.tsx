@@ -1,15 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAuth, usePharmacyApi } from '@/auth/authHooks';
+import {
+  useAuth,
+  useNotificationsApi,
+  usePharmacyApi,
+  usePharmacyKeys,
+} from '@/auth/authHooks';
 import { roleLabel } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { useApiQuery } from '@/api/useApiQuery';
-import { pharmacyKeys, PRESET_STALE_TIMES } from '@/api/queryKeys';
+import { PRESET_STALE_TIMES } from '@/api/queryKeys';
 import type { ApiPharmacyProfile } from '@/api/pharmacyTypes';
 import { thumbUrl } from '@/lib/format';
 import { initTheme } from '@/lib/theme';
 import { topbarTitleFor } from './routeTitles';
-import { IconBell } from './icons';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 /**
  * Topbar — faithful port of components/topbar.blade.php.
@@ -27,34 +32,23 @@ import { IconBell } from './icons';
  * syncs `users.avatar` with the uploaded logo, so the store logo IS the
  * account picture here — matching the web profile page behaviour.
  *
- * Notifications are MOCK/static (API integration is out of scope for this
- * phase) — the dropdown renders Blade's empty-state text.
+ * The notification bell is backed by the real `/api/notifications` endpoints
+ * through this pharmacy session's own client.
  */
 export function Topbar() {
   const { user } = useAuth();
   const api = usePharmacyApi();
+  const notificationsApi = useNotificationsApi();
+  const keys = usePharmacyKeys();
   const { lang, STR, toggleLang } = useLang();
   const { pathname } = useLocation();
   const heading = topbarTitleFor(pathname, STR);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Enforce the single light theme on mount (clears any stale dark choice).
   // Skipped in the visual-QA harness, which pins the theme via the html class.
   useEffect(() => {
     if (document.body.dataset.harness === 'theme') return;
     initTheme();
-  }, []);
-
-  // Close the notifications dropdown when clicking outside (mirrors Blade).
-  useEffect(() => {
-    function onDocClick(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setNotificationsOpen(false);
-      }
-    }
-    document.addEventListener('click', onDocClick);
-    return () => document.removeEventListener('click', onDocClick);
   }, []);
 
   const initial = user?.name ? user.name.trim().charAt(0) : '؟';
@@ -66,7 +60,7 @@ export function Topbar() {
     (signal) => api.profile(signal),
     [user?.id],
     {
-      queryKey: pharmacyKeys(user?.id ?? 'anon').profile,
+      queryKey: keys.profile,
       staleTime: PRESET_STALE_TIMES.settings,
     },
   );
@@ -93,32 +87,10 @@ export function Topbar() {
           <span className="lang-label">{lang === 'ar' ? 'EN' : 'عربي'}</span>
         </a>
 
-        {/* Notifications */}
-        <div className="notifications-wrapper" ref={wrapperRef}>
-          <button
-            className="icon-btn"
-            id="notificationBtn"
-            title={STR.layout.notifications_tooltip}
-            onClick={() => setNotificationsOpen((v) => !v)}
-          >
-            <IconBell />
-            <span className="notification-badge" />
-          </button>
-          <div className={`notifications-dropdown${notificationsOpen ? ' active' : ''}`}>
-            <div className="notifications-header">
-              <h3>{STR.layout.notifications_title}</h3>
-              <button className="clear-all-btn">{STR.layout.mark_all_as_read}</button>
-            </div>
-            <div className="notifications-list">
-              <p className="no-notifications">{STR.layout.no_new_notifications}</p>
-            </div>
-            <div className="notifications-footer">
-              <a href="#" onClick={(e) => e.preventDefault()}>
-                {STR.layout.view_all_notifications}
-              </a>
-            </div>
-          </div>
-        </div>
+        <NotificationBell
+          api={notificationsApi}
+          queryKeys={keys.notifications}
+        />
 
         {/* User profile — الاسم والصورة يظلان ظاهرين هنا (طلب عبود)، وزر
             الخروج مقره فوتر السايدبار أسفل. مطابق لـBlade: صورة المستخدم

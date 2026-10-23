@@ -14,6 +14,7 @@
  * hardcode the identity prefix and accidentally drop it.
  */
 import { PRESET_STALE_TIMES } from '@/api/queryClient';
+import type { NotificationListQuery } from '@/api/notificationTypes';
 
 // Mirrors the `Query` type in pharmacyApi.ts (string|number|boolean|undefined
 // record) — kept inline to avoid a dependency on that module which would
@@ -67,6 +68,11 @@ export function pharmacyKeys(id: string | number) {
     customers: [...base, 'customers'] as const,
     customerSearch: (term: string) => [...base, 'customers', 'search', term] as const,
     suppliers: [...base, 'suppliers'] as const,
+    notifications: {
+      all: [...base, 'notifications'] as const,
+      list: (q?: NotificationListQuery) => [...base, 'notifications', 'list', q] as const,
+      count: [...base, 'notifications', 'count'] as const,
+    },
     // Sidebar badges: unread inquiries + low stock
     sidebarCounts: [...base, 'sidebar', 'counts'] as const,
     // Phone-as-scanner: the active scan session, if one is open on this screen.
@@ -114,6 +120,11 @@ export function adminKeys(id: string | number) {
     paymentProblems: {
       all: [...base, 'payment-problems'] as const,
       list: (q?: ListQuery) => [...base, 'payment-problems', 'list', q] as const,
+    },
+    notifications: {
+      all: [...base, 'notifications'] as const,
+      list: (q?: NotificationListQuery) => [...base, 'notifications', 'list', q] as const,
+      count: [...base, 'notifications', 'count'] as const,
     },
   };
 }

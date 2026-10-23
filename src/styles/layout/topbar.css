@@ -19,6 +19,7 @@
     --notification-bg-blue: #e0f2fe;
     --notification-text-blue: #0369a1;
     --read-notification-bg: #f1f5f9;
+    --unread-notification-bg: #eef7fb;
 }
 
 /* Dark Mode Colors */
@@ -36,6 +37,7 @@ body.dark-mode {
     --notification-bg-blue: rgba(28, 114, 166, 0.18);
     --notification-text-blue: #A5D8FF;
     --read-notification-bg: rgba(255, 255, 255, 0.04);
+    --unread-notification-bg: rgba(28, 114, 166, 0.16);
 }
 
 .topbar {
@@ -178,12 +180,17 @@ body.dark-mode .theme-toggle-btn .icon-3d {
     font-size: var(--fs-lg);
     color: var(--text-primary);
 }
-.notifications-header .clear-all-btn {
+.notifications-header .clear-all-btn,
+.notifications-state .clear-all-btn {
     background: none;
     border: none;
     color: var(--teal-text);
     cursor: pointer;
     font-size: var(--fs-xs);
+}
+.notifications-header .clear-all-btn:disabled {
+    cursor: default;
+    opacity: 0.45;
 }
 .notifications-list {
     padding: 0;
@@ -194,14 +201,21 @@ body.dark-mode .theme-toggle-btn .icon-3d {
 .notification-item {
     display: flex;
     align-items: center;
+    width: 100%;
     padding: 10px 15px;
+    border: 0;
     border-bottom: 1px solid var(--border-color);
     text-decoration: none;
+    text-align: start;
+    font: inherit;
     color: inherit;
     background-color: var(--read-notification-bg);
     opacity: 0.7;
+    cursor: pointer;
+    appearance: none;
     transition: background-color 0.2s ease, opacity 0.2s ease;
 }
+.notification-item:disabled { cursor: default; }
 .notification-item:last-child { border-bottom: none; }
 .notification-item:hover {
     background-color: var(--btn-hover);
@@ -216,18 +230,31 @@ body.dark-mode .theme-toggle-btn .icon-3d {
     margin-inline-end: 10px;
     color: var(--teal-text);
 }
-.notification-content { flex-grow: 1; }
+.notification-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-grow: 1;
+    min-width: 0;
+}
 .notification-title {
+    display: block;
     margin: 0;
     font-size: var(--fs-md);
     font-weight: 500;
     color: var(--text-primary);
+    line-height: 1.45;
+    overflow-wrap: anywhere;
 }
 .notification-time {
+    display: block;
     margin: 0;
     font-size: var(--fs-xs);
     color: var(--text-secondary);
 }
+.notifications-state { text-align: center; }
+.notifications-state .error-notifications { padding-bottom: 4px; }
+.notifications-state .clear-all-btn { padding: 4px 8px; }
 .no-notifications, .loading-notifications, .error-notifications {
     padding: 15px;
     text-align: center;
@@ -260,6 +287,7 @@ body.dark-mode .theme-toggle-btn .icon-3d {
     /* Logical: sits at the inline-end corner in both directions. */
     inset-inline-end: 4px;
 }
+.notification-badge.is-visible { display: inline-flex; }
 
 .user-profile-btn {
     display: flex;

@@ -16,7 +16,6 @@ const PRELOAD_MAP: Record<string, () => Promise<unknown>> = {
 
   // Pharmacy
   '/': () => import('@/features/pharmacy/dashboard/DashboardPage'),
-  '/inventory': () => import('@/features/pharmacy/inventory/InventoryPage'),
   '/inventory/import': () => import('@/features/pharmacy/import/InventoryImportPage'),
   '/medicines': () => import('@/features/pharmacy/medicines/MedicinesPage'),
   '/medicines/create': () => import('@/features/pharmacy/medicines/MedicineRequestPage'),

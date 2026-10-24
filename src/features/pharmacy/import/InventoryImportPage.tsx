@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, DataTable } from '@/components/ui';
 import { useLang } from '@/lib/lang/LanguageContext';
-import { useApi, usePharmacyApi } from '@/auth/authHooks';
+import { useApi, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation } from '@/api/useApiQuery';
+import { ROUTES } from '@/routes/paths';
 import type {
   ApiCatalogMedicineHit,
   ApiImportCommitResult,
@@ -199,6 +201,8 @@ export function InventoryImportPage() {
   };
   const api = usePharmacyApi();
   const { client } = useApi();
+  const keys = usePharmacyKeys();
+  const queryClient = useQueryClient();
 
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -274,6 +278,7 @@ export function InventoryImportPage() {
     missing_name: P.err_missing_name,
     invalid_price: P.err_invalid_price,
     invalid_quantity: P.err_invalid_quantity,
+    quantity_out_of_range: P.err_quantity_out_of_range,
     invalid_min_stock: P.err_invalid_min_stock,
     invalid_is_available: P.err_invalid_is_available,
   };
@@ -466,6 +471,22 @@ export function InventoryImportPage() {
       const res = await commit.run(full.uuid);
       setResult(res);
       setSession(res.import);
+      void queryClient.invalidateQueries({
+        queryKey: keys.inventory.all,
+        refetchType: 'all',
+      });
+      void queryClient.invalidateQueries({
+        queryKey: keys.dashboardStats,
+        refetchType: 'all',
+      });
+      void queryClient.invalidateQueries({
+        queryKey: keys.sidebarCounts,
+        refetchType: 'all',
+      });
+      void queryClient.invalidateQueries({
+        queryKey: keys.medicines.uncategorizedAll,
+        refetchType: 'all',
+      });
       toast.success(P.done_title);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : P.error_commit_failed);
@@ -516,8 +537,8 @@ export function InventoryImportPage() {
               <i className="fas fa-file-csv" /> {P.download_errors}
             </button>
           )}
-          <Link to="/inventory" className="ph-btn outline">
-            <i className="fas fa-arrow-right" /> {P.back_to_inventory}
+          <Link to={ROUTES.medicines} className="ph-btn outline">
+            <i className="fas fa-arrow-right" /> {P.back_to_medicines}
           </Link>
         </div>
       </div>
@@ -1147,9 +1168,6 @@ export function InventoryImportPage() {
                   <i className="fas fa-tags" /> {P.done_uncategorized}
                 </Link>
               )}
-              <Link to="/inventory" className="ph-btn outline">
-                <i className="fas fa-boxes-stacked" /> {P.done_back}
-              </Link>
               <button type="button" className="ph-btn ghost" onClick={resetAll}>
                 <i className="fas fa-cloud-arrow-up" /> {P.upload_another}
               </button>

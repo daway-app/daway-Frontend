@@ -26,7 +26,6 @@ export const ROUTES = {
    */
   forgotPassword: '/forgot-password',
   dashboard: '/',
-  inventory: '/inventory',
   /** Bulk inventory import (pharmacy/import/*). */
   inventoryImport: '/inventory/import',
   medicines: '/medicines',

@@ -386,9 +386,19 @@ export function createPharmacyApi(client: ApiClient) {
       return paginated(res);
     },
 
+    /**
+     * Send a pharmacy reply to a patient inquiry.
+     *
+     * Accepts either:
+     *  - `{ message: string }` — sent as JSON (text-only message)
+     *  - `FormData` — sent as multipart/form-data (text + optional image media)
+     *
+     * The client's FormData branch leaves Content-Type unset so the browser
+     * adds the multipart boundary itself.
+     */
     async sendInquiryMessage(
       id: number | string,
-      body: { message: string },
+      body: { message: string } | FormData,
     ): Promise<ApiInquiryMessage> {
       const res = await client.post<ApiSuccess<ApiInquiryMessage>>(
         `${P.inquiries}/${id}/messages`,

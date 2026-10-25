@@ -71,6 +71,19 @@ export function InquiryChatPage() {
   const [draft, setDraft] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+
+  const filePreview = attachedFile
+    ? URL.createObjectURL(attachedFile)
+    : null;
+
+  // Revoke object URL to avoid memory leaks.
+  useEffect(() => {
+    return () => {
+      if (filePreview) URL.revokeObjectURL(filePreview);
+    };
+  }, [filePreview]);
 
   // Restore once on mount.
   useEffect(() => {
@@ -100,7 +113,7 @@ export function InquiryChatPage() {
     { queryKey: keys.inquiries.messages(Number(id)), isEmpty: (r) => r.data.length === 0 },
   );
 
-  const sendMessage = useApiMutation((body: { message: string }) =>
+  const sendMessage = useApiMutation((body: { message: string } | FormData) =>
     api.sendInquiryMessage(String(id), body),
   );
 
@@ -124,6 +137,22 @@ export function InquiryChatPage() {
 
   async function send() {
     const text = draft.trim();
+    if (attachedFile) {
+      const form = new FormData();
+      form.append('message', text);
+      form.append('media', attachedFile);
+      try {
+        await sendMessage.run(form);
+        setDraft('');
+        setAttachedFile(null);
+        setFileError(null);
+        clearDraft(user?.id ?? 'anon', DRAFT_ROUTE);
+        messagesQuery.refetch();
+      } catch {
+        // `sendMessage.error` renders below the composer.
+      }
+      return;
+    }
     if (text === '') return;
     try {
       await sendMessage.run({ message: text });
@@ -296,6 +325,7 @@ export function InquiryChatPage() {
             <label
               htmlFor="ph-chat-media"
               className="ph-btn ghost"
+              title={I.attach_photo}
               style={{ borderRadius: 'var(--ph-r-md)', padding: '12px 16px', cursor: 'pointer' }}
             >
               <i className="fas fa-paperclip" />
@@ -307,19 +337,69 @@ export function InquiryChatPage() {
               name="media"
               accept="image/*"
               style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                setFileError(null);
+                if (!file) return;
+                const MAX_BYTES = 5 * 1024 * 1024;
+                if (!file.type.startsWith('image/')) {
+                  setFileError('الملف يجب أن يكون صورة (jpeg, png, jpg, gif, webp).');
+                  setAttachedFile(null);
+                  return;
+                }
+                if (file.size > MAX_BYTES) {
+                  setFileError('الصورة كبيرة جدًا — الحد الأقصى 5 ميجابكسل.');
+                  setAttachedFile(null);
+                  return;
+                }
+                setAttachedFile(file);
+              }}
             />
+            {filePreview && (
+              <div
+                style={{
+                  position: 'relative',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 12px',
+                  background: 'var(--ph-paper)',
+                  border: '1px solid var(--ph-line-soft)',
+                  borderRadius: 'var(--ph-r-md)',
+                }}
+              >
+                <img
+                  src={filePreview}
+                  alt="preview"
+                  style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }}
+                />
+                <button
+                  type="button"
+                  className="ph-btn ghost"
+                  title="إزالة الصورة"
+                  onClick={() => {
+                    setAttachedFile(null);
+                    setFileError(null);
+                    if (fileRef.current) fileRef.current.value = '';
+                  }}
+                  style={{ padding: '2px 6px', fontSize: '.7rem' }}
+                >
+                  <i className="fas fa-x" />
+                </button>
+              </div>
+            )}
             <button
               type="submit"
               className="ph-btn primary"
-              disabled={sendMessage.isPending || draft.trim() === ''}
+              disabled={sendMessage.isPending || (draft.trim() === '' && attachedFile === null)}
               style={{ borderRadius: 'var(--ph-r-md)', padding: '12px 20px', fontSize: '.95rem' }}
             >
               <i className="fas fa-paper-plane" />
             </button>
           </div>
 
-          {sendMessage.error && (
-            <Notice tone="error">{sendMessage.error.message}</Notice>
+          {(fileError || sendMessage.error) && (
+            <Notice tone="error">{fileError ?? sendMessage.error?.message}</Notice>
           )}
         </form>
       </AsyncBoundary>

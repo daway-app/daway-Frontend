@@ -24,7 +24,12 @@
     font-size: var(--fs-xs);
     color: var(--ph-ink-faint);
 }
-.ph-chat-bubble .ph-chat-time { font-variant-numeric: tabular-nums; }
+/* الأرقام (الوقت) تُقرأ LTR دائماً؛ direction: ltr يمنع تشويه الترتيب في الـ RTL. */
+.ph-chat-bubble .ph-chat-time {
+    font-variant-numeric: tabular-nums;
+    direction: ltr;
+    unicode-bidi: embed;
+}
 
 .ph-chat-bubble.ph-chat-mine {
     background: var(--ph-teal-mist);
@@ -35,6 +40,7 @@
 }
 .ph-chat-bubble.ph-chat-mine .ph-chat-text { color: var(--ph-teal-text); }
 .ph-chat-bubble.ph-chat-mine .ph-chat-meta { justify-content: flex-end; color: var(--ph-teal-text); opacity: .7; }
+.ph-chat-bubble.ph-chat-other .ph-chat-meta { justify-content: flex-start; }
 
 .ph-chat-bubble.ph-chat-other {
     background: var(--ph-canvas);

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useLang } from '@/lib/lang/LanguageContext';
 import { AsyncBoundary, Notice } from '@/components/ui';
 import { usePharmacyApi, useAuth, usePharmacyKeys } from '@/auth/authHooks';
@@ -40,6 +40,7 @@ const BADGE_CLASS: Record<string, string> = {
 };
 
 export function InquiryChatPage() {
+  const navigate = useNavigate();
   const { STR } = useLang();
   const I = STR.pharmacy.inquiries;
   const STATUS_LABEL: Record<string, string> = {
@@ -51,6 +52,12 @@ export function InquiryChatPage() {
   const api = usePharmacyApi();
   const { user } = useAuth();
   const keys = usePharmacyKeys();
+
+  useEffect(() => {
+    if (!id || !/^\d+$/.test(id)) {
+      navigate('/inquiries', { replace: true });
+    }
+  }, [id, navigate]);
 
   /*
    * Phase 3: unsent-message draft (sessionStorage, per user + per inquiry).
@@ -194,7 +201,7 @@ export function InquiryChatPage() {
             {inquiry?.created_at && (
               <div style={{ fontSize: '.8rem', color: 'var(--ph-ink-faint)', marginBlockStart: 4 }}>
                 <i className="fas fa-clock" style={{ marginInlineEnd: 6 }} />
-                {formatDateTime(inquiry.created_at)}
+                <span dir="ltr">{formatDateTime(inquiry.created_at)}</span>
               </div>
             )}
           </div>
@@ -231,7 +238,7 @@ export function InquiryChatPage() {
                     )}
                   </div>
                   <div className="ph-chat-meta">
-                    <span className="ph-chat-time">{formatTime(msg.created_at)}</span>
+                    <span className="ph-chat-time" dir="ltr">{formatTime(msg.created_at)}</span>
                     {/* Read receipts are only meaningful on incoming messages. */}
                     {!msg.is_mine && msg.is_read && (
                       <i

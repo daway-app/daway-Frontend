@@ -16,7 +16,7 @@ import { toast } from '@/lib/toast';
 import { ApiError } from '@/api/errors';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { num } from '../shared';
 import { errorMessage } from './paymentShared';
 import type { AdminPaymentBanksResponse, PaymentBank } from '@/api/adminTypes';
@@ -455,3 +455,4 @@ export function AdminPaymentBanksPage() {
     </>
   );
 }
+

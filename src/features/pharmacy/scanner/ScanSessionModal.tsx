@@ -1,4 +1,4 @@
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { Modal } from '@/components/ui';
 import { useScanSessionApi } from '@/auth/authHooks';
 import { useScanSession, type ScanSessionState } from './useScanSession';
@@ -188,3 +188,4 @@ export function ScanSessionModal({
     </Modal>
   );
 }
+

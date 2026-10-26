@@ -11,7 +11,7 @@ import {
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { labelOf } from '@/lib/i18n';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useUrlState } from '@/lib/urlState';
 import { ariaSort, useSort } from '@/lib/sort';
 import { formatDateTime, pageInfo } from '../shared';
@@ -292,3 +292,4 @@ export function AdminLogsPage() {
     </>
   );
 }
+

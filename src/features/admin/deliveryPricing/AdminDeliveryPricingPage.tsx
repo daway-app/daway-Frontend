@@ -15,7 +15,7 @@ import { toast } from '@/lib/toast';
 import { ApiError } from '@/api/errors';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { money } from '../shared';
 import { formatDistanceRange, validateTierDraft, type TierDraft } from './tierModel';
 import type {
@@ -553,3 +553,4 @@ export function AdminDeliveryPricingPage() {
     </>
   );
 }
+

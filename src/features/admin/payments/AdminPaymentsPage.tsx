@@ -14,7 +14,7 @@ import {
 import { toast } from '@/lib/toast';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useUrlState } from '@/lib/urlState';
 import { formatDateTime, money, pageInfo } from '../shared';
 import {
@@ -25,11 +25,15 @@ import {
   problemStatusLabel,
   saveBlob,
   submissionStatusLabel,
+  parseAmountUnmatched,
+  amountStatusLabel,
+  amountStatusVariant,
 } from './paymentShared';
 import type {
   AdminPaymentDetail,
   AdminPaymentSubmission,
   AdminPaymentsResponse,
+  AmountUnmatchedError,
   PaymentStatus,
   PaymentSubmissionStatus,
 } from '@/api/adminTypes';
@@ -109,6 +113,7 @@ export function AdminPaymentsPage() {
   const [approveNote, setApproveNote] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const [approveError, setApproveError] = useState<AmountUnmatchedError>(null);
 
   useEffect(() => {
     setQ(committedQ);
@@ -197,6 +202,7 @@ export function AdminPaymentsPage() {
     queryClient.removeQueries({ queryKey: keys.payments.detail(orderId) });
     setApproveNote('');
     setRejectReason('');
+    setApproveError(null);
     setSelectedId(orderId);
   }
 
@@ -215,7 +221,12 @@ export function AdminPaymentsPage() {
       await refreshAfterReview();
       closeReview();
     } catch (err) {
-      toast.error(errorMessage(err, S.action_failed));
+      const unmatched = parseAmountUnmatched(err);
+      if (unmatched) {
+        setApproveError(unmatched);
+      } else {
+        toast.error(errorMessage(err, S.action_failed));
+      }
     }
   }
 
@@ -231,6 +242,7 @@ export function AdminPaymentsPage() {
       await refreshAfterReview();
       closeReview();
     } catch (err) {
+      setApproveError(null);
       toast.error(errorMessage(err, S.action_failed));
     }
   }
@@ -489,57 +501,87 @@ export function AdminPaymentsPage() {
               ) : (
                 <ul className="admin-detail-list admin-detail-list--static">
                   {detailData.submissions.map((submission) => (
-                    <li key={submission.id}>
-                      <div>
-                        <strong>
-                          #{submission.id} · {money(submission.amount)}
-                        </strong>
-                        <span className="admin-muted">
-                          {S.bank}: {submission.bank_name} — {submission.account_holder}
-                        </span>
-                        <span className="admin-muted" dir="ltr">
-                          {submission.account_number}
-                          {submission.iban ? ` · ${submission.iban}` : ''}
-                        </span>
-                        <span className="admin-muted">
-                          {S.sender}: {submission.sender_name ?? '—'}
-                        </span>
-                        <span className="admin-muted">
-                          {S.reference}: {submission.transfer_reference ?? '—'}
-                        </span>
-                        <span className="admin-muted">
-                          {S.transferred_at}: {formatDateTime(submission.transferred_at)}
-                        </span>
-                        {submission.rejection_reason && (
-                          <span className="admin-muted">
-                            {S.rejection_reason}: {submission.rejection_reason}
-                          </span>
-                        )}
-                        {submission.review_note && (
-                          <span className="admin-muted">
-                            {S.review_note}: {submission.review_note}
-                          </span>
-                        )}
-                        <span className="admin-muted">
-                          {S.created_at}: {formatDateTime(submission.created_at)}
-                        </span>
-                      </div>
-                      <div className="admin-detail-list__actions">
-                        <Badge variant={submissionVariant(submission.status)}>
-                          {submissionStatusLabel(S, submission.status)}
-                        </Badge>
-                        <Btn
-                          size="xs"
-                          variant="outline"
-                          icon="fas fa-download"
-                          disabled={downloadingId === submission.id}
-                          onClick={() => handleDownload(submission)}
-                        >
-                          {S.download_receipt}
-                        </Btn>
-                      </div>
-                    </li>
-                  ))}
+                     <li key={submission.id}>
+                       <div>
+                         <strong>
+                           #{submission.id} · {money(submission.amount)}
+                         </strong>
+                         <span className="admin-muted">
+                           {S.bank}: {submission.bank_name} — {submission.account_holder}
+                         </span>
+                         <span className="admin-muted" dir="ltr">
+                           {submission.account_number}
+                           {submission.iban ? ` · ${submission.iban}` : ''}
+                         </span>
+                         <span className="admin-muted">
+                           {S.sender}: {submission.sender_name ?? '—'}
+                         </span>
+                         <span className="admin-muted">
+                           {S.reference}: {submission.transfer_reference ?? '—'}
+                         </span>
+                         <span className="admin-muted">
+                           {S.transferred_at}: {formatDateTime(submission.transferred_at)}
+                         </span>
+                         <span className="admin-muted">
+                           {S.snapshot_total}:{' '}
+                           <strong dir="ltr">
+                             {money(submission.order_grand_total ?? detailData.order.grand_total)}
+                           </strong>
+                         </span>
+                         <span className="admin-muted">
+                           <Badge variant={amountStatusVariant(submission.amount_status)}>
+                             {amountStatusLabel(S, submission.amount_status)}
+                           </Badge>
+                         </span>
+                         {submission.amount_status === 'under' && (
+                           <Notice tone="error">
+                             <span className="admin-muted">{S.deficit_label}:</span>{' '}
+                             <strong dir="ltr">
+                               {money(
+                                 (detailData.order.grand_total ?? 0) - (submission.amount ?? 0),
+                               )}
+                             </strong>
+                           </Notice>
+                         )}
+                         {submission.amount_status === 'over' && (
+                           <Notice tone="warning">
+                             <span className="admin-muted">{S.overage_label}:</span>{' '}
+                             <strong dir="ltr">
+                               {money(submission.overage_amount)}
+                             </strong>{' '}
+                             <span className="admin-muted">{S.not_auto_refunded}</span>
+                           </Notice>
+                         )}
+                         {submission.rejection_reason && (
+                           <span className="admin-muted">
+                             {S.rejection_reason}: {submission.rejection_reason}
+                           </span>
+                         )}
+                         {submission.review_note && (
+                           <span className="admin-muted">
+                             {S.review_note}: {submission.review_note}
+                           </span>
+                         )}
+                         <span className="admin-muted">
+                           {S.created_at}: {formatDateTime(submission.created_at)}
+                         </span>
+                       </div>
+                       <div className="admin-detail-list__actions">
+                         <Badge variant={submissionVariant(submission.status)}>
+                           {submissionStatusLabel(S, submission.status)}
+                         </Badge>
+                         <Btn
+                           size="xs"
+                           variant="outline"
+                           icon="fas fa-download"
+                           disabled={downloadingId === submission.id}
+                           onClick={() => handleDownload(submission)}
+                         >
+                           {S.download_receipt}
+                         </Btn>
+                       </div>
+                     </li>
+                   ))}
                 </ul>
               )}
 
@@ -583,6 +625,30 @@ export function AdminPaymentsPage() {
                   <h4 className="ph-card-title" style={{ marginBlock: '0 10px' }}>
                     {S.approve_title}
                   </h4>
+                  {approveError && (
+                    <div style={{ marginBlock: '12px 10px' }}>
+                      <Notice tone="error">
+                        {S.amount_unmatched_msg}
+                        {approveError.grand_total !== undefined && (
+                          <div className="admin-muted">
+                            {S.grand_total}: <strong dir="ltr">{money(approveError.grand_total)}</strong>
+                          </div>
+                        )}
+                        {approveError.deficit !== undefined && (
+                          <div className="admin-muted">
+                            {S.deficit_label}: <strong dir="ltr">{money(approveError.deficit)}</strong>
+                          </div>
+                        )}
+                        {approveError.overage !== undefined && (
+                          <div className="admin-muted">
+                            {S.overage_label}: <strong dir="ltr">{money(approveError.overage)}</strong>{' '}
+                            <span>{S.not_auto_refunded}</span>
+                          </div>
+                        )}
+                        <div className="admin-muted">{S.needs_new_receipt}</div>
+                      </Notice>
+                    </div>
+                  )}
                   <label className="admin-field">
                     <span>{S.approve_note}</span>
                     <textarea
@@ -651,3 +717,4 @@ export function AdminPaymentsPage() {
     </>
   );
 }
+

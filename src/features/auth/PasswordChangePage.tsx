@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { Btn } from '@/components/ui';
 
 /**
@@ -178,3 +178,4 @@ export function PasswordChangePage() {
     </form>
   );
 }
+

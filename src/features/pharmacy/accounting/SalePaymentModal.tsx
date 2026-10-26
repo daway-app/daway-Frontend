@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal } from '@/components/ui';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { usePharmacyApi } from '@/auth/authHooks';
 import { useApiMutation } from '@/api/useApiQuery';
 import { money } from '@/lib/format';
@@ -266,3 +266,4 @@ export function SalePaymentModal({
     </Modal>
   );
 }
+

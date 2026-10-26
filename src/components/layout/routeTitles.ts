@@ -1,5 +1,5 @@
 import { AR } from '@/lib/i18n';
-import type { Strings } from '@/lib/lang/LanguageContext';
+import type { Strings } from '@/lib/lang/types';
 import { ROUTES } from '@/routes/paths';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 

@@ -111,7 +111,7 @@ for (const f of files) {
     const li = final.split('\n').findIndex((l) => /from '@\/lib\/i18n'/.test(l));
     if (li >= 0) {
       const tmp = final.split('\n');
-      tmp.splice(li + 1, 0, "import { useLang } from '@/lib/lang/LanguageContext';");
+      tmp.splice(li + 1, 0, "import { useLang } from '@/lib/lang/useLang';");
       final = tmp.join('\n');
     }
   }
@@ -129,3 +129,4 @@ for (const f of files) {
   console.log('converted ' + f);
 }
 console.log((WRITE ? 'converted: ' : '[dry-run] would convert: ') + done);
+

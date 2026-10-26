@@ -1,6 +1,6 @@
 import type { Pagination } from '@/api/adminTypes';
 import { AR } from '@/lib/i18n';
-import type { Strings } from '@/lib/lang/LanguageContext';
+import type { Strings } from '@/lib/lang/types';
 
 /**
  * Small shared helpers for admin screens.

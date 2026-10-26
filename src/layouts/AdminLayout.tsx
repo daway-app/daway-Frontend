@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { Toaster } from '@/components/ui';
 import { roleLabel } from '@/lib/i18n';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { initTheme } from '@/lib/theme';
 import { topbarTitleFor } from '@/components/layout/routeTitles';
 import { useAdminApi, useAdminAuth, useAdminKeys } from '@/auth/adminContext';
@@ -118,3 +118,4 @@ export function AdminLayout() {
     </>
   );
 }
+

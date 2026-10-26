@@ -13,7 +13,7 @@ import {
 import { toast } from '@/lib/toast';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useUrlState } from '@/lib/urlState';
 import { formatDateTime, pageInfo } from '../shared';
 import {
@@ -337,3 +337,4 @@ export function AdminPaymentProblemsPage() {
     </>
   );
 }
+

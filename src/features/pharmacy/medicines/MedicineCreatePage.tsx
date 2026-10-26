@@ -5,7 +5,7 @@ import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { publicKeys } from '@/api/queryKeys';
 import type { ApiCategory } from '@/api/pharmacyTypes';
 import { AsyncBoundary, Btn, FormField, Notice, PageHeader } from '@/components/ui';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { ROUTES } from '@/routes/paths';
 import { stockStatus } from '@/lib/stock';
 import { money } from '@/lib/format';
@@ -842,3 +842,4 @@ export function MedicineCreatePage() {
     </div>
   );
 }
+

@@ -10,7 +10,7 @@ import {
 } from '@/components/ui';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useUrlState } from '@/lib/urlState';
 import { money, num, pageInfo, tpl } from '../shared';
 import { thumbUrl } from '@/lib/format';
@@ -494,3 +494,4 @@ export function AdminMedicinesPage() {
     </div>
   );
 }
+

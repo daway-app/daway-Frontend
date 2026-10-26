@@ -40,6 +40,21 @@ export interface ApiErrorBody {
   message?: string;
   code?: string;
   errors?: Record<string, string[]>;
+  /**
+   * Optional payload the backend attaches to named error codes.
+   *
+   * Today this is the `amount_unmatched` body (HTTP 422) returned by
+   * `POST /api/admin/payments/{id}/approve`, which carries `deficit|overage`
+   * plus the `grand_total` it compared against. Typed as a partial so callers
+   * must narrow by `code` before reading fields — this is NOT assumed on every
+   * error, only on `amount_unmatched`.
+   */
+  data?: {
+    code?: string;
+    deficit?: number | string;
+    overage?: number | string;
+    grand_total?: number | string;
+  };
 }
 
 /** HTTP status codes the client handles explicitly. */

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { AsyncBoundary, Btn, FormField, PageHeader } from '@/components/ui';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
@@ -210,3 +210,4 @@ export function MedicineRequestPage() {
     </div>
   );
 }
+

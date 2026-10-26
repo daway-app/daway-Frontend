@@ -65,11 +65,11 @@ for (const f of files) {
   // 1. fix import
   out = out.replace(
     /import\s*\{\s*AR\s*,\s*([^}]+)\}\s*from\s*'@\/lib\/i18n';/,
-    "import { $1 } from '@/lib/i18n';\nimport { useLang } from '@/lib/lang/LanguageContext';",
+    "import { $1 } from '@/lib/i18n';\nimport { useLang } from '@/lib/lang/useLang';",
   );
   out = out.replace(
     /import\s*\{\s*AR\s*\}\s*from\s*'@\/lib\/i18n';/,
-    "import { useLang } from '@/lib/lang/LanguageContext';",
+    "import { useLang } from '@/lib/lang/useLang';",
   );
   // 2. insert hook: after first line inside component that starts with 2-space hook call
   const lines = out.split('\n');
@@ -95,3 +95,4 @@ for (const f of files) {
 console.log((DRY ? '[dry-run] would convert: ' : 'converted: ') + converted);
 console.log('NEEDS-MANUAL(' + needsManual.length + '):');
 for (const m of needsManual) console.log('  ' + m);
+

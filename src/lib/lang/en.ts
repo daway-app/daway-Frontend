@@ -1874,6 +1874,15 @@ export const EN = {
       blocked_problem: 'Resolve the open payment problem before approving or rejecting the receipt.',
       no_reviewable: 'There is no receipt under review for this order.',
       payment_banks_title: 'Payment banks',
+      snapshot_total: 'Amount due at receipt (snapshot)',
+      amount_match: 'Amount matches',
+      amount_under: 'Underpaid',
+      amount_over: 'Overpaid',
+      deficit_label: 'Missing amount',
+      overage_label: 'Overpaid amount',
+      not_auto_refunded: 'The overpayment is NOT refunded automatically.',
+      needs_new_receipt: 'The order total changed since the receipt was submitted. A new receipt with the correct amount is required.',
+      amount_unmatched_msg: 'The transfer amount does not match the amount due. Please check the receipt details and correct it.',
     },
 
     payment_problems: {

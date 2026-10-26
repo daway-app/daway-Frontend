@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { AsyncBoundary, FormField, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { useAuth, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
@@ -241,7 +241,7 @@ export function ProfilePage() {
         ? '…'
         : '—';
     return { unified, exception: closedNames.length ? closedNames.join('، ') : HQ.no_exception };
-  }, [hours]);
+  }, [hours, HQ.open_24, HQ.no_exception]);
 
   const applyAll = () => {
     const ref = hours[API_DAYS[0].key];
@@ -1043,3 +1043,4 @@ export function ProfilePage() {
     </div>
   );
 }
+

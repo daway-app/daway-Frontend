@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import {
   dismissPushBanner,
   shouldShowPushBanner,
@@ -97,3 +97,4 @@ export function PushPermissionBanner() {
     </div>
   );
 }
+

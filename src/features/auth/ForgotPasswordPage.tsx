@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { Btn } from '@/components/ui';
 import { useApi } from '@/auth/authHooks';
 import { ROUTES } from '@/routes/paths';
@@ -249,3 +249,4 @@ export function ForgotPasswordPage() {
     </div>
   );
 }
+

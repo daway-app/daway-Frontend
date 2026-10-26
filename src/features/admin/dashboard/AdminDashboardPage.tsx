@@ -3,7 +3,7 @@ import { AsyncBoundary, Badge, Card, PageHeader, StatCard } from '@/components/u
 import { Chart } from '@/components/ui/Chart';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { timeAgo, tpl } from '../shared';
 import type { AdminDashboardResponse } from '@/api/adminTypes';
 
@@ -215,3 +215,4 @@ export function AdminDashboardPage() {
     </>
   );
 }
+

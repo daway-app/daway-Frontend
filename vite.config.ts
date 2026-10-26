@@ -10,6 +10,18 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React + ecosystem (vendor-stable).
+          react: ['react', 'react-dom', 'react-router-dom'],
+          // TanStack Query — shared across data-fetching boundaries.
+          reactQuery: ['@tanstack/react-query'],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     // NOTE: no proxy is configured on purpose. The React app talks to the

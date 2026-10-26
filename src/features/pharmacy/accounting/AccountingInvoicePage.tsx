@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { AsyncBoundary } from '@/components/ui';
 import { useAuth, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -342,3 +342,4 @@ function canRefund(sale: ApiSale): boolean {
     sale.paid > sale.total - sale.remaining
   );
 }
+

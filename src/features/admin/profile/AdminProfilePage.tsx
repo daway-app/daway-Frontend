@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { AsyncBoundary, Badge, Btn, PageHeader } from '@/components/ui';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { thumbUrl } from '@/lib/format';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import type { AdminProfile } from '@/api/adminTypes';
@@ -150,3 +150,4 @@ export function AdminProfilePage() {
     </div>
   );
 }
+

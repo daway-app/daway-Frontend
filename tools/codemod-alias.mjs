@@ -100,7 +100,7 @@ for (const f of collectTargets()) {
   // 3b. ensure useLang import
   let li = out.findIndex((l) => /from '@\/lib\/i18n'/.test(l));
   if (!out.some((l) => l.includes('@/lib/lang/LanguageContext'))) {
-    out.splice(li + 1, 0, "import { useLang } from '@/lib/lang/LanguageContext';");
+    out.splice(li + 1, 0, "import { useLang } from '@/lib/lang/useLang';");
     // recompute component starts (+1 shift)
     for (let k = 0; k < compStarts.length; k++) compStarts[k]++;
   }
@@ -140,3 +140,4 @@ for (const f of collectTargets()) {
 console.log((WRITE ? 'converted: ' : '[dry-run] would convert: ') + done);
 console.log('SKIPPED(' + skipped.length + '):');
 for (const s of skipped) console.log('  ' + s);
+

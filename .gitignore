@@ -13,6 +13,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Local dev output (Vite/dev server logs captured to file)
+devlog.txt
+
 node_modules
 dist
 dist-ssr

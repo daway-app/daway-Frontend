@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Btn, Card, Modal, PageHeader } from '@/components/ui';
 import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
 import { useApiMutation } from '@/api/useApiQuery';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 
 /**
@@ -260,3 +260,4 @@ export function AdminPasswordChangePage() {
     </div>
   );
 }
+

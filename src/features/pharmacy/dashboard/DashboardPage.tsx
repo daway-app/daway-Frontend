@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary, Card, SetupChecklist, StatCard } from '@/components/ui';
 import type { SetupStep } from '@/components/ui';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { usePharmacyApi, useAuth } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import { pharmacyKeys } from '@/api/queryKeys';
@@ -336,3 +336,4 @@ export function DashboardPage() {
     </div>
   );
 }
+

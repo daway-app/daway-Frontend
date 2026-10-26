@@ -11,8 +11,8 @@ import {
   shortcutLabel,
   useCommandKOpen,
 } from '@/lib/commandPalette';
-import { useLang } from '@/lib/lang/LanguageContext';
-import type { Strings } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
+import type { Strings } from '@/lib/lang/types';
 import { ROUTES } from '@/routes/paths';
 import { IconAlertTriangle, IconBox, IconCapsule, IconChat, IconDashboard, IconStar, IconUser } from './icons';
 
@@ -355,3 +355,4 @@ export function CommandPaletteTrigger() {
     </button>
   );
 }
+

@@ -5,7 +5,7 @@ import { toast } from '@/lib/toast';
 import { useAdminApi, useAdminAuth, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { roleLabel } from '@/lib/i18n';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useUrlState } from '@/lib/urlState';
 import { ariaSort, useSort } from '@/lib/sort';
 import { thumbUrl } from '@/lib/format';
@@ -510,3 +510,4 @@ export function AdminUsersPage() {
     </div>
   );
 }
+

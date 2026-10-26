@@ -9,7 +9,7 @@ import { PRESET_STALE_TIMES } from '@/api/queryClient';
 import type { AdminProfile } from '@/api/adminTypes';
 import { AR } from '@/lib/i18n';
 void AR;
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import {
   IconBox,
@@ -376,3 +376,4 @@ function IconBank() {
     </svg>
   );
 }
+

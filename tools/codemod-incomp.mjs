@@ -24,7 +24,7 @@ for (const f of files) {
   // add import after i18n import
   if (!out.some((l) => l.includes('@/lib/lang/LanguageContext'))) {
     const li = out.findIndex((l) => /from '@\/lib\/i18n'/.test(l));
-    out.splice(li + 1, 0, "import { useLang } from '@/lib/lang/LanguageContext';");
+    out.splice(li + 1, 0, "import { useLang } from '@/lib/lang/useLang';");
   }
   // convert aliases AR. → STR. and collect for hook insert
   for (const i of aliasIdx) out[i] = out[i].replace(/= AR\./, '= STR.');
@@ -54,3 +54,4 @@ for (const f of files) {
   console.log('converted ' + f);
 }
 console.log((WRITE ? 'converted: ' : '[dry-run] would convert: ') + done);
+

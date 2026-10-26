@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { Btn } from '@/components/ui';
 import { ApiError } from '@/api/errors';
 import { useApi } from '@/auth/authHooks';
@@ -393,3 +393,4 @@ export function RegisterPage() {
     </div>
   );
 }
+

@@ -4,7 +4,7 @@ import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import type { ApiInventoryItem } from '@/api/pharmacyTypes';
 import { AsyncBoundary, Btn, FormField, Notice, PageHeader } from '@/components/ui';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { ROUTES } from '@/routes/paths';
 import { stockStatus } from '@/lib/stock';
 import { toast } from '@/lib/toast';
@@ -278,3 +278,4 @@ export function MedicineEditPage() {
     </div>
   );
 }
+

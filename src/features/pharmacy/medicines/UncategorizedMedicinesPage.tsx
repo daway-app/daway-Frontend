@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useUrlState } from '@/lib/urlState';
 import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -357,3 +357,4 @@ export function UncategorizedMedicinesPage() {
     </div>
   );
 }
+

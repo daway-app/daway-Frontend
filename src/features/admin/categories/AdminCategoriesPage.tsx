@@ -4,7 +4,7 @@ import { AsyncBoundary, Btn, EmptyState, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import { num, pageInfo } from '../shared';
 import { thumbUrl } from '@/lib/format';
@@ -671,3 +671,4 @@ function CategoryLinksModalInner({
     </>
   );
 }
+

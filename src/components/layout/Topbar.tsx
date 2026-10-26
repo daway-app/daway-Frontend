@@ -7,7 +7,7 @@ import {
   usePharmacyKeys,
 } from '@/auth/authHooks';
 import { roleLabel } from '@/lib/i18n';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useApiQuery } from '@/api/useApiQuery';
 import { PRESET_STALE_TIMES } from '@/api/queryKeys';
 import type { ApiPharmacyProfile } from '@/api/pharmacyTypes';
@@ -121,3 +121,4 @@ export function Topbar() {
     </div>
   );
 }
+

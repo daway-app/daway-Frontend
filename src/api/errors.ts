@@ -24,6 +24,18 @@ export interface ApiErrorOptions {
   errors?: Record<string, string[]>;
   /** Machine-readable code the backend sometimes sends (e.g. `account_inactive`). */
   code?: string;
+  /**
+   * Typed portion of an error body the backend attaches by code.
+   * Currently only `amount_unmatched` (422) populates this with
+   * `{ deficit?, overage?, grand_total? }`. Callers must narrow by `code`
+   * before reading the numeric fields.
+   */
+  data?: {
+    code?: string;
+    deficit?: number | string;
+    overage?: number | string;
+    grand_total?: number | string;
+  };
   /** Seconds to wait, parsed from `Retry-After` on a 429/503. */
   retryAfterSeconds?: number;
 }
@@ -33,6 +45,12 @@ export class ApiError extends Error {
   readonly status: number | null;
   readonly errors?: Record<string, string[]>;
   readonly code?: string;
+  readonly data?: {
+    code?: string;
+    deficit?: number | string;
+    overage?: number | string;
+    grand_total?: number | string;
+  };
   readonly retryAfterSeconds?: number;
 
   constructor(options: ApiErrorOptions) {
@@ -42,6 +60,7 @@ export class ApiError extends Error {
     this.status = options.status;
     this.errors = options.errors;
     this.code = options.code;
+    this.data = options.data;
     this.retryAfterSeconds = options.retryAfterSeconds;
   }
 
@@ -109,6 +128,7 @@ export function apiErrorFromBody(
     message: body?.message,
     errors: body?.errors,
     code: body?.code,
+    data: body?.data,
     retryAfterSeconds,
   });
 }

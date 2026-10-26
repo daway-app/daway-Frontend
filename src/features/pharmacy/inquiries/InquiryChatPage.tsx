@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { AsyncBoundary, Notice } from '@/components/ui';
 import { usePharmacyApi, useAuth, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
@@ -406,3 +406,4 @@ export function InquiryChatPage() {
     </div>
   );
 }
+

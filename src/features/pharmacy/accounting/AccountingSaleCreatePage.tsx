@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { AsyncBoundary, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { BarcodeField } from '@/components/pharmacy/BarcodeField';
@@ -937,3 +937,4 @@ export function AccountingSaleCreatePage() {
     </div>
   );
 }
+

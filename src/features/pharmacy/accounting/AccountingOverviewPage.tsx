@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { labelOf } from '@/lib/i18n';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary } from '@/components/ui';
 import { useAuth, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
@@ -344,3 +344,4 @@ export function AccountingOverviewPage() {
     </div>
   );
 }
+

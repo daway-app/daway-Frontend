@@ -5,7 +5,7 @@ import { toast } from '@/lib/toast';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import type { AR } from '@/lib/i18n';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { num } from '../shared';
 import type { AdminSettingsResponse } from '@/api/adminTypes';
 
@@ -342,3 +342,4 @@ function SettingField({
     </label>
   );
 }
+

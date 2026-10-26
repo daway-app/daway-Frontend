@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { useLang } from '@/lib/lang/LanguageContext';
-import type { Strings } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
+import type { Strings } from '@/lib/lang/types';
 import { AsyncBoundary } from '@/components/ui';
 import { usePharmacyApi, useAuth, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
@@ -242,3 +242,4 @@ export function RatingsPage() {
     </div>
   );
 }
+

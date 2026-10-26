@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, DataTable } from '@/components/ui';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useApi, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation } from '@/api/useApiQuery';
 import { ROUTES } from '@/routes/paths';
@@ -1178,3 +1178,4 @@ export function InventoryImportPage() {
     </div>
   );
 }
+

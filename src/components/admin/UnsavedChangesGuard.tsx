@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useBlocker } from 'react-router-dom';
 import { Btn, Modal } from '@/components/ui';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 
 /**
  * Blocks in-app navigation — and warns on tab close / hard reload — while a
@@ -66,3 +66,4 @@ export function UnsavedChangesGuard({ when }: { when: boolean | (() => boolean) 
     </Modal>
   );
 }
+

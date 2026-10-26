@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AsyncBoundary } from '@/components/ui';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useAuth, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
@@ -748,3 +748,4 @@ export function ProfileCompletePage() {
     </div>
   );
 }
+

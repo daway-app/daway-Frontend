@@ -4,7 +4,7 @@ import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { useAdminAuth } from '@/auth/adminContext';
 import { ApiError } from '@/api/errors';
 import { Btn } from '@/components/ui';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { ROUTES } from '@/routes/paths';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import { preloadRoute } from '@/lib/routePreload';
@@ -492,3 +492,4 @@ export function LoginPage() {
     </div>
   );
 }
+

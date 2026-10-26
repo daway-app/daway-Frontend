@@ -13,7 +13,7 @@ import {
 import { toast } from '@/lib/toast';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useUrlState } from '@/lib/urlState';
 import { formatDate, num, pageInfo } from '../shared';
 import type { AdminMedicineRequestsResponse, AdminMedicineRequest } from '@/api/adminTypes';
@@ -450,3 +450,4 @@ export function AdminMedicineRequestsPage() {
     </>
   );
 }
+

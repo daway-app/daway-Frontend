@@ -9,7 +9,7 @@ import {
   IconCart,
   IconChat,
 } from '@/components/layout/icons';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import type {
   AppNotification,
   NotificationList,
@@ -300,3 +300,4 @@ export function NotificationBell({
     </div>
   );
 }
+

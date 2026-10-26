@@ -387,6 +387,16 @@ export interface AdminPaymentPatient {
   email: string | null;
 }
 
+/**
+ * Result of comparing the patient-declared transfer amount against the order's
+ * grand total, computed server-side at receipt-upload time (Phase 2 contract).
+ *
+ * `matches`         — declared amount equals grand_total
+ * `under`           — declared amount is LESS than grand_total (deficit = grand_total - amount)
+ * `over`            — declared amount is MORE than grand_total (overage = amount - grand_total)
+ */
+export type AmountStatus = 'matches' | 'under' | 'over';
+
 export interface AdminPaymentSubmission {
   id: number;
   order_id: number;
@@ -396,6 +406,23 @@ export interface AdminPaymentSubmission {
   account_number: string;
   iban: string | null;
   amount: number;
+  /**
+   * The order's `grand_total` at the moment the receipt was uploaded — a
+   * snapshot, NOT the live order total. `null` when unknown / not snapshotted.
+   * Used only to detect that the order total drifted since the receipt was
+   * uploaded; the live `grand_total` from the order summary is the reference
+   * shown for "amount due".
+   */
+  order_grand_total: number | null;
+  /**
+   * Reconciliation state of `amount` vs `order_grand_total` at receipt time.
+   */
+  amount_status: AmountStatus;
+  /**
+   * Surplus when `amount_status === 'over'` (amount - grand_total).
+   * `0` otherwise. The backend does NOT auto-refund this.
+   */
+  overage_amount: number;
   sender_name: string | null;
   transfer_reference: string | null;
   transferred_at: string | null;
@@ -466,6 +493,28 @@ export interface AdminPaymentsResponse {
   payments: AdminPaymentRow[];
   pagination: Pagination;
 }
+
+/**
+ * Payload the backend attaches to a `422 amount_unmatched` rejection from
+ * `POST /api/admin/payments/{id}/approve`.
+ *
+ * Returned when the latest receipt's declared `amount` does not equal the
+ * order's CURRENT `grand_total` (either it was under/over at submission, or the
+ * order total drifted since the receipt snapshot was taken). The backend does
+ * NOT mutate the order; approval must be retried with a matching receipt.
+ *
+ * Exactly one of `deficit` / `overage` is present; `grand_total` is the live
+ * amount-due the server compared against.
+ */
+export interface PaymentAmountUnmatched {
+  code: 'amount_unmatched';
+  deficit?: number;
+  overage?: number;
+  grand_total: number;
+}
+
+/** Typed view of a parsed `amount_unmatched` error body, or null. */
+export type AmountUnmatchedError = PaymentAmountUnmatched | null;
 
 export interface AdminPaymentProblemsResponse {
   problems: AdminPaymentProblem[];

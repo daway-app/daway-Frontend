@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useUrlState } from '@/lib/urlState';
 import { AsyncBoundary, Btn, EmptyState, Modal, Notice } from '@/components/ui';
 import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
@@ -439,3 +439,4 @@ export function AlternativesPage() {
     </div>
   );
 }
+

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { labelOf } from '@/lib/i18n';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useUrlState } from '@/lib/urlState';
 import { AsyncBoundary, Btn, EmptyState, Modal } from '@/components/ui';
 import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
@@ -580,3 +580,4 @@ export function AccountingCashPage() {
     </div>
   );
 }
+

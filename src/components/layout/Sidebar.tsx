@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { preloadRoute } from '@/lib/routePreload';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
 import { roleLabel } from '@/lib/i18n';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { useApiQuery } from '@/api/useApiQuery';
 import { pharmacyKeys, PRESET_STALE_TIMES } from '@/api/queryKeys';
 import type { ApiPharmacyProfile } from '@/api/pharmacyTypes';
@@ -267,3 +267,4 @@ const ACCOUNTING_NAV: { to: string; labelKey: string; icon: React.ReactNode }[] 
   { to: ROUTES.accountingRefunds, labelKey: 'refunds', icon: <IconRefund /> },
   { to: ROUTES.accountingCash, labelKey: 'cash_register', icon: <IconCash /> },
 ];
+

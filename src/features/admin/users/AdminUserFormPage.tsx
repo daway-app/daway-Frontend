@@ -4,7 +4,7 @@ import { Btn, FormField, LoadingState, Notice } from '@/components/ui';
 import { UnsavedChangesGuard } from '@/components/admin/UnsavedChangesGuard';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { toast } from '@/lib/toast';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import { thumbUrl } from '@/lib/format';
@@ -441,3 +441,4 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
     </div>
   );
 }
+

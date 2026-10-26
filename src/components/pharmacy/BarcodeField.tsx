@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLang } from '@/lib/lang/LanguageContext';
+import { useLang } from '@/lib/lang/useLang';
 import { Modal } from '@/components/ui';
 
 /**
@@ -207,3 +207,4 @@ export function BarcodeField({
     </>
   );
 }
+

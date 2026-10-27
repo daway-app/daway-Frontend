@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { QueryKey } from '@tanstack/react-query';
+import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import { ApiError } from '@/api/errors';
 import { PRESET_STALE_TIMES } from '@/api/queryClient';
 
@@ -188,6 +188,52 @@ function toMutationError(error: unknown): ApiError {
   });
 }
 
+/**
+ * Apply a mutation's `invalidates` option to the cache.
+ *
+ * 🔴 WHY THIS IS AN EXPORTED FUNCTION AND NOT AN INLINE CALLBACK
+ * `useApiMutation` cannot be rendered in this project's DOM-less test suite
+ * (no jsdom, and adding one is out of scope), so an inline invalidation rule
+ * would be permanently untestable. Extracting it keeps ONE implementation and
+ * lets it be verified against a REAL `QueryClient` — see
+ * `useApiQuery.test.ts`.
+ *
+ * 🔴 THE EMPTY-ARRAY TRAP THIS GUARDS AGAINST
+ * `invalidates` is typed `QueryKey | QueryKey[]`, and a `QueryKey` is ITSELF an
+ * array — so `[]` is genuinely ambiguous. The shape detection below reads
+ * `invalidates[0]`; for `[]` that is `undefined`, which is not an array, so
+ * `[]` was classified as ONE EMPTY KEY and handed to
+ * `invalidateQueries({ queryKey: [] })`. TanStack treats a key as a PREFIX
+ * filter and the empty prefix matches EVERY query — so an empty list silently
+ * invalidated the ENTIRE cache: every entry marked stale, and every active
+ * query refetched at once.
+ *
+ * An empty list now means "nothing to invalidate". No intentional
+ * global-invalidation mode exists in this codebase (`invalidateQueries()` with
+ * no filter is never called), so this is NOT turning a real feature into a
+ * no-op — it is refusing to interpret "no keys" as "all keys".
+ */
+export function applyInvalidation(
+  queryClient: QueryClient,
+  invalidates?: QueryKey | QueryKey[],
+): void {
+  // Omitted (or explicitly undefined) → the mutation declares no invalidation.
+  if (!invalidates) return;
+
+  // An empty LIST is not one empty KEY — see the doc comment above.
+  if (invalidates.length === 0) return;
+
+  // A QueryKey is an array, so "a list of keys" is detected by the first
+  // element being an array too (e.g. `[['pharmacy','sales'], ['dashboard']]`).
+  const keys: QueryKey[] = Array.isArray(invalidates[0])
+    ? (invalidates as QueryKey[])
+    : [invalidates as QueryKey];
+
+  for (const key of keys) {
+    queryClient.invalidateQueries({ queryKey: key });
+  }
+}
+
 export function useApiMutation<TArgs extends unknown[], TResult>(
   action: (...args: TArgs) => Promise<TResult>,
   options: UseApiMutationOptions = {},
@@ -198,16 +244,8 @@ export function useApiMutation<TArgs extends unknown[], TResult>(
   const mutation = useMutation<TResult, Error, unknown[]>({
     mutationFn: (args: unknown[]) => action(...(args as TArgs)),
     onSuccess: () => {
-      if (invalidates) {
-        // `invalidates` is QueryKey | QueryKey[]. A QueryKey is itself an array,
-        // so we distinguish by checking whether the FIRST element is an array
-        // (nested Key) vs a scalar Key — the [0] indexing is safe because every
-        // real key here is a tuple like ['pharmacy', id, ...].
-        const keys: QueryKey[] = Array.isArray(invalidates[0])
-          ? (invalidates as QueryKey[])
-          : [invalidates as QueryKey];
-        keys.forEach((key) => queryClient.invalidateQueries({ queryKey: key }));
-      }
+      // The rule lives in `applyInvalidation` so it stays testable without a DOM.
+      applyInvalidation(queryClient, invalidates);
     },
   });
 

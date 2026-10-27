@@ -57,4 +57,21 @@ export const config = {
    * frozen) and navigating away aborts the request.
    */
   apiTimeoutMs: positiveInt(env.VITE_API_TIMEOUT_MS, 60_000),
+
+  /**
+   * Timeout for BINARY downloads (xlsx templates / error reports / receipts).
+   *
+   * 🔴 DELIBERATELY SEPARATE from `apiTimeoutMs`. A JSON request returns a small
+   * payload; a download can be megabytes over a slow mobile link in Gaza. Two
+   * failure modes had to be avoided at once:
+   *
+   *  - reusing the 60 s JSON budget would abort a LEGITIMATE large workbook;
+   *  - having no budget at all (the previous behaviour) let a stalled socket
+   *    hang the caller's promise forever — no error, no timeout, no recovery,
+   *    and the spinner never stopped.
+   *
+   * 3 minutes covers a multi-megabyte file on a poor connection while still
+   * bounding the wait. Override with VITE_API_DOWNLOAD_TIMEOUT_MS.
+   */
+  apiDownloadTimeoutMs: positiveInt(env.VITE_API_DOWNLOAD_TIMEOUT_MS, 180_000),
 } as const;

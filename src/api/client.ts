@@ -49,6 +49,12 @@ export interface ApiClientDeps {
   fetchImpl?: typeof fetch;
   baseUrl?: string;
   timeoutMs?: number;
+  /**
+   * Budget for `download()` (binary responses). Defaults to
+   * `config.apiDownloadTimeoutMs` — a LONGER window than `timeoutMs`, because a
+   * file transfer is not a JSON round-trip.
+   */
+  downloadTimeoutMs?: number;
 }
 
 function buildUrl(
@@ -85,6 +91,7 @@ export function createApiClient(deps: ApiClientDeps) {
   const doFetch = deps.fetchImpl ?? fetch;
   const baseUrl = (deps.baseUrl ?? config.apiBaseUrl).replace(/\/+$/, '');
   const timeoutMs = deps.timeoutMs ?? config.apiTimeoutMs;
+  const downloadTimeoutMs = deps.downloadTimeoutMs ?? config.apiDownloadTimeoutMs;
 
   /**
    * Shared in-flight refresh. Every concurrent 401 awaits the same promise,
@@ -255,15 +262,63 @@ export function createApiClient(deps: ApiClientDeps) {
      * plain `<a href>` cannot be used — the browser would send no `Authorization`
      * header and the request would 401. This fetches with the token and returns
      * the body as a Blob for the caller to save.
+     *
+     * RELIABILITY (Phase 1B.2): this path used to call `fetch` bare — no
+     * timeout, no cancellation. A socket that stalled after the headers left the
+     * returned promise pending FOREVER: the caller's spinner never stopped, no
+     * error reached the UI, and navigating away could not release it.
+     *
+     * It now mirrors `request()`'s guarantees with two deliberate differences:
+     *  · the budget is `downloadTimeoutMs` (minutes, not the 60 s JSON budget)
+     *    so a legitimate large file is not cut off;
+     *  · the budget spans the WHOLE operation — headers AND body — because the
+     *    timer is only cleared in `finally`, after `blob()` settles.
+     *
+     * A caller may pass its own `signal` (e.g. an effect cleanup) to cancel.
+     * Both paths abort the same internal controller, and the timer + listener
+     * are always released, so neither leaks.
      */
-    async download(path: string): Promise<Blob> {
+    async download(
+      path: string,
+      options?: { signal?: AbortSignal },
+    ): Promise<Blob> {
       const headers: Record<string, string> = { Accept: '*/*' };
       const token = deps.getToken();
       if (token) headers.Authorization = `Bearer ${token}`;
 
-      const res = await doFetch(buildUrl(baseUrl, path), { headers });
-      if (!res.ok) throw await toApiError(res);
-      return res.blob();
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), downloadTimeoutMs);
+
+      // Honour the caller's signal as well as the timeout. An ALREADY-aborted
+      // signal must abort immediately — `addEventListener` alone would never
+      // fire for an abort that happened before this call.
+      const onAbort = () => controller.abort();
+      options?.signal?.addEventListener('abort', onAbort);
+      if (options?.signal?.aborted) controller.abort();
+
+      try {
+        const res = await doFetch(buildUrl(baseUrl, path), {
+          headers,
+          signal: controller.signal,
+        });
+        if (!res.ok) throw await toApiError(res);
+        return await res.blob();
+      } catch (error) {
+        // An ApiError already carries the HTTP semantics — pass it through.
+        if (error instanceof ApiError) throw error;
+        const aborted =
+          error instanceof DOMException && error.name === 'AbortError';
+        throw new ApiError({
+          // The error architecture has no `cancelled` kind (see errors.ts), so a
+          // caller abort is reported as `timeout` — the same convention
+          // `request()` already uses for an aborted caller signal.
+          kind: aborted ? 'timeout' : 'network',
+          status: null,
+        });
+      } finally {
+        clearTimeout(timer);
+        options?.signal?.removeEventListener('abort', onAbort);
+      }
     },
 
     request,

@@ -14,13 +14,14 @@ import type { ApiPharmacyProfile } from '@/api/pharmacyTypes';
 import { thumbUrl } from '@/lib/format';
 import { initTheme } from '@/lib/theme';
 import { topbarTitleFor } from './routeTitles';
+import { TopbarTitle } from './TopbarTitle';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 /**
  * Topbar — faithful port of components/topbar.blade.php.
  *
  * Markup/classes match Blade 1:1 so `topbar.css` applies unchanged:
- *   div.topbar > .topbar-title-group (h1 + p) + .topbar-actions
+ *   div.topbar > .topbar-title-group (title + p) + .topbar-actions
  *     a.icon-btn.lang-switch-btn > span.lang-label
  *     .notifications-wrapper > button.icon-btn#notificationBtn + .notifications-dropdown
  *     .user-profile-btn > .avatar + .user-details
@@ -67,10 +68,7 @@ export function Topbar() {
   const logoSrc = thumbUrl(profileQuery.data?.logo_url ?? null, 84, 84);
   return (
     <div className="topbar">
-      <div className="topbar-title-group">
-        <h1>{heading.title}</h1>
-        <p>{heading.subtitle}</p>
-      </div>
+      <TopbarTitle title={heading.title} subtitle={heading.subtitle} />
 
       <div className="topbar-actions">
         {/* Language switch — shows the OTHER locale (Blade parity):

@@ -21,6 +21,25 @@ import { ADMIN_ROUTES } from '@/routes/adminPaths';
 
 type Entry = { path: string; title: string };
 
+/**
+ * `/admin/users/<id>/edit` — the only admin route whose path cannot be written
+ * as a static string.
+ *
+ * WHY A REGEX AND NOT AN ENTRY
+ * ----------------------------
+ * `match()` is a longest-prefix table over literal strings, which works for
+ * every other route because they are constants. `ADMIN_ROUTES.userEdit` is a
+ * BUILDER FUNCTION (`(id) => `/admin/users/${id}/edit``), so there is no string
+ * to put in the table — and a bare `/admin/users` entry already matches every
+ * `/admin/users/...` path, so both form screens silently inherited the users
+ * LIST title ("المستخدمون" / "Users") while showing a completely different
+ * screen.
+ *
+ * Kept deliberately narrow (`[^/]+` for the id, anchored end) so it cannot
+ * swallow `/admin/users/create` or any future sub-route.
+ */
+const ADMIN_USER_EDIT_PATH = /^\/admin\/users\/[^/]+\/edit$/;
+
 export interface TopbarTitle {
   title: string;
   subtitle: string;
@@ -68,6 +87,35 @@ export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle
   if (pathname === ADMIN_ROUTES.login) {
     return { title: STR.admin.login.title, subtitle: STR.admin.login.subtitle };
   }
+
+  /**
+   * User CREATE / EDIT resolve BEFORE the prefix table.
+   *
+   * A form screen is not the list screen, but every `/admin/users/...` path
+   * matches the `/admin/users` entry below, so without these two checks both
+   * forms announced themselves as "Users". Checked first because they are more
+   * specific than any entry the table can express.
+   *
+   * The edit title uses `users.action_edit` ("تعديل المستخدم" / "Edit User")
+   * rather than `users.form.edit_title`, which is `"تعديل المستخدم: {name}"`:
+   * this function receives only a pathname, so it has no user record to fill
+   * `{name}` from, and emitting a literal `{name}` (or a bare `…`) into the
+   * topbar would be worse than the generic form. The page's own `<h1>` still
+   * carries the real name.
+   */
+  if (pathname === ADMIN_ROUTES.userCreate) {
+    return {
+      title: STR.admin.users.form.create_title,
+      subtitle: STR.admin.nav.panel_subtitle,
+    };
+  }
+  if (ADMIN_USER_EDIT_PATH.test(pathname)) {
+    return {
+      title: STR.admin.users.action_edit,
+      subtitle: STR.admin.nav.panel_subtitle,
+    };
+  }
+
   if (pathname.startsWith('/admin')) {
     return {
       title: match(ADMIN_ENTRIES, pathname) ?? STR.admin.nav.dashboard,

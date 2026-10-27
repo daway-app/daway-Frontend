@@ -687,7 +687,7 @@ body.dark-mode .confirm-modal-actions .modal-btn:hover { background: var(--teal-
         min-width: 0;
     }
 
-    .topbar-title-group h1 {
+    .topbar-title-group .topbar-title {
         
         white-space: nowrap;
         overflow: hidden;

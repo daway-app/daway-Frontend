@@ -6,6 +6,7 @@ import { roleLabel } from '@/lib/i18n';
 import { useLang } from '@/lib/lang/useLang';
 import { initTheme } from '@/lib/theme';
 import { topbarTitleFor } from '@/components/layout/routeTitles';
+import { TopbarTitle } from '@/components/layout/TopbarTitle';
 import { useAdminApi, useAdminAuth, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
@@ -79,10 +80,7 @@ export function AdminLayout() {
 
         <div className="main-wrapper">
           <div className="topbar">
-            <div className="topbar-title-group">
-              <h1>{heading.title}</h1>
-              <p>{heading.subtitle}</p>
-            </div>
+            <TopbarTitle title={heading.title} subtitle={heading.subtitle} />
             <div className="topbar-actions">
               <NotificationBell
                 api={api.notifications}

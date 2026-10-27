@@ -131,7 +131,11 @@ body.dark-mode .complete-card {
             justify-content: center;
             flex-shrink: 0;
         }
-        .complete-security-head h3 { margin: 0; font-size: var(--fs-lg); font-weight: 700; color: var(--pc-text); }
+        /* `:is(h2, h3)` — the section headings under the page `<h1>` are `<h2>`
+           (they were `<h3>` while the page title was an `<h2>`; promoting the
+           title left h1 → h3, which skipped a level). Matching both keeps the
+           identical declarations applying if either level is used again. */
+        .complete-security-head :is(h2, h3) { margin: 0; font-size: var(--fs-lg); font-weight: 700; color: var(--pc-text); }
         /* see above — tokenised */
         .complete-security-head p { margin: 2px 0 0; font-size: var(--fs-xs); color: var(--pc-text-soft); }
         body.dark-mode .complete-security-head p { color: var(--ink-soft); }
@@ -151,7 +155,8 @@ body.dark-mode .complete-card {
             border-bottom: 1px solid var(--pc-line);
         }
         body.dark-mode .complete-card-head { border-color: var(--line); }
-        .complete-card-head h3 { margin: 0; font-size: var(--fs-md); font-weight: 700; color: var(--pc-text); }
+        /* Same reason as `.complete-security-head` above. */
+        .complete-card-head :is(h2, h3) { margin: 0; font-size: var(--fs-md); font-weight: 700; color: var(--pc-text); }
         /* see above — tokenised */
         .complete-card-ic {
             width: 32px;

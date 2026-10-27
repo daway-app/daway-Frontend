@@ -42,7 +42,14 @@
     justify-content: space-between;
 }
 
-.header-title-area h2 {
+/* `:is(h1, h2)` — NOT a bare `h1`.
+   The two screens that use `.header-title-area` (AdminUserFormPage and
+   ProfileCompletePage) promote their title to `<h1>` so the page owns the
+   document's only heading. Matching BOTH levels keeps the exact same
+   declarations applying if either screen ever needs to fall back to `<h2>`,
+   and costs nothing today. Verified: `.header-title-area` has no other
+   consumer in the tree, so this selector cannot leak onto another screen. */
+.header-title-area :is(h1, h2) {
     font-size: var(--fs-xl);
     font-weight: 700;
     margin: 0 0 5px 0;

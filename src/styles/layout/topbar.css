@@ -61,7 +61,11 @@ body.dark-mode .topbar {
     border-bottom: 1px solid var(--line);
 }
 
-.topbar-title-group h1 {
+/* `.topbar-title`, NOT `h1`: the topbar title stopped being a heading so the
+   page can own the document's only <h1> (see components/layout/TopbarTitle.tsx).
+   Every declaration below is unchanged — only the selector moved, so the title
+   renders pixel-identically. */
+.topbar-title-group .topbar-title {
     font-size: 18px;
     font-weight: 800;
     color: var(--text-primary);

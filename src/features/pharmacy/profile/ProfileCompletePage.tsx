@@ -205,7 +205,12 @@ export function ProfileCompletePage() {
       <div className="main-card">
         <div className="card-header-modern">
           <div className="header-title-area">
-            <h2>{C.heading}</h2>
+            {/* Primary heading — `<h2>` until the topbar stopped being the
+                document `<h1>`. Reuses `STR.pharmacy.profile.complete.heading`.
+                The three section headings below are `<h2>` for the same reason:
+                promoting the title to `<h1>` would otherwise leave h1 → h3 and
+                skip a level. */}
+            <h1>{C.heading}</h1>
             <p>{C.subtitle.replace(':pharmacy', form.pharmacy_name || user?.name || '')}</p>
           </div>
           <div className="header-icon">
@@ -467,7 +472,7 @@ export function ProfileCompletePage() {
                   </svg>
                 </div>
                 <div>
-                  <h3>{C.password_section}</h3>
+                  <h2>{C.password_section}</h2>
                   <p>{C.password_optional_hint}</p>
                 </div>
               </div>
@@ -593,7 +598,7 @@ export function ProfileCompletePage() {
                     <circle cx="12" cy="10" r="3" />
                   </svg>
                 </span>
-                <h3>{P.location_title}</h3>
+                <h2>{P.location_title}</h2>
               </div>
               <div className="complete-card-body">
                 <div
@@ -639,9 +644,9 @@ export function ProfileCompletePage() {
                     <polyline points="12 6 12 12 16 14" />
                   </svg>
                 </span>
-                <h3>
+                <h2>
                   {P.hours_title} <span style={{ color: '#ef4444' }}>*</span>
-                </h3>
+                </h2>
               </div>
               <div className="complete-card-body">
                 <div className="complete-hours-quickbar">

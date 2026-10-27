@@ -244,7 +244,12 @@ export function AdminUserFormPage({ mode }: { mode: 'create' | 'edit' }) {
         <div className="main-card">
           <div className="card-header-modern">
             <div className="header-title-area">
-              <h2>{isEdit ? F.edit_title.replace('{name}', currentName || '…') : F.create_title}</h2>
+              {/* The page's PRIMARY heading. Was an `<h2>` when the topbar
+                  carried the document `<h1>`; now that the topbar is a plain
+                  location label, this screen must supply the one `<h1>`. The
+                  create/edit variants stay mutually exclusive and keep their
+                  existing translations (`form.create_title` / `form.edit_title`). */}
+              <h1>{isEdit ? F.edit_title.replace('{name}', currentName || '…') : F.create_title}</h1>
               <p>{STR.admin.users.main_description}</p>
             </div>
             {/* On edit the header carries the account's own avatar, matching

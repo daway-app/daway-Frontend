@@ -3,6 +3,7 @@ import { AppLayout, AuthLayout } from '@/layouts/AppLayout';
 import { RequireAuth, RequireGuest } from './guards';
 import { ROUTES } from './paths';
 import { lazyPage } from './lazyPage';
+import { RouteErrorBoundary } from './RouteErrorBoundary';
 import { SessionExpiryWatcher } from '@/auth/SessionExpiryWatcher';
 import { ADMIN_ROUTES } from './adminPaths';
 import { RequireAdmin, RedirectAdminLoginToUnified } from './adminGuards';
@@ -90,7 +91,13 @@ export const router = createBrowserRouter([
   {
     // Root layout: hosts cross-cutting, router-aware behaviour. It must sit
     // inside the router tree, since it uses `useNavigate()`.
+    //
+    // `errorElement` here is the LAST line of defence: without it a throw from
+    // this element, from a guard, or from a top-level loader produced a blank
+    // page with no message at all. Nested branches below declare their own so a
+    // page crash keeps the surrounding shell mounted.
     element: <SessionExpiryWatcher />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       // ──────────────────────────────────────────────────────────────────────
       // ADMIN TREE — declared FIRST, deliberately.
@@ -119,9 +126,13 @@ export const router = createBrowserRouter([
       },
       {
         element: <RequireAdmin />,
+        // Keeps the crash INSIDE the admin shell instead of replacing the whole
+        // document — the admin keeps their sidebar and can navigate away.
+        errorElement: <RouteErrorBoundary />,
         children: [
           {
             element: <AdminLayout />,
+            errorElement: <RouteErrorBoundary />,
             children: [
               { path: ADMIN_ROUTES.dashboard, element: <AdminDashboardPage /> },
               { path: ADMIN_ROUTES.pharmacies, element: <AdminPharmaciesPage /> },
@@ -172,9 +183,11 @@ export const router = createBrowserRouter([
 
       {
         element: <RequireGuest />,
+        errorElement: <RouteErrorBoundary />,
         children: [
           {
             element: <AuthLayout />,
+            errorElement: <RouteErrorBoundary />,
             children: [
               { path: ROUTES.login, element: <LoginPage /> },
               // Public registration. `RequireGuest` (not `RequireAuth`) on
@@ -193,18 +206,22 @@ export const router = createBrowserRouter([
         // child of `layouts/app.blade.php`. It therefore sits OUTSIDE AppLayout.
         // It is still an authenticated screen, so RequireAuth — not RequireGuest.
         element: <RequireAuth />,
+        errorElement: <RouteErrorBoundary />,
         children: [
           {
             element: <AuthLayout />,
+            errorElement: <RouteErrorBoundary />,
             children: [{ path: ROUTES.password, element: <PasswordChangePage /> }],
           },
         ],
       },
       {
         element: <RequireAuth />,
+        errorElement: <RouteErrorBoundary />,
         children: [
           {
             element: <AppLayout />,
+            errorElement: <RouteErrorBoundary />,
             children: [
               {
                 index: true,

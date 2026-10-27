@@ -1,5 +1,4 @@
 import type { Pagination } from '@/api/adminTypes';
-import { AR } from '@/lib/i18n';
 import type { Strings } from '@/lib/lang/types';
 
 /**
@@ -87,8 +86,16 @@ export function tpl(template: string, values: Record<string, string | number>): 
  *
  * Returns `null` for `from`/`to` when the page is empty, so the caller can show
  * "0 results" rather than a nonsensical "showing 51–50 of 50".
+ *
+ * 🔴 `STR` IS REQUIRED, DELIBERATELY.
+ * It used to default to `AR`. That default is invisible at the call site: a
+ * screen that forgot to pass the dictionary still compiled, still rendered, and
+ * silently showed Arabic pagination labels under an English UI. Seven of the
+ * nine admin screens had exactly that bug. Making the parameter required turns
+ * the next occurrence into a compile error instead of a translation regression
+ * nobody notices.
  */
-export function pageInfo(pagination: Pagination, STR: Strings = AR): {
+export function pageInfo(pagination: Pagination, STR: Strings): {
   from: number;
   to: number;
   total: number;

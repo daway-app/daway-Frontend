@@ -5,6 +5,7 @@ import { ApiProvider, AuthProvider } from '@/auth/AuthContext';
 import { AdminApiProvider, AdminAuthProvider } from '@/auth/adminAuth';
 import { LanguageProvider } from '@/lib/lang/LanguageContext';
 import { router } from '@/routes/router';
+import { ErrorBoundary } from '@/routes/RouteErrorBoundary';
 
 /**
  * Application root.
@@ -36,20 +37,35 @@ import { router } from '@/routes/router';
  */
 export function App() {
   return (
-    // QueryClientProvider sits ABOVE ApiProvider/AuthProvider so the query
-    // cache outlives auth churn but can still be cleared at logout/login.
-    <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <ApiProvider>
-          <AuthProvider>
-            <AdminApiProvider>
-              <AdminAuthProvider>
-                <RouterProvider router={router} />
-              </AdminAuthProvider>
-            </AdminApiProvider>
-          </AuthProvider>
-        </ApiProvider>
-      </LanguageProvider>
-    </QueryClientProvider>
+    /**
+     * OUTERMOST boundary.
+     *
+     * `errorElement` in the router only catches throws INSIDE the route tree.
+     * A throw during the initial mount of these providers — a bad token in
+     * localStorage, a `?lang=` value the store rejects, any hook bug in auth
+     * setup — happens BEFORE the router exists, so it had no boundary at all
+     * and blanked the document. This wrapper is the floor under everything.
+     *
+     * It renders the crash screen WITHOUT a language provider above it, which
+     * is why `CrashScreen` reads `LangContext` defensively and falls back to
+     * Arabic instead of calling `useLang()`.
+     */
+    <ErrorBoundary>
+      {/* QueryClientProvider sits ABOVE ApiProvider/AuthProvider so the query
+          cache outlives auth churn but can still be cleared at logout/login. */}
+      <QueryClientProvider client={queryClient}>
+        <LanguageProvider>
+          <ApiProvider>
+            <AuthProvider>
+              <AdminApiProvider>
+                <AdminAuthProvider>
+                  <RouterProvider router={router} />
+                </AdminAuthProvider>
+              </AdminApiProvider>
+            </AuthProvider>
+          </ApiProvider>
+        </LanguageProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }

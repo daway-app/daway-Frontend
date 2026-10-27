@@ -141,7 +141,7 @@ export function AdminCategoriesPage() {
   const rows = useMemo(() => query.data?.categories ?? [], [query.data]);
   const pagination = query.data?.pagination;
   const stats = query.data?.stats;
-  const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
+  const info = useMemo(() => (pagination ? pageInfo(pagination, STR) : null), [pagination, STR]);
 
   /** The recovery action only appears when a filter is actually responsible for
    *  the empty list. */
@@ -508,7 +508,7 @@ function CategoryLinksModalInner({
 
   const links = useMemo(() => query.data?.links ?? [], [query.data]);
   const pagination = query.data?.pagination;
-  const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
+  const info = useMemo(() => (pagination ? pageInfo(pagination, STR) : null), [pagination, STR]);
 
   const approveMutation = useApiMutation(async (linkId: number) =>
     api.admin.approveCategoryLink(category.id, linkId),

@@ -2259,10 +2259,60 @@ export const AR = {
       unsaved_leave: 'المغادرة بدون حفظ',
     },
   },
+
+  /**
+   * Route-level crash screen (`RouteErrorBoundary`).
+   *
+   * ADDED — not in the Laravel lang files: the Blade app has no SPA router, so
+   * a render crash there is a server-rendered error page. These strings cover
+   * the client-side equivalent. Copy is written to be actionable and to avoid
+   * blaming the user ("حدث خطأ غير متوقع", not "لقد ارتكبت خطأ").
+   *
+   * TOP-LEVEL on purpose: this screen may render OUTSIDE every layout (see
+   * RouteErrorBoundary's root position), so it must not sit under `admin` or
+   * `pharmacy` — a crashed pharmacy route has no business reading admin copy.
+   */
+  crash: {
+    title: 'حدث خطأ غير متوقع',
+    body: 'تعذّر عرض هذه الصفحة. يمكنك المحاولة مرة أخرى، وإذا تكرّر الخطأ فأعد تحميل التطبيق.',
+    chunk_title: 'تعذّر تحميل الصفحة',
+    chunk_body:
+      'يبدو أن نسخة جديدة من التطبيق نُشرت أثناء استخدامك للنسخة الحالية. أعد التحميل للحصول على أحدث نسخة.',
+    retry: 'إعادة المحاولة',
+    reload: 'إعادة تحميل التطبيق',
+    home: 'العودة إلى لوحة التحكم',
+    details: 'تفاصيل الخطأ',
+  },
 } as const;
 
-/** Map a backend role key to its Arabic label (`users.role_*`). */
-export function roleLabel(role: string, STR: typeof AR = AR): string {
+/**
+ * Widen every string leaf to `string`.
+ *
+ * ⚠️ DUPLICATED from `lib/lang/types.ts`, deliberately.
+ *
+ * `types.ts` derives `Strings` from `AR`, so it must import this file. If this
+ * file imported `Strings` back from `types.ts`, the two modules would form an
+ * import cycle — and at module-init time `AR` would still be `undefined` when
+ * `DeepWiden<typeof AR>` is evaluated, collapsing the contract to `any` and
+ * silently disabling every key check the type exists to provide.
+ *
+ * A local copy is the cheaper cost: three lines, no runtime, and the two
+ * definitions are pinned together by the assignments in `types.ts`, which fail
+ * to compile the moment they disagree.
+ */
+type Widen<T> = T extends string ? string : { readonly [K in keyof T]: Widen<T[K]> };
+
+/** The dictionary contract — same keys as `AR`, any string values. */
+export type Strings = Widen<typeof AR>;
+
+/**
+ * Map a backend role key to its label (`users.role_*`).
+ *
+ * `STR` is typed `Strings`, not `typeof AR`: pinning it to `typeof AR` made the
+ * parameter accept ONLY the Arabic string literals, so a caller holding the
+ * language-agnostic dictionary could not pass it at all.
+ */
+export function roleLabel(role: string, STR: Strings = AR): string {
   const map: Record<string, string> = {
     admin: STR.users.role_admin,
     pharmacy: STR.users.role_pharmacy,

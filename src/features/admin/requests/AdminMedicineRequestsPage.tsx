@@ -88,7 +88,7 @@ export function AdminMedicineRequestsPage() {
   const rows = useMemo(() => query.data?.requests ?? [], [query.data]);
   const pagination = query.data?.pagination;
   const stats = query.data?.stats;
-  const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
+  const info = useMemo(() => (pagination ? pageInfo(pagination, STR) : null), [pagination, STR]);
 
   /**
    * An empty list has a different fix depending on what emptied it. The search

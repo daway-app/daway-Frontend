@@ -307,6 +307,13 @@ export const EN = {
         manufacturer: 'Manufacturer (optional)',
         active_ingredient: 'Active ingredient (optional)',
         dosage_form: 'Dosage form (optional)',
+        barcode: 'Barcode (optional)',
+        barcode_filled: 'Barcode filled from scan — review it before submitting.',
+        official_price: 'Official price (optional)',
+        category: 'Category',
+        subcategory: 'Subcategory',
+        submit: 'Submit request for review',
+        cancel: 'Cancel',
       },
     },
     inquiries: {
@@ -1975,6 +1982,17 @@ export const EN = {
       unsaved_stay: 'Stay on this page',
       unsaved_leave: 'Leave without saving',
     },
+  },
+  crash: {
+    title: 'Something went wrong',
+    body: 'This page could not be displayed. Try again, and if it keeps happening reload the app.',
+    chunk_title: 'Could not load this page',
+    chunk_body:
+      'A new version of the app appears to have been deployed while you were using the current one. Reload to get the latest version.',
+    retry: 'Try again',
+    reload: 'Reload the app',
+    home: 'Back to the dashboard',
+    details: 'Error details',
   },
 } as const;
 

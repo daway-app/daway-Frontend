@@ -121,7 +121,7 @@ export function AdminUsersPage() {
   const rows = useMemo(() => query.data?.users ?? [], [query.data]);
   const pagination = query.data?.pagination;
   const counts = query.data?.role_counts;
-  const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
+  const info = useMemo(() => (pagination ? pageInfo(pagination, STR) : null), [pagination, STR]);
 
   /** See AdminMedicineRequestsPage — the recovery action only appears when a
    *  filter is actually responsible for the empty list. */

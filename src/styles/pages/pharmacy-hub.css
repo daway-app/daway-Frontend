@@ -723,6 +723,151 @@ body.dark-mode .ph-modal { border: 1px solid var(--line); }
 .ph-error p { margin: 0 0 16px; font-size: var(--fs-md); color: var(--ph-ink-faint); line-height: 1.6; }
 
 /* ==================================================================
+   ROUTE CRASH SCREEN (`RouteErrorBoundary`)
+   ==================================================================
+   Rendered by React Router's `errorElement`, so it can appear OUTSIDE both
+   layouts — there is no `.admin-page` / `.ph-page` ancestor to scope to, and
+   no guarantee the sidebar's CSS variables are in play. Everything here is
+   therefore self-contained and built only on the shared tokens.
+
+   It reuses `.ph-error` for the frame (same dashed card the data-fetch
+   failures use) and adds only what a full-page crash needs: centring in the
+   viewport, a heading that is an `<h1>` rather than `<h3>` (this IS the page
+   heading when the page has crashed), and an action row.
+
+   `.route-crash` also carries `.ph-error`, so `--ph-*` tokens are already
+   inherited; the fallbacks below only matter if `.ph-error` itself changes. */
+.route-crash {
+    /* Fill so the card is centred rather than pinned to the top of a short
+       page. `dvh` keeps mobile browser chrome out of the calculation. */
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin: 0;
+    padding: 48px 24px;
+    /* A crash inside AppLayout/AdminLayout renders into `main.main-content`,
+       which is already offset — `min-height: auto` avoids a double scrollbar. */
+    box-sizing: border-box;
+    background: var(--ph-paper, #fff);
+    border-radius: 0;
+    border: 0;
+}
+
+/* When nested inside a layout (main.main-content), don't claim the viewport.
+   `min()` caps the height so the screen still reads as a page-level failure on
+   a tall monitor without pushing 60% of empty space onto every smaller one —
+   60dvh alone was measured at ~1000px on a 1700px viewport, which looked like a
+   layout bug rather than an error state. */
+.main-content > .route-crash {
+    min-height: min(60vh, 460px);
+    border: 1px dashed var(--ph-line, #d8dee6);
+    border-radius: var(--ph-r-lg, 14px);
+    margin: 24px 0;
+}
+
+.route-crash > i {
+    font-size: 2.5rem;
+    color: var(--ac-red-text, var(--ph-red, #c0392b));
+    margin-block-end: 12px;
+}
+
+.route-crash h1 {
+    margin: 0 0 10px;
+    color: var(--ph-ink, #12233a);
+    font-size: clamp(1.15rem, 1rem + 0.8vw, 1.45rem);
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.route-crash > p {
+    margin: 0 auto 18px;
+    max-width: 46ch;
+    color: var(--ph-ink-faint, #5b6b7d);
+    font-size: var(--fs-md, 0.95rem);
+    line-height: 1.7;
+}
+
+.route-crash-hint {
+    font-size: var(--fs-sm, 0.85rem);
+    color: var(--ac-red-text, var(--ph-red, #c0392b));
+}
+
+/* Collapsed by default: a raw stack/message means nothing to a pharmacist and
+   everything to whoever is debugging. `<details>` gives both without JS. */
+.route-crash-details {
+    margin: 0 0 18px;
+    max-width: min(680px, 100%);
+    text-align: start;
+    font-size: var(--fs-sm, 0.85rem);
+    color: var(--ph-ink-faint, #5b6b7d);
+}
+
+.route-crash-details summary {
+    cursor: pointer;
+    padding: 6px 2px;
+    /* `list-style` is reset in base.css for some lists; be explicit. */
+    list-style: revert;
+}
+
+.route-crash-details summary:focus-visible {
+    outline: 2px solid var(--teal-primary, #1c72a6);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.route-crash-details pre {
+    margin: 8px 0 0;
+    padding: 12px 14px;
+    max-height: 180px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    /* `dir` is inherited from the wrapper, but error text is LTR in practice
+       (identifiers, URLs, stack frames) — force it so paths don't fragment. */
+    direction: ltr;
+    text-align: start;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--ph-ink, #12233a);
+    background: var(--ph-canvas, #f6f8fa);
+    border: 1px solid var(--ph-line-soft, #e6ebf1);
+    border-radius: var(--ph-r-md, 10px);
+}
+
+.route-crash-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* The "back to dashboard" action is an <a>, not a <button> — it may render
+   above the router, so it cannot be a <Link>. Style it to match, and keep the
+   underline off (buttons don't have one). */
+.route-crash-actions a.ph-btn {
+    text-decoration: none;
+}
+
+@media (max-width: 480px) {
+    .route-crash {
+        padding: 32px 16px;
+    }
+    .route-crash-actions {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        max-width: 320px;
+    }
+    .route-crash-actions > * {
+        justify-content: center;
+    }
+}
+
+/* ==================================================================
    ADMIN PANEL (React SPA, /admin/*)
    ==================================================================
    The admin screens reuse the pharmacy primitives (`ph-stat`, `ph-card`,

@@ -83,7 +83,7 @@ export function AdminMedicinesPage() {
   const rows = useMemo(() => query.data?.medicines ?? [], [query.data]);
   const pagination = query.data?.pagination;
   const stats = query.data?.stats;
-  const info = useMemo(() => (pagination ? pageInfo(pagination) : null), [pagination]);
+  const info = useMemo(() => (pagination ? pageInfo(pagination, STR) : null), [pagination, STR]);
 
   /** See AdminMedicineRequestsPage — the recovery action only appears when a
    *  filter is actually responsible for the empty list. */

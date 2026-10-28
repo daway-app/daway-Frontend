@@ -466,7 +466,7 @@ export function LoginPage() {
               height={92}
               fetchPriority="high"
               decoding="async"
-              alt="شعار دواك"
+              alt={STR.layout.app_title}
               className="brand-logo-img"
             />
           </div>

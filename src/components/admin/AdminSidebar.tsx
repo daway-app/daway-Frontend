@@ -9,6 +9,7 @@ import { PRESET_STALE_TIMES } from '@/api/queryClient';
 import type { AdminProfile } from '@/api/adminTypes';
 import { useLang } from '@/lib/lang/useLang';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
+import { sidebarLinkAccessibleName } from '@/components/layout/sidebarAccessibility';
 import {
   IconBox,
   IconCapsule,
@@ -110,7 +111,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
             <div className="logo-icon-box">
               <img
                 src="/images/dawak-logo-256.jpg"
-                alt="شعار دواك"
+                alt={STR.layout.app_title}
                 className="sidebar-logo-img"
                 width={64}
                 height={64}
@@ -152,6 +153,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
             <div className="section-label">{A.main_section}</div>
             <NavLink
               to={ADMIN_ROUTES.dashboard}
+              aria-label={sidebarLinkAccessibleName(A.dashboard)}
               end
               className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
               onClick={onNavigate}
@@ -233,6 +235,7 @@ function NavItemLink({ item, nav, onNavigate }: { item: NavItem; nav: Record<str
   return (
     <NavLink
       to={item.to}
+      aria-label={sidebarLinkAccessibleName(nav[item.labelKey] ?? item.labelKey)}
       end={!item.activePrefix}
       className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
       onClick={onNavigate}

@@ -1017,7 +1017,7 @@ export const EN = {
       button: 'Scan with phone',
       modal_title: 'Connect your phone',
       modal_sub: 'Use your phone camera to scan barcodes; results land here instantly.',
-      step_1: 'Open Daway on your phone.',
+      step_1: 'Open DAWAK on your phone.',
       step_2: 'Scan the QR code or enter the pairing code.',
       step_3: 'Keep this window open while scanning.',
       state_idle: 'No scan session yet',
@@ -1232,7 +1232,7 @@ export const EN = {
     success_body: 'Your registration request was received and is under review. We will contact you when it is approved.',
     success_note: 'You cannot log in yet: login credentials (Pharmacy ID and password) are created after admin approval and sent to the phone number you entered.',
     success_go_login: 'Back to login',
-    hero_title: 'Join Daway',
+    hero_title: 'Join DAWAK',
     hero_desc: 'Show your medicines and stock to patients searching for a nearby medicine — before they move.',
   },
   forgot_password: {
@@ -1288,7 +1288,7 @@ export const EN = {
       activity_log: 'Activity log',
       profile: 'My profile',
       logout: 'Logout',
-      panel_title: 'Daway admin panel',
+      panel_title: 'DAWAK Admin Panel',
       panel_subtitle: 'System management',
     },
     login: {
@@ -1307,7 +1307,7 @@ export const EN = {
       back_to_pharmacy: 'Log in as pharmacy',
     },
     unified: {
-      brand_tag: 'Dawak',
+      brand_tag: 'DAWAK',
       hero_title: 'Welcome back',
       hero_pharmacy: 'Manage your pharmacy, medicines, and orders and track every operation from one place.',
       hero_admin: 'Manage pharmacies, medicines, categories, requests and users from one place.',

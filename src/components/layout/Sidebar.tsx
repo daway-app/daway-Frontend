@@ -10,6 +10,7 @@ import type { ApiPharmacyProfile } from '@/api/pharmacyTypes';
 import { thumbUrl } from '@/lib/format';
 import { ROUTES } from '@/routes/paths';
 import { useSidebarCounts } from './useSidebarCounts';
+import { sidebarLinkAccessibleName } from './sidebarAccessibility';
 import {
   IconAlertTriangle,
   IconCapsule,
@@ -75,22 +76,19 @@ const PHARMACY_NAV: NavItem[] = [
 /**
  * A count pill for a nav item.
  *
- * Rendered as a `<span>` with `aria-hidden` PLUS visually-hidden text, rather
- * than a bare number: a screen reader announcing "الاستفسارات 3" reads the 3 as
- * part of the link name, which is close to useless ("الاستفسارات ثلاثة" tells
- * the user nothing without a noun). The hidden text supplies the noun.
+ * The visual count is hidden from assistive technology because the containing
+ * link's accessible name includes the count alongside its translated label.
  *
  * Caps at `99+` so a large number cannot stretch the sidebar and break the
  * layout — the exact value stops mattering at that point.
  */
-function NavBadge({ count, label }: { count: number; label: string }) {
+function NavBadge({ count }: { count: number }) {
   if (!count || count <= 0) return null;
   return (
     <>
       <span className="nav-badge" aria-hidden="true">
         {count > 99 ? '99+' : count}
       </span>
-      <span className="sr-only">{`${label}: ${count}`}</span>
     </>
   );
 }
@@ -130,7 +128,7 @@ export function Sidebar() {
             <div className="logo-icon-box">
               <img
                 src="/images/dawak-logo-256.jpg"
-                alt="شعار دواك"
+                alt={STR.layout.app_title}
                 className="sidebar-logo-img"
                 width={64}
                 height={64}
@@ -151,6 +149,10 @@ export function Sidebar() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                aria-label={sidebarLinkAccessibleName(
+                  navLabel(item.labelKey),
+                  item.badge ? counts[item.badge] : undefined,
+                )}
                 end={!item.activePrefix}
                 className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
                 onMouseEnter={() => preloadRoute(item.to)}
@@ -158,9 +160,7 @@ export function Sidebar() {
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-text">{navLabel(item.labelKey)}</span>
-                {item.badge && (
-                  <NavBadge count={counts[item.badge]} label={navLabel(item.labelKey)} />
-                )}
+                {item.badge && <NavBadge count={counts[item.badge]} />}
               </NavLink>
             ))}
           </div>
@@ -173,6 +173,7 @@ export function Sidebar() {
               <NavLink
                 key={item.to}
                 to={item.to}
+                aria-label={sidebarLinkAccessibleName((STR.accounting.sidebar as Record<string, string>)[item.labelKey] ?? item.labelKey)}
                 end={item.to === ROUTES.accounting}
                 className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
                 onMouseEnter={() => preloadRoute(item.to)}

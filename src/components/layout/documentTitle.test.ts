@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { AR } from '@/lib/i18n';
 import { EN } from '@/lib/lang/en';
@@ -35,7 +36,7 @@ function expectFormat(title: string, page: string, brand: string): void {
 }
 
 describe('documentTitleFor — formatting', () => {
-  it('formats Arabic as "page | منصة دواك"', () => {
+  it('formats Arabic as "page | دواك"', () => {
     expectFormat(documentTitleFor(ROUTES.login, AR_STR), AR.admin.unified.title, BRAND_AR);
   });
 
@@ -51,6 +52,31 @@ describe('documentTitleFor — formatting', () => {
     const page = pageTitleFor(ROUTES.login, AR_STR);
     expect(page).not.toContain(' | ');
     expect(page).toBe(AR.admin.unified.title);
+  });
+});
+
+describe('DAWAK brand naming', () => {
+  it('uses the approved name in Arabic and English brand surfaces', () => {
+    expect(BRAND_AR).toBe('دواك');
+    expect(BRAND_EN).toBe('DAWAK');
+    expect(AR.layout.app_title).toBe('دواك');
+    expect(EN.layout.app_title).toBe('DAWAK');
+    expect(AR.admin.nav.panel_title).toContain('دواك');
+    expect(EN.admin.nav.panel_title).toContain('DAWAK');
+    expect(AR.admin.unified.brand_tag).toBe('دواك');
+    expect(EN.admin.unified.brand_tag).toBe('DAWAK');
+    expect(AR.accounting.scanner.step_1).toContain('دواك');
+    expect(EN.accounting.scanner.step_1).toContain('DAWAK');
+  });
+
+  it('keeps one HTML title element and leaves route-aware title updates to React', () => {
+    const html = readFileSync(new URL('../../../index.html', import.meta.url), 'utf8');
+    const documentTitle = readFileSync(new URL('./DocumentTitle.tsx', import.meta.url), 'utf8');
+
+    expect(html.match(/<title\b/gi)).toHaveLength(1);
+    expect(html).toContain('<title>دواك — الصيدلية</title>');
+    expect(html).not.toMatch(/document\.title\s*=/);
+    expect(documentTitle).toContain('document.title = documentTitleFor(pathname, STR)');
   });
 });
 

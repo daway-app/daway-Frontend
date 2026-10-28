@@ -10,7 +10,7 @@ import { routeTitleFor } from './routeTitles';
  * ---------------
  * `document.title` used to be written ONCE, by `lib/lang/store.ts`, whenever the
  * language was applied — so every screen in the app shared a single tab title
- * ("دواك — الصيدلية" / "Daway — Pharmacy"). The tab, the window title, the
+ * ("دواك — الصيدلية" / "DAWAK — Pharmacy"). The tab, the window title, the
  * history entry and every bookmark were therefore indistinguishable, and a
  * screen-reader user switching tabs had no way to tell which page they were on.
  *
@@ -23,8 +23,8 @@ import { routeTitleFor } from './routeTitles';
  * No new copy is introduced apart from the 404 label, which had no key at all.
  *
  * WHY THE BRAND SUFFIX IS `admin.unified.brand_tag`
- * That key already holds the product name in both dictionaries ("منصة دواك" /
- * "Dawak") and is already rendered on the login screen — reusing it keeps ONE
+ * That key already holds the product name in both dictionaries ("دواك" /
+ * "DAWAK") and is already rendered on the login screen — reusing it keeps ONE
  * source of truth instead of adding a second, drifting brand string.
  */
 

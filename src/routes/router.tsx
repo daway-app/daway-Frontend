@@ -5,6 +5,7 @@ import { ROUTES } from './paths';
 import { lazyPage } from './lazyPage';
 import { RouteErrorBoundary } from './RouteErrorBoundary';
 import { SessionExpiryWatcher } from '@/auth/SessionExpiryWatcher';
+import { DocumentTitle } from '@/components/layout/DocumentTitle';
 import { ADMIN_ROUTES } from './adminPaths';
 import { RequireAdmin, RedirectAdminLoginToUnified } from './adminGuards';
 import { AdminLayout } from '@/layouts/AdminLayout';
@@ -92,11 +93,20 @@ export const router = createBrowserRouter([
     // Root layout: hosts cross-cutting, router-aware behaviour. It must sit
     // inside the router tree, since it uses `useNavigate()`.
     //
+    // `DocumentTitle` is a SIBLING here (not a wrapper): it needs `useLocation`
+    // and `useLang`, renders nothing, and keeps the tab title in sync with the
+    // route + language. It is the ONLY writer of `document.title` (Phase 1B.3).
+    //
     // `errorElement` here is the LAST line of defence: without it a throw from
     // this element, from a guard, or from a top-level loader produced a blank
     // page with no message at all. Nested branches below declare their own so a
     // page crash keeps the surrounding shell mounted.
-    element: <SessionExpiryWatcher />,
+    element: (
+      <>
+        <DocumentTitle />
+        <SessionExpiryWatcher />
+      </>
+    ),
     errorElement: <RouteErrorBoundary />,
     children: [
       // ──────────────────────────────────────────────────────────────────────

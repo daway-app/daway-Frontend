@@ -19,7 +19,20 @@ import { ADMIN_ROUTES } from '@/routes/adminPaths';
  * route and `/` is a prefix of everything.
  */
 
-type Entry = { path: string; title: string };
+type Entry = {
+  path: string;
+  title: string;
+  /**
+   * Match ONLY the exact path, never as a prefix.
+   *
+   * Needed for `ADMIN_ROUTES.dashboard` (`/admin`): it is a literal prefix of
+   * every other admin route, so a typo like `/admin/userz` used to resolve to
+   * the dashboard title — harmless for the topbar (which falls back to the same
+   * string anyway) but wrong for the DOCUMENT title, where the 404 screen would
+   * announce itself as the dashboard.
+   */
+  exactOnly?: boolean;
+};
 
 /**
  * `/admin/users/<id>/edit` — the only admin route whose path cannot be written
@@ -49,18 +62,16 @@ export interface TopbarTitle {
 function match(entries: Entry[], pathname: string): string | null {
   const sorted = [...entries].sort((a, b) => b.path.length - a.path.length);
   for (const e of sorted) {
-    if (pathname === e.path || pathname.startsWith(`${e.path}/`)) return e.title;
+    if (pathname === e.path) return e.title;
+    if (!e.exactOnly && pathname.startsWith(`${e.path}/`)) return e.title;
   }
   return null;
 }
 
-/**
- * Title + subtitle for the topbar. Falls back to the Blade pair when the route
- * has no entry (the dashboard, or any screen added later).
- */
-export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle {
-  const ADMIN_ENTRIES: Entry[] = [
-    { path: ADMIN_ROUTES.dashboard, title: STR.admin.nav.dashboard },
+/** Admin nav labels. `match()` sorts by path length, so the order here is cosmetic. */
+function adminEntries(STR: Strings): Entry[] {
+  return [
+    { path: ADMIN_ROUTES.dashboard, title: STR.admin.nav.dashboard, exactOnly: true },
     { path: ADMIN_ROUTES.pharmacies, title: STR.admin.nav.pharmacies },
     { path: ADMIN_ROUTES.medicines, title: STR.admin.nav.medicines },
     { path: ADMIN_ROUTES.medicineRequests, title: STR.admin.nav.medicine_requests },
@@ -73,8 +84,11 @@ export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle
     { path: ADMIN_ROUTES.paymentProblems, title: STR.admin.nav.payment_problems },
     { path: ADMIN_ROUTES.profile, title: STR.admin.nav.profile },
   ];
+}
 
-  const PHARMACY_ENTRIES: Entry[] = [
+/** Pharmacy nav labels. */
+function pharmacyEntries(STR: Strings): Entry[] {
+  return [
     { path: ROUTES.inventoryImport, title: STR.pharmacyImport.title },
     { path: ROUTES.medicines, title: STR.pharmacy.medicines.index.heading_page },
     { path: ROUTES.inquiries, title: STR.pharmacy.inquiries.heading },
@@ -83,7 +97,43 @@ export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle
     { path: ROUTES.profile, title: STR.pharmacy.profile.heading_page },
     { path: ROUTES.accounting, title: STR.accounting.sidebar.section_title },
   ];
+}
 
+/**
+ * The page title for `pathname`, or `null` when the path has NO entry.
+ *
+ * WHY THIS IS NULLABLE, AND WHY IT IS EXPORTED
+ * `topbarTitleFor` must always render something, so it falls back to the
+ * dashboard pair — which means its OUTPUT cannot tell "this is the dashboard"
+ * apart from "nothing matched". The DOCUMENT title needs that distinction: an
+ * unknown path renders the 404 screen, and a browser tab reading
+ * "لوحة الإحصائيات" on a 404 page is simply wrong. Both callers now share this
+ * resolver: the topbar adds the fallback, the document title turns `null` into
+ * the 404 label.
+ *
+ * User CREATE / EDIT resolve BEFORE the prefix table — a form screen is not the
+ * list screen, but every `/admin/users/...` path matches `/admin/users`.
+ */
+export function routeTitleFor(pathname: string, STR: Strings = AR): string | null {
+  if (pathname === ADMIN_ROUTES.login) return STR.admin.login.title;
+
+  if (pathname === ADMIN_ROUTES.userCreate) return STR.admin.users.form.create_title;
+  if (ADMIN_USER_EDIT_PATH.test(pathname)) return STR.admin.users.action_edit;
+
+  if (pathname.startsWith('/admin')) return match(adminEntries(STR), pathname);
+  if (pathname === ROUTES.dashboard) return STR.topbar.dashboard_title;
+
+  return match(pharmacyEntries(STR), pathname);
+}
+
+/**
+ * Title + subtitle for the topbar. Falls back to the Blade pair when the route
+ * has no entry (the dashboard, or any screen added later).
+ *
+ * Behaviour is unchanged by the `routeTitleFor` extraction above — the fallbacks
+ * live HERE because only the topbar has to render something unconditionally.
+ */
+export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle {
   if (pathname === ADMIN_ROUTES.login) {
     return { title: STR.admin.login.title, subtitle: STR.admin.login.subtitle };
   }
@@ -118,7 +168,7 @@ export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle
 
   if (pathname.startsWith('/admin')) {
     return {
-      title: match(ADMIN_ENTRIES, pathname) ?? STR.admin.nav.dashboard,
+      title: match(adminEntries(STR), pathname) ?? STR.admin.nav.dashboard,
       subtitle: STR.admin.nav.panel_subtitle,
     };
   }
@@ -130,7 +180,7 @@ export function topbarTitleFor(pathname: string, STR: Strings = AR): TopbarTitle
     };
   }
 
-  const matchedTitle = match(PHARMACY_ENTRIES, pathname);
+  const matchedTitle = match(pharmacyEntries(STR), pathname);
   return {
     title: matchedTitle ?? STR.topbar.dashboard_title,
     subtitle: matchedTitle ? STR.pharmacy.sidebar.section_title : STR.topbar.dashboard_subtitle,

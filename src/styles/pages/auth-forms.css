@@ -581,7 +581,14 @@ body.dark-mode .auth-container {
 }
 
 @media (max-width: 420px) {
-    body { padding: 14px; }
+    /* 🔴 THIS RULE USED TO TARGET `body`.
+       This stylesheet is imported ONCE for the whole app (see the header note),
+       so `body { padding: 14px }` padded EVERY screen on phones: the pharmacy
+       and admin shells sat 14px off all four edges, and the auth screen got the
+       padding TWICE (body 14 + `.auth-shell` 28). The 420px query exists only
+       to tighten the AUTH screen, so the padding belongs to `.auth-shell` — the
+       same element that owns it in the base rule above. */
+    .auth-shell { padding: 14px; }
     .auth-form-side { padding: 32px 22px; }
     .form-footer-options { flex-direction: column; align-items: flex-start; gap: 10px; }
 }

@@ -52,6 +52,12 @@ export const AR = {
   topbar: {
     dashboard_title: 'لوحة الإحصائيات',
     dashboard_subtitle: 'نظرة عامة على أداء المنصة',
+    /**
+     * Document-title label for a path with no route entry (the 404 screen).
+     * ADDED (Phase 1B.3): the browser tab needs a name for it, and the 404 page
+     * itself carries no translation key.
+     */
+    not_found_title: 'الصفحة غير موجودة',
   },
 
   /**

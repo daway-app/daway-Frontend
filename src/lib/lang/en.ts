@@ -38,6 +38,8 @@ export const EN = {
   topbar: {
     dashboard_title: 'Dashboard',
     dashboard_subtitle: 'Platform performance overview',
+    // Document-title label for a path with no route entry (the 404 screen).
+    not_found_title: 'Page not found',
   },
   commandPalette: {
     title: 'Command Palette',
@@ -1305,7 +1307,7 @@ export const EN = {
       back_to_pharmacy: 'Log in as pharmacy',
     },
     unified: {
-      brand_tag: 'Daway platform',
+      brand_tag: 'Dawak',
       hero_title: 'Welcome back',
       hero_pharmacy: 'Manage your pharmacy, medicines, and orders and track every operation from one place.',
       hero_admin: 'Manage pharmacies, medicines, categories, requests and users from one place.',

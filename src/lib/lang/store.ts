@@ -35,7 +35,9 @@ export function resolveLang(): Lang {
 function apply(lang: Lang): void {
   document.documentElement.lang = lang;
   document.documentElement.dir = LANG_DIR[lang];
-  document.title = lang === 'ar' ? 'دواك — الصيدلية' : 'Daway — Pharmacy';
+  // `document.title` is deliberately NOT set here: a title is route-dependent,
+  // and its single writer is `components/layout/DocumentTitle.tsx` (Phase 1B.3).
+  // Setting it here as well made two writers race on every language switch.
   window.dispatchEvent(new CustomEvent<Lang>(LANG_EVENT, { detail: lang }));
 }
 

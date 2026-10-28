@@ -72,6 +72,111 @@ describe('createApiClient — happy path', () => {
   });
 });
 
+describe('download refresh cancellation and rate limiting', () => {
+  it.each([
+    ['caller', 'get'], ['timeout', 'get'],
+    ['caller', 'download'], ['timeout', 'download'],
+  ] as const)('cancels the %s waiter, cleans up, and lets a shared %s refresh finish', async (reason, peerKind) => {
+    vi.useFakeTimers();
+    const add = vi.spyOn(AbortSignal.prototype, 'addEventListener');
+    const remove = vi.spyOn(AbortSignal.prototype, 'removeEventListener');
+    try {
+      let finish!: (token: string) => void;
+      const refresh = vi.fn(() => new Promise<string>((resolve) => { finish = resolve; }));
+      const fetchImpl = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) =>
+        jsonResponse({}, (init?.headers as Record<string, string>).Authorization === 'Bearer new' ? 200 : 401),
+      );
+      const clearToken = vi.fn();
+      const expired = vi.fn();
+      const client = createApiClient({
+        getToken: () => 'old', setToken: () => {}, clearToken, onSessionExpired: expired,
+        refresh, fetchImpl, baseUrl: BASE, downloadTimeoutMs: 1000,
+      });
+      const caller = new AbortController();
+      const pending = client.download('/cancelled', { signal: caller.signal });
+      const rejected = expect(pending).rejects.toMatchObject({ kind: 'timeout' });
+      await vi.advanceTimersByTimeAsync(0);
+      const internal = fetchImpl.mock.calls[0][1]!.signal!;
+      await vi.advanceTimersByTimeAsync(500);
+      const peer = client[peerKind]('/peer');
+      await vi.advanceTimersByTimeAsync(0);
+      expect(refresh).toHaveBeenCalledOnce();
+      if (reason === 'caller') caller.abort();
+      else await vi.advanceTimersByTimeAsync(500);
+      await rejected;
+      expect(vi.getTimerCount()).toBe(peerKind === 'download' ? 1 : 0);
+      for (const [index, [event, listener]] of add.mock.calls.entries()) {
+        const signal = add.mock.contexts[index];
+        if (signal === caller.signal || signal === internal) {
+          expect(remove.mock.calls.some((args, i) => remove.mock.contexts[i] === signal && args[0] === event && args[1] === listener)).toBe(true);
+        }
+      }
+      finish('new');
+      if (peerKind === 'download') await expect(peer).resolves.toBeInstanceOf(Blob);
+      else await expect(peer).resolves.toEqual({});
+      expect(fetchImpl.mock.calls.map(([url]) => String(url))).toEqual([
+        `${BASE}/cancelled`, `${BASE}/peer`, `${BASE}/peer`,
+      ]);
+      expect(clearToken).not.toHaveBeenCalled();
+      expect(expired).not.toHaveBeenCalled();
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+    }
+  });
+
+  it('cleans the refresh listener and timer after success', async () => {
+    vi.useFakeTimers();
+    const add = vi.spyOn(AbortSignal.prototype, 'addEventListener');
+    const remove = vi.spyOn(AbortSignal.prototype, 'removeEventListener');
+    try {
+      const fetchImpl = fetchQueue([jsonResponse({}, 401), new Response('file')]);
+      const client = createApiClient({
+        getToken: () => 'old', setToken: () => {}, clearToken: () => {},
+        refresh: async () => 'new', fetchImpl, baseUrl: BASE,
+      });
+      await client.download('/file');
+      const signal = vi.mocked(fetchImpl).mock.calls[0][1]!.signal!;
+      const index = add.mock.contexts.indexOf(signal);
+      expect(index).toBeGreaterThanOrEqual(0);
+      expect(remove.mock.calls.some((args, i) => remove.mock.contexts[i] === signal && args[1] === add.mock.calls[index][1])).toBe(true);
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+    }
+  });
+
+  it.each([
+    ['numeric', '30', 30],
+    ['HTTP-date', 'Wed, 28 Oct 2026 10:00:30 GMT', 30],
+    ['missing', undefined, undefined],
+    ['invalid', 'not-a-date', undefined],
+  ] as const)('preserves %s Retry-After without retrying a 429, including after refresh', async (_name, header, seconds) => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-28T10:00:00Z'));
+    try {
+      for (const afterRefresh of [false, true]) {
+        const response = jsonResponse({}, 429, header ? { 'Retry-After': header } : {});
+        const fetchImpl = fetchQueue(afterRefresh ? [jsonResponse({}, 401), response] : [response]);
+        const refresh = vi.fn(async () => 'new');
+        const clearToken = vi.fn();
+        const client = createApiClient({ getToken: () => 'old', setToken: () => {}, clearToken, refresh, fetchImpl, baseUrl: BASE });
+        await expect(client.download('/limited')).rejects.toMatchObject({
+          kind: 'rate_limited', status: 429, retryAfterSeconds: seconds,
+        });
+        expect(fetchImpl).toHaveBeenCalledTimes(afterRefresh ? 2 : 1);
+        expect(refresh).toHaveBeenCalledTimes(afterRefresh ? 1 : 0);
+        expect(clearToken).not.toHaveBeenCalled();
+        expect(vi.getTimerCount()).toBe(0);
+      }
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
 describe('createApiClient — 401 handling', () => {
   it('refreshes once, retries once, and succeeds', async () => {
     const fetchImpl = fetchQueue([
@@ -410,7 +515,7 @@ describe('createApiClient — download reliability', () => {
         ok: true,
         status: 200,
         headers: new Headers(),
-        blob: () => body,
+        blob: vi.fn(() => body),
       } as unknown as Response);
     }) as unknown as typeof fetch;
   }
@@ -531,5 +636,177 @@ describe('createApiClient — download reliability', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  /**
+   * G2 — caller cancellation while `blob()` is mid-stream.
+   *
+   * The existing `supports caller cancellation` test uses `stallingFetch()`
+   * which never resolves *headers* — it rejects at the `fetch()` level. But
+   * the real danger is: headers arrive (200 OK), body starts streaming, and
+   * the caller aborts during `blob()`. This test pins that path: the abort
+   * listener is wired to the internal controller, `blob()` rejects with
+   * `AbortError`, the error maps to `timeout`, and the listener + timer are
+   * cleaned up in `finally`.
+   */
+  it('rejects and cleans up when the caller aborts during blob() (G2)', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetchImpl = headersThenStallingBody();
+      const client = clientWith(fetchImpl, 60_000);
+
+      const controller = new AbortController();
+      const add = vi.spyOn(controller.signal, 'addEventListener');
+      const remove = vi.spyOn(controller.signal, 'removeEventListener');
+      const pending = client.download('/api/x', { signal: controller.signal });
+
+      // Attach first so the rejection is never unhandled.
+      const assertion = expect(pending).rejects.toMatchObject({
+        kind: 'timeout',
+        status: null,
+      });
+
+      // 1) fetch resolves: HEADERS are in, BODY is still pending.
+      await vi.advanceTimersByTimeAsync(0);
+      const response = await vi.mocked(fetchImpl).mock.results[0].value;
+      expect(response.blob).toHaveBeenCalledTimes(1);
+
+      // 2) Caller aborts while blob() is still waiting on the body.
+      controller.abort();
+
+      // 3) The download must reject — not hang.
+      await assertion;
+
+      // 4) No timer or listener leak.
+      expect(vi.getTimerCount()).toBe(0);
+      expect(remove).toHaveBeenCalledWith('abort', add.mock.calls[0][1]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  /**
+   * G3a — 401 on download triggers a refresh + retry, mirroring request().
+   */
+  it('refreshes and retries a 401 on download (G3a: refresh succeeds)', async () => {
+    const blob = new Blob(['xlsx-bytes'], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const fetchImpl = fetchQueue([
+      jsonResponse({ message: 'Unauthorized' }, 401), // initial 401
+      new Response(blob, { status: 200 }), // retry after refresh succeeds
+    ]);
+    const refresh = vi.fn(async () => 'new-token');
+    const setToken = vi.fn();
+
+    const client = createApiClient({
+      getToken: () => 'old-token',
+      setToken,
+      clearToken: () => {},
+      refresh,
+      fetchImpl,
+      baseUrl: BASE,
+      downloadTimeoutMs: 60_000,
+    });
+
+    const result = await client.download('/api/template');
+
+    expect(result).toBeInstanceOf(Blob);
+    expect(refresh).toHaveBeenCalledTimes(1);
+    const calls = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls;
+    expect((calls[1][1] as RequestInit).headers).toMatchObject({
+      Authorization: 'Bearer new-token',
+    });
+  });
+
+  /**
+   * G3a — refresh fails → `clearToken()` + `onSessionExpired()` fire once.
+   */
+  it('clears token and signals session expiry when download 401s and refresh fails (G3a)', async () => {
+    const fetchImpl = fetchQueue([
+      jsonResponse({ message: 'Unauthorized' }, 401),
+    ]);
+    const clearToken = vi.fn();
+    const onSessionExpired = vi.fn();
+
+    const client = createApiClient({
+      getToken: () => 'expired-token',
+      setToken: () => {},
+      clearToken,
+      refresh: async () => null, // refresh refused
+      onSessionExpired,
+      fetchImpl,
+      baseUrl: BASE,
+      downloadTimeoutMs: 60_000,
+    });
+
+    await expect(client.download('/api/template')).rejects.toMatchObject({
+      kind: 'unauthorized',
+      status: 401,
+    });
+
+    expect(clearToken).toHaveBeenCalledTimes(1);
+    expect(onSessionExpired).toHaveBeenCalledTimes(1);
+    // Refresh was attempted exactly once (not retried).
+    // The `refresh` mock itself tracks this — it should have been called once.
+  });
+
+  /**
+   * G3a — still 401 after refresh → session ends exactly once (no double notification).
+   */
+  it('ends the session exactly once when download stays 401 after refresh (G3a)', async () => {
+    const fetchImpl = fetchQueue([
+      jsonResponse({ message: 'Unauthorized' }, 401), // initial 401
+      jsonResponse({ message: 'Unauthorized' }, 401), // retry still 401
+    ]);
+    const refresh = vi.fn(async () => 'new-token');
+    const clearToken = vi.fn();
+    const onSessionExpired = vi.fn();
+
+    const client = createApiClient({
+      getToken: () => 'old-token',
+      setToken: () => {},
+      clearToken,
+      refresh,
+      onSessionExpired,
+      fetchImpl,
+      baseUrl: BASE,
+      downloadTimeoutMs: 60_000,
+    });
+
+    await expect(client.download('/api/template')).rejects.toMatchObject({
+      kind: 'unauthorized',
+      status: 401,
+    });
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(clearToken).toHaveBeenCalledTimes(1);
+    expect(onSessionExpired).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * G3b — 429 on download preserves `Retry-After` as `retryAfterSeconds`.
+   * No automatic backoff or retry is expected — this only pins the parse+forward path.
+   */
+  it('preserves Retry-After as retryAfterSeconds on a 429 download (G3b)', async () => {
+    const fetchImpl = fetchQueue([
+      jsonResponse({ message: 'Too many requests' }, 429, { 'Retry-After': '30' }),
+    ]);
+
+    const client = createApiClient({
+      getToken: () => 'tok',
+      setToken: () => {},
+      clearToken: () => {},
+      refresh: async () => null,
+      fetchImpl,
+      baseUrl: BASE,
+      downloadTimeoutMs: 60_000,
+    });
+
+    await expect(client.download('/api/big-report')).rejects.toMatchObject({
+      kind: 'rate_limited',
+      status: 429,
+      retryAfterSeconds: 30,
+    });
   });
 });

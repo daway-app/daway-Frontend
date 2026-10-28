@@ -109,15 +109,3 @@ export function problemCategoryLabel(
   };
   return map[category] ?? category;
 }
-
-/** Save an authenticated binary download without exposing the receipt path. */
-export function saveBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename || 'receipt';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}

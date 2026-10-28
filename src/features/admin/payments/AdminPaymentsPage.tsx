@@ -12,6 +12,7 @@ import {
   PageHeader,
 } from '@/components/ui';
 import { toast } from '@/lib/toast';
+import { downloadAndSave } from '@/lib/download';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/useLang';
@@ -23,7 +24,6 @@ import {
   paymentStatusVariant,
   problemCategoryLabel,
   problemStatusLabel,
-  saveBlob,
   submissionStatusLabel,
   parseAmountUnmatched,
   amountStatusLabel,
@@ -265,8 +265,10 @@ export function AdminPaymentsPage() {
 
     setDownloadingId(submission.id);
     try {
-      const blob = await api.admin.downloadPaymentReceipt(selectedId, submission.id);
-      saveBlob(blob, submission.receipt_original_name);
+      await downloadAndSave(
+        api.admin.downloadPaymentReceipt(selectedId, submission.id),
+        submission.receipt_original_name,
+      );
     } catch (err) {
       toast.error(errorMessage(err, S.download_failed));
     } finally {

@@ -98,11 +98,24 @@ export function createApiClient(deps: ApiClientDeps) {
    * so N failing requests trigger ONE refresh, not N.
    */
   let refreshInFlight: Promise<string | null> | null = null;
+  // Nested refresh requests and their callers share an expiry generation.
+  let sessionGeneration = 0;
+
+  function endSession(generation: number): void {
+    if (generation !== sessionGeneration) return;
+    sessionGeneration++;
+    deps.clearToken();
+    deps.onSessionExpired?.();
+  }
 
   function runRefreshOnce(): Promise<string | null> {
     if (!refreshInFlight) {
       refreshInFlight = deps
         .refresh()
+        .then((token) => {
+          if (token) deps.setToken(token);
+          return token;
+        })
         .catch(() => null)
         .finally(() => {
           refreshInFlight = null;
@@ -178,6 +191,7 @@ export function createApiClient(deps: ApiClientDeps) {
     path: string,
     options: RequestOptions = {},
   ): Promise<T> {
+    const generation = sessionGeneration;
     let response: Response;
 
     try {
@@ -212,14 +226,12 @@ export function createApiClient(deps: ApiClientDeps) {
 
         // Still 401 with a fresh token → the session is genuinely over.
         if (response.status === 401) {
-          deps.clearToken();
-          deps.onSessionExpired?.();
+          endSession(generation);
           throw await toApiError(response);
         }
       } else {
         // Refresh failed (or the chain cap was reached) → end the session.
-        deps.clearToken();
-        deps.onSessionExpired?.();
+        endSession(generation);
         throw await toApiError(response);
       }
     }
@@ -227,8 +239,7 @@ export function createApiClient(deps: ApiClientDeps) {
     // ── Other failures ───────────────────────────────────────────────────
     if (!response.ok) {
       if (response.status === 401 && !options.skipAuth) {
-        deps.clearToken();
-        deps.onSessionExpired?.();
+        endSession(generation);
       }
       throw await toApiError(response);
     }
@@ -282,6 +293,7 @@ export function createApiClient(deps: ApiClientDeps) {
       path: string,
       options?: { signal?: AbortSignal },
     ): Promise<Blob> {
+      const generation = sessionGeneration;
       const headers: Record<string, string> = { Accept: '*/*' };
       const token = deps.getToken();
       if (token) headers.Authorization = `Bearer ${token}`;
@@ -296,12 +308,62 @@ export function createApiClient(deps: ApiClientDeps) {
       options?.signal?.addEventListener('abort', onAbort);
       if (options?.signal?.aborted) controller.abort();
 
+      // Cancel only this waiter; the shared refresh must continue for others.
+      const waitForRefresh = async (refresh: Promise<string | null>) => {
+        const signal = controller.signal;
+        let onRefreshAbort!: () => void;
+        const cancelled = new Promise<never>((_resolve, reject) => {
+          onRefreshAbort = () => reject(new DOMException('Aborted', 'AbortError'));
+          signal.addEventListener('abort', onRefreshAbort);
+          if (signal.aborted) onRefreshAbort();
+        });
+        try {
+          return await Promise.race([refresh, cancelled]);
+        } finally {
+          signal.removeEventListener('abort', onRefreshAbort);
+        }
+      };
+
       try {
         const res = await doFetch(buildUrl(baseUrl, path), {
           headers,
           signal: controller.signal,
         });
-        if (!res.ok) throw await toApiError(res);
+
+        // ── 401: mirror `request()` — one refresh, one retry, then end session. ──
+        if (res.status === 401) {
+          controller.signal.throwIfAborted();
+          const newToken = await waitForRefresh(runRefreshOnce());
+          controller.signal.throwIfAborted();
+
+          if (newToken) {
+            // Retry the download with the refreshed token. Reuse the same
+            // controller/timer so the caller's signal and the timeout budget
+            // span both attempts.
+            headers.Authorization = `Bearer ${newToken}`;
+            const retryRes = await doFetch(buildUrl(baseUrl, path), {
+              headers,
+              signal: controller.signal,
+            });
+            // Still 401 with a fresh token → session is genuinely over.
+            if (retryRes.status === 401) {
+              endSession(generation);
+              throw await toApiError(retryRes);
+            }
+            if (!retryRes.ok) throw await toApiError(retryRes);
+            return await retryRes.blob();
+          }
+
+          // Refresh failed (or chain cap reached) → end the session.
+          endSession(generation);
+          throw await toApiError(res);
+        }
+
+        // ── Other HTTP failures ──
+        if (!res.ok) {
+          throw await toApiError(res);
+        }
+
         return await res.blob();
       } catch (error) {
         // An ApiError already carries the HTTP semantics — pass it through.

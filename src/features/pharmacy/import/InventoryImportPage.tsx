@@ -16,6 +16,7 @@ import type {
 } from '@/api/pharmacyTypes';
 import { formatDateTime, num } from '@/lib/format';
 import { toast } from '@/lib/toast';
+import { downloadAndSave } from '@/lib/download';
 import {
   blockingCount,
   buildDecisionPayload,
@@ -288,17 +289,6 @@ export function InventoryImportPage() {
     price_deviation: P.warn_price_deviation,
   };
 
-  function saveBlob(blob: Blob, filename: string) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
   function applySession(next: ApiImportSession, keepFile?: File) {
     const nextRows = next.rows ?? [];
     setSession(next);
@@ -352,10 +342,12 @@ export function InventoryImportPage() {
     setDownloading(mode);
     setDownloadError(null);
     try {
-      const blob = await client.download(api.templateUrl(mode));
       const suffix = mode === 'current' ? 'current' : 'template';
       const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      saveBlob(blob, `inventory-${suffix}-${stamp}.xlsx`);
+      await downloadAndSave(
+        client.download(api.templateUrl(mode)),
+        `inventory-${suffix}-${stamp}.xlsx`,
+      );
     } catch {
       setDownloadError(P.download_failed);
     } finally {
@@ -369,8 +361,10 @@ export function InventoryImportPage() {
     setDownloadingReport(true);
     setDownloadError(null);
     try {
-      const blob = await client.download(api.importErrorsPath(active.uuid));
-      saveBlob(blob, `import-errors-${active.uuid.slice(0, 8)}.xlsx`);
+      await downloadAndSave(
+        client.download(api.importErrorsPath(active.uuid)),
+        `import-errors-${active.uuid.slice(0, 8)}.xlsx`,
+      );
     } catch {
       setDownloadError(P.download_failed);
     } finally {

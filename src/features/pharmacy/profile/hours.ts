@@ -43,18 +43,25 @@ export function isDayOpen(
   return Boolean(hour?.open && hour?.close);
 }
 
+/** Normalise a time string to HH:mm format, stripping any trailing seconds (:ss). */
+export function normalizeTime(val: string | null | undefined): string {
+  if (!val) return '';
+  const trimmed = val.trim();
+  return trimmed.length >= 5 ? trimmed.slice(0, 5) : trimmed;
+}
+
 /** Build editable state from the profile payload (or an empty week). */
 export function initHours(profile: ApiPharmacyProfile | null): HoursState {
   const out = {} as HoursState;
   for (const d of API_DAYS) {
     const row = profile?.working_hours?.[d.key];
-    const open = row?.open ?? '';
-    const close = row?.close ?? '';
+    const open = normalizeTime(row?.open);
+    const close = normalizeTime(row?.close);
     out[d.key] = {
       closed: !isDayOpen(row ?? undefined),
       open,
       close,
-      h24: open === '00:00' && close === '23:59',
+      h24: open === '00:00' && (close === '23:59' || close === '24:00'),
     };
   }
   return out;
@@ -64,6 +71,7 @@ export function initHours(profile: ApiPharmacyProfile | null): HoursState {
  * Serialise the week for the save request.
  *
  * MUST include all seven days — see the full-replace note above.
+ * Days marked closed or lacking open/close times are serialised as empty objects (closed).
  */
 export function buildHoursPayload(
   hours: HoursState,
@@ -71,7 +79,11 @@ export function buildHoursPayload(
   const out: Record<string, { open?: string; close?: string }> = {};
   for (const d of API_DAYS) {
     const s = hours[d.key];
-    out[d.key] = s.closed ? {} : { open: s.open, close: s.close };
+    if (s.closed || !s.open || !s.close) {
+      out[d.key] = {};
+    } else {
+      out[d.key] = { open: s.open, close: s.close };
+    }
   }
   return out;
 }

@@ -102,6 +102,8 @@ export function ProfilePage() {
   const [logoFileError, setLogoFileError] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [hours, setHours] = useState<HoursState>(() => initHours(null));
+  const [draftHours, setDraftHours] = useState<HoursState>(() => initHours(null));
+  const [hoursError, setHoursError] = useState<string | null>(null);
   const [modal, setModal] = useState<null | 'password' | 'logo' | 'location' | 'hours'>(null);
   /** True once the password changed — the session is over and needs a re-login. */
   const [pwDone, setPwDone] = useState(false);
@@ -155,7 +157,9 @@ export function ProfilePage() {
     setLat(profile.latitude !== null ? String(profile.latitude) : '');
     setLng(profile.longitude !== null ? String(profile.longitude) : '');
     setLogo(profile.logo_url ?? '');
-    setHours(initHours(profile));
+    const initialH = initHours(profile);
+    setHours(initialH);
+    setDraftHours(initialH);
   }, [profile]);
 
   const save = useApiMutation((body: Record<string, unknown>) => api.updateProfile(body));
@@ -219,20 +223,30 @@ export function ProfilePage() {
     api.changePassword(body),
   );
 
-  const setDay = (key: ApiDayKey, patch: Partial<DayState>) =>
-    setHours((prev) => ({ ...prev, [key]: { ...prev[key], ...patch } }));
+  const setDraftDay = (key: ApiDayKey, patch: Partial<DayState>) => {
+    setDraftHours((prev) => {
+      const cur = prev[key];
+      const next = { ...cur, ...patch };
+      if (patch.closed === false && (!next.open || !next.close)) {
+        next.open = next.open || '09:00';
+        next.close = next.close || '17:00';
+      }
+      return { ...prev, [key]: next };
+    });
+  };
 
   const dayLabel = (s: DayState) => dayLabelOf(s, P.closed, HQ.open_24);
 
   const summary = useMemo(() => {
-    const open = API_DAYS.filter((d) => !hours[d.key].closed).map((d) => ({
+    const active = modal === 'hours' ? draftHours : hours;
+    const open = API_DAYS.filter((d) => !active[d.key].closed).map((d) => ({
       name: d.name,
-      sig: `${hours[d.key].open}|${hours[d.key].close}|${hours[d.key].h24 ? 1 : 0}`,
-      h24: hours[d.key].h24,
-      open: hours[d.key].open,
-      close: hours[d.key].close,
+      sig: `${active[d.key].open}|${active[d.key].close}|${active[d.key].h24 ? 1 : 0}`,
+      h24: active[d.key].h24,
+      open: active[d.key].open,
+      close: active[d.key].close,
     }));
-    const closedNames = API_DAYS.filter((d) => hours[d.key].closed).map((d) => d.name);
+    const closedNames = API_DAYS.filter((d) => active[d.key].closed).map((d) => d.name);
     const uniform = open.length === API_DAYS.length && new Set(open.map((o) => o.sig)).size <= 1;
     const unified = uniform && open.length
       ? open[0].h24
@@ -242,18 +256,48 @@ export function ProfilePage() {
         ? '…'
         : '—';
     return { unified, exception: closedNames.length ? closedNames.join('، ') : HQ.no_exception };
-  }, [hours, HQ.open_24, HQ.no_exception]);
+  }, [modal, draftHours, hours, HQ.open_24, HQ.no_exception]);
 
   const applyAll = () => {
-    const ref = hours[API_DAYS[0].key];
+    const ref = draftHours[API_DAYS[0].key];
     const open = ref.open || '09:00';
     const close = ref.close || '17:00';
-    setHours((prev) => {
+    setDraftHours((prev) => {
       const next = { ...prev };
       for (const d of API_DAYS) next[d.key] = { closed: false, open, close, h24: ref.h24 };
       return next;
     });
   };
+
+  function openHoursModal() {
+    setDraftHours(hours);
+    setHoursError(null);
+    setModal('hours');
+  }
+
+  async function handleHoursSave() {
+    setHoursError(null);
+    try {
+      await save.run({
+        name: form.pharmacy_name || profile?.name || '',
+        phone: form.phone_number || profile?.phone || '',
+        address: form.address || profile?.address || '',
+        region: form.region || profile?.region || '',
+        latitude: lat === '' ? (profile?.latitude ?? null) : Number(lat),
+        longitude: lng === '' ? (profile?.longitude ?? null) : Number(lng),
+        logo_url: logo || profile?.logo_url || null,
+        working_hours: buildHoursPayload(draftHours),
+      });
+      setHours(draftHours);
+      toast.success(P.success);
+      setModal(null);
+      query.refetch();
+    } catch {
+      const msg = save.error?.message || STR.pharmacy.toast.save_failed;
+      setHoursError(msg);
+      toast.error(msg);
+    }
+  }
 
   /**
    * Build the `working_hours` payload.
@@ -298,6 +342,7 @@ export function ProfilePage() {
 
     if (!ok) {
       markAllTouched(FIELDS);
+      toast.error('يرجى التأكد من ملء الحقول الإلزامية بشكل صحيح.');
       // The field lives inside whichever modal or card holds it; scroll the
       // document so it is centred, then focus it.
       requestAnimationFrame(() => focusFirstInvalid());
@@ -669,7 +714,7 @@ export function ProfilePage() {
                   ))}
                 </div>
                 <div style={{ padding: '0 22px 18px' }}>
-                  <button type="button" className="ph-text-action" onClick={() => setModal('hours')}>
+                  <button type="button" className="ph-text-action" onClick={openHoursModal}>
                     <i className="fas fa-pen" /> {P.hours_change}
                   </button>
                 </div>
@@ -954,14 +999,20 @@ export function ProfilePage() {
               type="button"
               className="ph-btn primary"
               disabled={save.isPending}
-              onClick={() => void handleSave()}
+              onClick={() => void handleHoursSave()}
             >
-              {P.save_button}
+              {save.isPending ? 'جاري الحفظ…' : P.save_button}
             </button>
           </>
         }
       >
         <div className="ph-hours-list ph-hours-editor">
+          {hoursError && (
+            <div className="ph-error" style={{ marginBlockEnd: 14, padding: '12px 16px' }}>
+              <p style={{ margin: 0 }}>{hoursError}</p>
+            </div>
+          )}
+
           <div className="ph-hours-chips">
             <div className="ph-chip ph-chip-accent">
               <div className="ph-chip-label">{HQ.uniform}</div>
@@ -980,7 +1031,7 @@ export function ProfilePage() {
           </div>
 
           {API_DAYS.map((d) => {
-            const s = hours[d.key];
+            const s = draftHours[d.key];
             return (
               <div className="ph-day-card" data-day={d.key} key={d.key}>
                 <div className="ph-day-top">
@@ -992,7 +1043,7 @@ export function ProfilePage() {
                       className="ph-switch-input"
                       checked={!s.closed}
                       aria-label={d.name}
-                      onChange={(e) => setDay(d.key, { closed: !e.target.checked })}
+                      onChange={(e) => setDraftDay(d.key, { closed: !e.target.checked })}
                     />
                     <span className="ph-switch-knob" />
                   </span>
@@ -1005,7 +1056,7 @@ export function ProfilePage() {
                       className="ph-control hc-time-input"
                       value={s.open}
                       disabled={s.h24}
-                      onChange={(e) => setDay(d.key, { open: e.target.value })}
+                      onChange={(e) => setDraftDay(d.key, { open: e.target.value })}
                     />
                     <span className="ph-day-to">{P.to}</span>
                     <input
@@ -1014,14 +1065,14 @@ export function ProfilePage() {
                       className="ph-control hc-time-input"
                       value={s.close}
                       disabled={s.h24}
-                      onChange={(e) => setDay(d.key, { close: e.target.value })}
+                      onChange={(e) => setDraftDay(d.key, { close: e.target.value })}
                     />
                     <label className="ph-day-24">
                       <input
                         type="checkbox"
                         checked={s.h24}
                         onChange={(e) =>
-                          setDay(d.key, {
+                          setDraftDay(d.key, {
                             h24: e.target.checked,
                             ...(e.target.checked ? { open: '00:00', close: '23:59' } : {}),
                           })

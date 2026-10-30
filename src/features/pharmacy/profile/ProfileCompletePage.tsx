@@ -7,6 +7,7 @@ import { thumbUrl } from '@/lib/format';
 import type { ApiDayKey, ApiPharmacyProfile } from '@/api/pharmacyTypes';
 import { API_DAYS, buildHoursPayload, isDayOpen, type DayState } from './hours';
 import { validateLogoFile } from './logoUpload';
+import { LocationMap } from '@/components/pharmacy/LocationMap';
 
 /**
  * Pharmacy profile — complete. Live against `GET/POST /api/profile/pharmacy`.
@@ -601,27 +602,38 @@ export function ProfileCompletePage() {
                 <h2>{P.location_title}</h2>
               </div>
               <div className="complete-card-body">
-                <div
-                  className="complete-map"
-                  data-lat={lat}
-                  data-lng={lng}
-                  style={{
-                    background: 'linear-gradient(135deg, var(--ph-canvas), var(--ph-line-soft))',
-                    display: 'grid',
-                    placeItems: 'center',
-                    color: 'var(--ph-ink-faint)',
-                  }}
-                >
-                  <i className="fas fa-map-location-dot" style={{ fontSize: '1.8rem' }} />
+                <div className="complete-map">
+                  <LocationMap
+                    latitude={lat}
+                    longitude={lng}
+                    onChange={(coords) => {
+                      setLat(String(coords.lat));
+                      setLng(String(coords.lng));
+                    }}
+                    pharmacyName={form.pharmacy_name || user?.name}
+                  />
                 </div>
-                {/* الحقلان يحملان مركز الخريطة الافتراضي كقيمة ابتدائية — نفس Blade. */}
-                <input type="hidden" name="latitude" id="latitude" defaultValue={lat} />
-                <input
-                  type="hidden"
-                  name="longitude"
-                  id="longitude"
-                  defaultValue={lng}
-                />
+                {/* الحقلان يحملان الإحداثيات المحددة كقيمة للشكل — متزامنان مع الحالة. */}
+                <input type="hidden" name="latitude" id="latitude" value={lat} />
+                <input type="hidden" name="longitude" id="longitude" value={lng} />
+                {lat && lng ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      marginBlockStart: 8,
+                      fontSize: 'var(--fs-xs)',
+                      color: 'var(--ph-teal)',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <i className="fas fa-circle-check" aria-hidden="true" />
+                    <span>
+                      الموقع المحدد: {Number(lat).toFixed(4)}, {Number(lng).toFixed(4)}
+                    </span>
+                  </div>
+                ) : null}
                 <p className="hint-under">{C.location_default_hint}</p>
               </div>
             </div>

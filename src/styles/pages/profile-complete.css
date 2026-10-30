@@ -172,10 +172,11 @@ body.dark-mode .complete-card {
         .complete-card-body { padding: 16px; }
 
         .complete-map {
-            height: 220px;
+            height: 260px;
             border-radius: var(--ph-r-sm);
             border: 1px solid var(--pc-line);
             overflow: hidden;
+            position: relative;
             z-index: 0;
         }
         body.dark-mode .complete-map { border-color: var(--line); }

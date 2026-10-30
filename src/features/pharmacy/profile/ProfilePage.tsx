@@ -27,6 +27,7 @@ import {
   type HoursState,
 } from './hours';
 import { validateLogoFile } from './logoUpload';
+import { LocationMap } from '@/components/pharmacy/LocationMap';
 
 /**
  * Pharmacy profile — live against `GET/POST /api/profile/pharmacy`.
@@ -603,30 +604,52 @@ export function ProfilePage() {
                   </h2>
                 </div>
                 <div className="ph-card-body">
-                  <div
-                    className="ph-map ph-map-sm"
-                    data-lat={lat}
-                    data-lng={lng}
-                    role="img"
-                    aria-label={P.map_display_hint}
-                    style={{
-                      background: 'linear-gradient(135deg, var(--ph-canvas), var(--ph-line-soft))',
-                      display: 'grid',
-                      placeItems: 'center',
-                      color: 'var(--ph-ink-faint)',
-                    }}
-                  >
-                    <i className="fas fa-map-location-dot" style={{ fontSize: '1.8rem' }} />
+                  <div className="ph-map ph-map-sm">
+                    <LocationMap
+                      readOnly
+                      latitude={lat}
+                      longitude={lng}
+                      pharmacyName={form.pharmacy_name || user?.name}
+                      onMapClick={() => setModal('location')}
+                    />
                   </div>
-                  <p className="ph-hint">{P.map_display_hint}</p>
-                  <button
-                    type="button"
-                    className="ph-text-action"
-                    style={{ marginBlockStart: 12 }}
-                    onClick={() => setModal('location')}
-                  >
-                    <i className="fas fa-location-dot" /> {P.location_change}
-                  </button>
+                  {lat && lng ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBlockStart: 10,
+                      }}
+                    >
+                      <span className="ph-hint" style={{ margin: 0 }}>
+                        <i
+                          className="fas fa-location-dot"
+                          style={{ marginInlineEnd: 4, color: 'var(--ph-teal)' }}
+                        />
+                        {Number(lat).toFixed(4)}, {Number(lng).toFixed(4)}
+                      </span>
+                      <button
+                        type="button"
+                        className="ph-text-action"
+                        onClick={() => setModal('location')}
+                      >
+                        <i className="fas fa-pen" /> {P.location_change}
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="ph-hint">{P.map_display_hint}</p>
+                      <button
+                        type="button"
+                        className="ph-text-action"
+                        style={{ marginBlockStart: 12 }}
+                        onClick={() => setModal('location')}
+                      >
+                        <i className="fas fa-location-dot" /> {P.location_change}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -861,18 +884,16 @@ export function ProfilePage() {
           </>
         }
       >
-        <div
-          className="ph-map ph-map-edit"
-          data-lat={lat}
-          data-lng={lng}
-          style={{
-            background: 'linear-gradient(135deg, var(--ph-canvas), var(--ph-line-soft))',
-            display: 'grid',
-            placeItems: 'center',
-            color: 'var(--ph-ink-faint)',
-          }}
-        >
-          <i className="fas fa-map-location-dot" style={{ fontSize: '1.8rem' }} />
+        <div className="ph-map ph-map-edit">
+          <LocationMap
+            latitude={lat}
+            longitude={lng}
+            onChange={(coords) => {
+              setLat(String(coords.lat));
+              setLng(String(coords.lng));
+            }}
+            pharmacyName={form.pharmacy_name || user?.name}
+          />
         </div>
         <p className="ph-hint" style={{ marginBlockStart: 10 }}>
           {P.map_hint}

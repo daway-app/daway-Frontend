@@ -8,6 +8,7 @@ import { adminKeys } from '@/api/queryKeys';
 import { PRESET_STALE_TIMES } from '@/api/queryClient';
 import type { AdminProfile } from '@/api/adminTypes';
 import { useLang } from '@/lib/lang/useLang';
+import { roleLabel } from '@/lib/i18n';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
 import { sidebarLinkAccessibleName } from '@/components/layout/sidebarAccessibility';
 import {
@@ -126,30 +127,6 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
             </div>
           </div>
 
-          {/* بطاقة المستخدم — أعلى السايدبار مباشرة تحت الشعار (طلب عبود).
-              الصورة الحقيقية من `avatar_url` عند توفّرها، وإلا الحرف الأول. */}
-          <div className="sidebar-user-card" title={STR.layout.edit_profile_modal_title}>
-            <div className="avatar-box">
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="User Avatar"
-                  width={44}
-                  height={44}
-                  loading="lazy"
-                  decoding="async"
-                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-                />
-              ) : (
-                initial
-              )}
-            </div>
-            <div className="user-meta">
-              <div className="user-name">{user?.name ?? ''}</div>
-              <div className="user-role">{user?.role ?? 'User'}</div>
-            </div>
-          </div>
-
           <div className="nav-section">
             <div className="section-label">{A.main_section}</div>
             <NavLink
@@ -183,13 +160,40 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
           </div>
         </div>
 
-        {/* Footer — زر الخروج فقط؛ بيانات المستخدم صارت في البطاقة أعلى. */}
+        {/* Footer — مطابق لفوتر سايدبار الصيدلية حرفيًا: الهوية (الصورة + الاسم
+            + الدور) على جهة البداية وزر الخروج على الجهة الأخرى.
+
+            كان هنا زر خروج وحده، وبطاقة مستخدم أعلى السايدبار بكلاسات
+            (`.sidebar-user-card` / `.user-meta`) لا يعرّفها أي ملف CSS — أي
+            صندوق عارٍ بلا تنسيق. حُذفت البطاقة ونُقلت الهوية إلى الفوتر بنفس
+            بنية الصيدلية، فلا حاجة لأي CSS جديد. */}
         <div className="user-profile-footer">
+          <div className="user-info-group" title={STR.layout.edit_profile_modal_title}>
+            <div className="avatar-box" aria-hidden="true">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt=""
+                  width={42}
+                  height={42}
+                  loading="lazy"
+                  decoding="async"
+                  style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                />
+              ) : (
+                initial
+              )}
+            </div>
+            <div className="user-text">
+              <div className="user-name">{user?.name ?? ''}</div>
+              <div className="user-role">{roleLabel(user?.role ?? '', STR)}</div>
+            </div>
+          </div>
           <div
             className="more-options-btn"
             role="button"
             tabIndex={0}
-            title={A.logout}
+            title={STR.layout.logout_tooltip}
             onClick={() => setShowLogoutConfirm(true)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') setShowLogoutConfirm(true);

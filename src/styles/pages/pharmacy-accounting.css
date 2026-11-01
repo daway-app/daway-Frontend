@@ -205,6 +205,18 @@ a.ac-kpi:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2
    عناصر الجداول المحاسبية
    ========================================================== */
 .ac-num { font-variant-numeric: tabular-nums; text-align: end; white-space: nowrap; }
+
+/*
+   Actions column — narrow, never wraps, centred.
+
+   `.ac-actions` is applied by the accounting refunds table AND by seven admin
+   tables, but no stylesheet ever defined it. The column therefore took whatever
+   width the header text needed and its icon links sat flush against the
+   previous cell, so "الإجراءات" looked glued to the last data column on every
+   admin list.
+*/
+.ac-actions { width: 1%; white-space: nowrap; text-align: center; }
+.ph-table td.ac-actions .ph-link { display: inline-flex; align-items: center; }
 .ac-strong { font-weight: 700; }
 .ac-muted { color: var(--ac-ink-faint); font-size: var(--fs-sm); }
 .ac-neg { color: var(--ac-red-text); }

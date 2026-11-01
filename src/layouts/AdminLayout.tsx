@@ -32,7 +32,7 @@ import type { AdminProfile } from '@/api/adminTypes';
  * latter is what actually moves focus rather than just the scroll position.
  */
 export function AdminLayout() {
-  const { STR, lang } = useLang();
+  const { STR, lang, toggleLang } = useLang();
   const api = useAdminApi();
   const keys = useAdminKeys();
   const { user } = useAdminAuth();
@@ -82,6 +82,21 @@ export function AdminLayout() {
           <div className="topbar">
             <TopbarTitle title={heading.title} subtitle={heading.subtitle} />
             <div className="topbar-actions">
+              {/* Language switch — مطابق لتوبار الصيدلية حرفيًا.
+                  كان غائبًا هنا، فلوحة الأدمن كانت عالقة على العربية بلا أي
+                  طريقة للتبديل، مع أن الشريط نفسه يعرض `EN` في الصيدلية. */}
+              <a
+                href="#"
+                className="icon-btn lang-switch-btn"
+                title={STR.layout.switch_language_tooltip}
+                onClick={(e) => {
+                  e.preventDefault();
+                  toggleLang();
+                }}
+              >
+                <span className="lang-label">{lang === 'ar' ? 'EN' : 'عربي'}</span>
+              </a>
+
               <NotificationBell
                 api={api.notifications}
                 queryKeys={keys.notifications}
@@ -90,11 +105,20 @@ export function AdminLayout() {
 
               {/* الاسم والصورة بالشريط العلوي — زر الخروج مقره فوتر السايدبار */}
               <div className="user-profile-btn" title={STR.layout.edit_profile_modal_title}>
-                <div
-                  className="avatar"
-                  style={avatarUrl ? { backgroundImage: `url(${avatarUrl})` } : undefined}
-                >
-                  {avatarUrl ? '' : initial}
+                <div className="avatar">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt=""
+                      width={36}
+                      height={36}
+                      loading="lazy"
+                      decoding="async"
+                      style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    initial
+                  )}
                 </div>
                 <div className="user-details">
                   <span className="user-name">{user?.name ?? ''}</span>

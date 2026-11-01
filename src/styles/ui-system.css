@@ -466,6 +466,7 @@ body {
 .form-control,
 .fc,
 .admin-page .filter-input,
+.admin-page .filter-select,
 input.ph-control,
 select.ph-control,
 textarea.ph-control {
@@ -509,7 +510,8 @@ textarea.ph-control {
 .ph-select:hover:not(:disabled),
 .form-control:hover:not(:disabled):not([readonly]),
 .fc:hover:not(:disabled):not([readonly]),
-.admin-page .filter-input:hover:not(:disabled):not([readonly]) {
+.admin-page .filter-input:hover:not(:disabled):not([readonly]),
+.admin-page .filter-select:hover:not(:disabled) {
     border-color: var(--line-strong);
 }
 
@@ -522,7 +524,8 @@ textarea.ph-control {
 .ph-input:focus,
 .form-control:focus,
 .fc:focus,
-.admin-page .filter-input:focus {
+.admin-page .filter-input:focus,
+.admin-page .filter-select:focus {
     border-color: var(--focus-ring);
     box-shadow: var(--ring);
 }
@@ -538,6 +541,7 @@ textarea.ph-control {
 .fc:disabled,
 .fc[readonly],
 .admin-page .filter-input:disabled,
+.admin-page .filter-select:disabled,
 .admin-page .filter-input[readonly] {
     background: var(--ph-canvas);
     color: var(--ph-ink-faint);

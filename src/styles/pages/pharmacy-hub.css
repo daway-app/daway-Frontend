@@ -1473,27 +1473,51 @@ body.dark-mode .ph-modal { border: 1px solid var(--line); }
 
 /* --- Forms -------------------------------------------------------- */
 .admin-hint { margin: 0 0 12px; font-size: var(--fs-sm); color: var(--ph-ink-faint); line-height: 1.6; }
-.admin-field { display: flex; flex-direction: column; gap: 6px; margin-block-end: 14px; }
-.admin-field > span { font-size: var(--fs-sm); font-weight: 600; color: var(--ph-ink-soft); }
+.admin-field { display: flex; flex-direction: column; gap: var(--sp-2); margin-block-end: 14px; }
+/*
+  🔴 Alignment with the pharmacy form vocabulary (`.ph-field` / `.ph-form-label`
+  / `.ph-control`).
+
+  This block used to hard-code its own metrics — `padding: 9px 13px`, no
+  `min-height`, `--fs-sm` labels, and a hand-written teal focus glow. The
+  canonical input group in `ui-system.css` already settled those values (and
+  documents WHY: a field and the button beside it have to share `--ctl-h-md`,
+  or they never line up). Because `.admin-field input` is more specific than
+  `.form-control`, it silently won — so every admin form rendered shorter
+  fields with smaller labels and a different focus ring than the same form in
+  the pharmacy shell.
+
+  These rules now point at the shared tokens instead of restating numbers.
+*/
+.admin-field > span {
+    font-size: var(--fs-md);
+    font-weight: 600;
+    color: var(--ph-ink-soft);
+}
 .admin-field input,
 .admin-field select,
 .admin-field textarea {
-    padding: 9px 13px;
+    width: 100%;
+    min-height: var(--ctl-h-md);
+    padding: var(--sp-2) var(--sp-3);
     border: 1px solid var(--ph-line);
     border-radius: var(--ph-r-md, 10px);
-    background: var(--ph-paper);
+    background: var(--field-bg);
     color: var(--ph-ink);
     font-size: var(--fs-md);
+    line-height: 1.5;
     font-family: inherit;
-    transition: var(--ph-tr);
+    outline: none;
+    transition: border-color var(--tr-fast), box-shadow var(--tr-fast);
 }
 .admin-field input:focus,
 .admin-field select:focus,
 .admin-field textarea:focus {
     outline: none;
-    border-color: var(--ph-teal);
-    box-shadow: 0 0 0 3px var(--ph-teal-mist);
+    border-color: var(--focus-ring);
+    box-shadow: var(--ring);
 }
+.admin-field textarea { min-height: 96px; padding-block: var(--sp-3); resize: vertical; }
 .admin-field--inline { flex-direction: row; align-items: center; gap: 8px; margin: 0; }
 .admin-field--inline > span { white-space: nowrap; }
 .admin-field--toggle { margin-block-end: 10px; }

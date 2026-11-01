@@ -3,6 +3,7 @@ import type { ApiSuccess } from './types';
 import type {
   ApiIncomingOrder,
   ApiPlatformSettlement,
+  ApiPlatformSettlementOutstanding,
   AccountingRange,
   ApiAccountingOverview,
   ApiAccountingBarcodeResult,
@@ -140,8 +141,8 @@ export function createPharmacyApi(client: ApiClient) {
       return response.data;
     },
 
-    async platformSettlements(page = 1, signal?: AbortSignal): Promise<Paginated<ApiPlatformSettlement>> {
-      return paginated(await client.get<ApiSuccess<ApiPlatformSettlement[]>>(
+    async platformSettlements(page = 1, signal?: AbortSignal): Promise<Paginated<ApiPlatformSettlement> & { outstanding: ApiPlatformSettlementOutstanding }> {
+      return paginated(await client.get<ApiSuccess<ApiPlatformSettlement[]> & { outstanding: ApiPlatformSettlementOutstanding }>(
         P.accPlatformSettlements, { query: { page }, signal },
       ));
     },
@@ -151,6 +152,9 @@ export function createPharmacyApi(client: ApiClient) {
         `${P.accPlatformSettlements}/${id}`, { signal },
       );
       return response.data;
+    },
+    async downloadPlatformSettlementReceipt(id: number): Promise<Blob> {
+      return client.download(`${P.accPlatformSettlements}/${id}/receipt`);
     },
 
     // ══════════════════════════════════════════════════════════════════

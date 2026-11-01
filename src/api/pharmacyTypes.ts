@@ -59,6 +59,7 @@ export interface ApiPlatformSettlement {
   status: 'draft' | 'paid';
   transfer_reference: string | null;
   paid_at: string | null;
+  receipt_available: boolean;
   items: Array<{
     sub_order_id: number;
     order_id: number;
@@ -66,6 +67,11 @@ export interface ApiPlatformSettlement {
     items: Array<{ name: string; quantity: number; total: number }>;
   }>;
   adjustments: Array<{ id: number; amount: number; reason: string; effective_period_start: string }>;
+}
+
+export interface ApiPlatformSettlementOutstanding {
+  orders_count: number; orders_total: number; draft_count: number; drafts_total: number;
+  adjustments_total: number; total_due: number;
 }
 
 /** A paginated list response. */

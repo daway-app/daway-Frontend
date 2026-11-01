@@ -26,13 +26,30 @@ function SettlementListPage() {
     queryKey: keys.platformSettlements.list(1),
   });
 
+  async function downloadReceipt(id: number) {
+    const blob = await api.downloadPlatformSettlementReceipt(id);
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `transfer-receipt-${id}`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="ph-page">
       <PageHeader title={S.title} subtitle={S.subtitle} icon="fas fa-money-bill-transfer" />
-      <AsyncBoundary isLoading={query.isLoading} isError={query.isError} error={query.error} onRetry={query.refetch}
-        isEmpty={query.data?.data.length === 0} emptyTitle={S.empty} emptyDescription={S.empty_hint}>
-        {query.data && <Card>
-            <DataTable caption={S.title} columns={[S.period, S.orders_total, S.adjustments, S.net_total, S.status, S.reference]}>
+      <AsyncBoundary isLoading={query.isLoading} isError={query.isError} error={query.error} onRetry={query.refetch}>
+        {query.data && <>
+          <Card title={S.outstanding_label}>
+            <div className="platform-settlement-outstanding">
+              <span>{S.waiting_transfer}</span>
+              <strong dir="ltr">{money(query.data.outstanding.total_due)}</strong>
+              <small>{query.data.outstanding.orders_count} · {S.orders_total} + {query.data.outstanding.draft_count} · {S.draft}</small>
+            </div>
+          </Card>
+          {query.data.data.length ? <Card>
+            <DataTable caption={S.title} columns={[S.period, S.orders_total, S.adjustments, S.net_total, S.status, S.reference, S.download_receipt]}>
               {query.data.data.map((row) => (
                 <tr key={row.id}>
                   <td><Link to={`${ROUTES.accountingPlatformSettlements}/${row.id}`}>{period(row)}</Link></td>
@@ -41,10 +58,12 @@ function SettlementListPage() {
                   <td dir="ltr"><strong>{money(row.net_total)}</strong></td>
                   <td><span className={`ph-badge ${row.status === 'paid' ? 'ok' : 'low'}`}>{row.status === 'paid' ? S.paid : S.draft}</span></td>
                   <td dir="ltr">{row.transfer_reference ?? '—'}</td>
+                  <td>{row.receipt_available && <Btn variant="outline" size="sm" onClick={() => void downloadReceipt(row.id)}>{S.download_receipt}</Btn>}</td>
                 </tr>
               ))}
             </DataTable>
-          </Card>}
+          </Card> : <EmptyState title={S.empty} description={S.empty_hint} icon="fas fa-receipt" />}
+        </>}
       </AsyncBoundary>
     </div>
   );

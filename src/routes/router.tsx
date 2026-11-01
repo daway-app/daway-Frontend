@@ -81,7 +81,7 @@ const AdminPaymentsPage = lazyPage(() => import('@/features/admin/payments/Admin
 const AdminPaymentProblemsPage = lazyPage(
   () => import('@/features/admin/payments/AdminPaymentProblemsPage'),
 );
-const AdminPlatformSettlementsPage = lazyPage(() => import('@/features/admin/settlements/AdminPlatformSettlementsPage'));
+const AdminPlatformSettlementsPage = lazyPage(() => import('@/features/admin/settlements/AdminPharmacyDuesPage'));
 const AdminProfilePage = lazyPage(() => import('@/features/admin/profile/AdminProfilePage'));
 const AdminPasswordChangePage = lazyPage(() => import('@/features/admin/profile/AdminPasswordChangePage'));
 

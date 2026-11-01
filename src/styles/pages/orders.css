@@ -58,3 +58,6 @@
   .order-item-card__prices b,.order-item-card__prices strong { color: var(--ph-ink); }
   .order-item-card__prices strong { font-size: var(--fs-md); }
 }
+.platform-settlement-outstanding { display: grid; gap: 8px; }
+.platform-settlement-outstanding strong { font-size: 1.5rem; }
+.platform-settlement-outstanding small { color: var(--ph-muted, #667085); }

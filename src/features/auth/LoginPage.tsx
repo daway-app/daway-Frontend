@@ -7,6 +7,7 @@ import { Btn } from '@/components/ui';
 import { useLang } from '@/lib/lang/useLang';
 import { ROUTES } from '@/routes/paths';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
+import { adminPostLoginDestination } from '@/routes/adminRouting';
 import { preloadRoute } from '@/lib/routePreload';
 import { queryClient, PRESET_STALE_TIMES } from '@/api/queryClient';
 import { pharmacyKeys } from '@/api/queryKeys';
@@ -84,6 +85,8 @@ export function LoginPage() {
   const pharmacyApi = usePharmacyApi();
   const navigate = useNavigate();
   const location = useLocation();
+  const adminPasswordChanged =
+    (location.state as { adminPasswordChanged?: boolean } | null)?.adminPasswordChanged === true;
 
   const [role, setRole] = useState<Role>('pharmacy');
   const [identity, setIdentity] = useState('');
@@ -211,8 +214,15 @@ export function LoginPage() {
     }, LOGIN_TIMEOUT_MS);
 
     try {
+      let postLoginDestination = redirectTo;
       if (isAdmin) {
-        await adminAuth.login(identity.trim(), password);
+        const admin = await adminAuth.login(identity.trim(), password);
+        postLoginDestination = adminPostLoginDestination(admin.must_change_password);
+        if (admin.must_change_password) {
+          setIsSubmitting(false);
+          navigate(postLoginDestination, { replace: true });
+          return;
+        }
       } else {
         await pharmacyAuth.login(identity.trim(), password);
       }
@@ -224,7 +234,7 @@ export function LoginPage() {
       // user does not trade the login spinner for a blank dashboard skeleton.
       // A timeout / "continue anyway" fall-through still navigates — the
       // dashboard will refetch on its own if preflight did not complete.
-      await prepareDashboard(attempt, isAdmin, redirectTo);
+      await prepareDashboard(attempt, isAdmin, postLoginDestination);
     } catch (caught) {
       if (attempt !== attemptRef.current) return;
       if (caught instanceof ApiError) {
@@ -302,6 +312,11 @@ export function LoginPage() {
       <div className="auth-form-side">
         <h1 className="form-title">{L.title}</h1>
         <p className="form-subtitle">{L.subtitle}</p>
+        {isAdmin && adminPasswordChanged ? (
+          <div className="info-hint" role="status">
+            {STR.admin.profile.password.changed_body}
+          </div>
+        ) : null}
 
         {/* مُبدِّل نوع الحساب — المؤشّر عنصر منفصل ينزلق بـ transform. */}
         <div className="fg">

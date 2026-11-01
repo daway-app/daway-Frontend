@@ -2,6 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '@/auth/adminContext';
 import { ADMIN_ROUTES } from './adminPaths';
 import { ROUTES } from './paths';
+import { adminGuardRedirect } from './adminRouting';
 
 /**
  * Admin route guards.
@@ -31,10 +32,15 @@ import { ROUTES } from './paths';
 
 /** Gate for authenticated admin areas. */
 export function RequireAdmin() {
-  const { isAuthenticated } = useAdminAuth();
+  const { isAuthenticated, user } = useAdminAuth();
   const location = useLocation();
+  const redirectTo = adminGuardRedirect(
+    isAuthenticated,
+    user?.must_change_password ?? false,
+    location.pathname,
+  );
 
-  if (!isAuthenticated) {
+  if (redirectTo === ROUTES.login) {
     return (
       <Navigate
         to={ROUTES.login}
@@ -42,6 +48,12 @@ export function RequireAdmin() {
         state={{ from: location.pathname + location.search }}
       />
     );
+  }
+
+  // The password screen is the one authenticated destination available while
+  // the first-login flag is set. The server remains the security boundary.
+  if (redirectTo) {
+    return <Navigate to={redirectTo} replace />;
   }
 
   return <Outlet />;

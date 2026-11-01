@@ -67,6 +67,104 @@ describe('refresh through the session and storage contract', () => {
     expect(values.get('daway.auth.token')).toBe('old-pharmacy');
   });
 
+  it.each([true, false])('persists the admin password-change state (%s) and restores it after refresh', async (mustChange) => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({
+      success: true,
+      data: {
+        token: 'new-admin-token',
+        user: {
+          id: 7,
+          name: 'Admin',
+          email: 'admin@example.test',
+          role: 'admin',
+          must_change_password: mustChange,
+        },
+      },
+    })));
+    const first = createAdminApiStack({ fetchImpl, baseUrl: 'https://api.test' });
+    await first.login('admin@example.test', 'initial-pass');
+
+    const restored = createAdminApiStack({ fetchImpl, baseUrl: 'https://api.test' });
+    expect(restored.isAuthenticated()).toBe(true);
+    expect(restored.getUser()?.must_change_password).toBe(mustChange);
+    expect(values.get('daway.auth.token')).toBe('old-pharmacy');
+  });
+
+  it('updates a stale admin snapshot when the backend requires a password change', async () => {
+    const loginFetch = vi.fn(async () => new Response(JSON.stringify({
+      success: true,
+      data: {
+        token: 'admin-token',
+        user: {
+          id: 7,
+          name: 'Admin',
+          email: 'admin@example.test',
+          role: 'admin',
+          must_change_password: false,
+        },
+      },
+    })));
+    const stack = createAdminApiStack({ fetchImpl: loginFetch, baseUrl: 'https://api.test' });
+    await stack.login('admin@example.test', 'password');
+    const requestFetch = vi.fn(async () => new Response(JSON.stringify({
+      success: false,
+      code: 'PASSWORD_CHANGE_REQUIRED',
+      message: 'يجب تغيير كلمة المرور الأولية.',
+    }), { status: 403 }));
+    const expired = vi.fn();
+    // The new stack reads the persisted false snapshot and token. A 403 updates
+    // that snapshot, rather than expiring the valid limited admin session.
+    const actualStack = createAdminApiStack({
+      fetchImpl: requestFetch,
+      baseUrl: 'https://api.test',
+      onSessionExpired: expired,
+    });
+
+    await expect(actualStack.client.get('/api/admin/dashboard')).rejects.toMatchObject({
+      status: 403,
+      code: 'PASSWORD_CHANGE_REQUIRED',
+    });
+    expect(actualStack.getUser()?.must_change_password).toBe(true);
+    expect(JSON.parse(values.get('daway.admin.user') ?? '{}').must_change_password).toBe(true);
+    expect(expired).not.toHaveBeenCalled();
+    expect(values.get('daway.auth.token')).toBe('old-pharmacy');
+  });
+
+  it('clears the admin session on logout and allows a fresh login', async () => {
+    let logins = 0;
+    const fetchImpl = vi.fn(async (url: RequestInfo | URL) => {
+      if (String(url).endsWith('/api/login/admin')) {
+        logins += 1;
+        return new Response(JSON.stringify({
+          success: true,
+          data: {
+            token: `admin-token-${logins}`,
+            user: {
+              id: 7,
+              name: 'Admin',
+              email: 'admin@example.test',
+              role: 'admin',
+              must_change_password: false,
+            },
+          },
+        }));
+      }
+      return new Response('{}');
+    });
+    const stack = createAdminApiStack({ fetchImpl, baseUrl: 'https://api.test' });
+
+    await stack.login('admin@example.test', 'old-password');
+    await stack.logout();
+    expect(stack.isAuthenticated()).toBe(false);
+    expect(stack.getUser()).toBeNull();
+    expect(values.has('daway.admin.token')).toBe(false);
+
+    await stack.login('admin@example.test', 'new-password');
+    expect(stack.isAuthenticated()).toBe(true);
+    expect(stack.tokens.get()).toBe('admin-token-2');
+    expect(stack.getUser()?.must_change_password).toBe(false);
+  });
+
   it('shares one failed internal refresh and one expiry across a request and download', async () => {
     const fetchImpl = vi.fn(async (_url: RequestInfo | URL) => new Response('{}', { status: 401 }));
     const expired = vi.fn();

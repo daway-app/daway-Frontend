@@ -45,6 +45,8 @@ export interface ApiClientDeps {
   refresh: () => Promise<string | null>;
   /** Notified when the session ends and the user must sign in again. */
   onSessionExpired?: () => void;
+  /** Called when the server reports that an admin must change an initial password. */
+  onPasswordChangeRequired?: () => void;
   /** Overridable for tests. */
   fetchImpl?: typeof fetch;
   baseUrl?: string;
@@ -184,7 +186,11 @@ export function createApiClient(deps: ApiClientDeps) {
       // Non-JSON error body (e.g. an HTML 500 page) — leave body null.
     }
     const retryAfter = parseRetryAfter(response.headers.get('Retry-After'));
-    return apiErrorFromBody(response.status, body, retryAfter);
+    const error = apiErrorFromBody(response.status, body, retryAfter);
+    if (error.code === 'PASSWORD_CHANGE_REQUIRED') {
+      deps.onPasswordChangeRequired?.();
+    }
+    return error;
   }
 
   async function request<T>(

@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Btn, Card, Modal, PageHeader } from '@/components/ui';
+import { Btn, Card, PageHeader } from '@/components/ui';
 import { useAdminApi, useAdminAuth } from '@/auth/adminContext';
 import { useApiMutation } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/useLang';
 import { ADMIN_ROUTES } from '@/routes/adminPaths';
+import { ROUTES } from '@/routes/paths';
 
 /**
  * Admin password change — `POST /api/admin/change-password`.
@@ -17,12 +18,8 @@ import { ADMIN_ROUTES } from '@/routes/adminPaths';
  * request arrived on. That is correct: a password change must invalidate any
  * session an attacker may already hold.
  *
- * The consequence the UI must handle: the token in localStorage is now dead, so
- * the very next request would 401. The screen therefore does NOT "continue" —
- * it blocks with a modal explaining the re-login and offers that single action.
- * Redirecting first and explaining afterwards (the pharmacy page's ORIGINAL bug,
- * a `window.alert` immediately destroyed by a redirect) is exactly what this
- * avoids.
+ * The UI clears its local session immediately and sends the admin to the unified
+ * login. The next session must be issued with the newly changed password.
  *
  * ============================================================================
  * VALIDATION LAYERS
@@ -44,7 +41,7 @@ export function AdminPasswordChangePage() {
   const P = STR.admin.profile.password;
   const api = useAdminApi();
   const navigate = useNavigate();
-  const { logout } = useAdminAuth();
+  const { logout, user } = useAdminAuth();
 
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -52,7 +49,6 @@ export function AdminPasswordChangePage() {
   const [showNext, setShowNext] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [done, setDone] = useState(false);
 
   const changePassword = useApiMutation(
     (body: { current_password: string; password: string; password_confirmation: string }) =>
@@ -82,8 +78,9 @@ export function AdminPasswordChangePage() {
         password: next,
         password_confirmation: confirm,
       });
-      // Server success — every token is gone, so the session is already over.
-      setDone(true);
+      // The server revoked every token; clear the local snapshot and re-login.
+      await logout();
+      navigate(ROUTES.login, { replace: true, state: { adminPasswordChanged: true } });
     } catch {
       /*
        * Prefer the server's FIELD errors. The API returns Laravel's `errors`
@@ -101,13 +98,6 @@ export function AdminPasswordChangePage() {
       }
       setErrors({ current: changePassword.error?.message ?? P.failed });
     }
-  }
-
-  async function handleRelogin() {
-    // Clear the dead token before navigating so the guard does not bounce back
-    // into an authenticated route with a token the server has already revoked.
-    await logout();
-    navigate(ADMIN_ROUTES.login, { replace: true });
   }
 
   return (
@@ -228,35 +218,15 @@ export function AdminPasswordChangePage() {
             <Btn type="submit" variant="primary" disabled={changePassword.isPending}>
               {P.submit}
             </Btn>
-            <Btn variant="outline" to={ADMIN_ROUTES.profile}>
-              {P.back}
-            </Btn>
+            {!user?.must_change_password ? (
+              <Btn variant="outline" to={ADMIN_ROUTES.profile}>
+                {P.back}
+              </Btn>
+            ) : null}
           </div>
         </form>
       </Card>
 
-      {/*
-        Session-ended modal. Deliberately NOT dismissible: the token is dead, so
-        "close" would strand the user on a page where nothing loads. One action,
-        one way forward.
-      */}
-      <Modal
-        open={done}
-        title={P.changed_title}
-        onClose={() => {
-          /* intentionally not dismissible — the session is over */
-        }}
-        footer={
-          <Btn variant="primary" onClick={() => void handleRelogin()}>
-            {P.relogin}
-          </Btn>
-        }
-      >
-        <div className="admin-password-done">
-          <i className="fas fa-circle-check" aria-hidden="true" />
-          <p>{P.changed_body}</p>
-        </div>
-      </Modal>
     </div>
   );
 }

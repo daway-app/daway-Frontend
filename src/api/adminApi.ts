@@ -129,7 +129,16 @@ export function createAdminApi(client: ApiClient) {
       return client.post<{
         success: boolean;
         message: string;
-        data: { user: { id: number; name: string; email: string | null; role: string }; token: string };
+        data: {
+          user: {
+            id: number;
+            name: string;
+            email: string | null;
+            role: string;
+            must_change_password: boolean;
+          };
+          token: string;
+        };
       }>(ADMIN_ENDPOINTS.login, { email, password }, { skipAuth: true });
     },
 

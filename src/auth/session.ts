@@ -221,6 +221,13 @@ export function createAdminApiStack(options?: {
       notify();
       options?.onSessionExpired?.();
     },
+    onPasswordChangeRequired: () => {
+      if (user && !user.must_change_password) {
+        user = { ...user, must_change_password: true };
+        browserAdminUserStorage.set(user);
+        notify();
+      }
+    },
     fetchImpl: options?.fetchImpl,
     baseUrl: options?.baseUrl,
   });

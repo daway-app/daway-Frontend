@@ -50,6 +50,12 @@ export const ROUTES = {
   accountingRefundsCreate: '/accounting/refunds/create',
   accountingCash: '/accounting/cash',
   accountingPlatformSettlements: '/accounting/platform-settlements',
+  /**
+   * Outstanding customer debts — the drill-down behind the overview's
+   * «ديون مستحقة» KPI. Same data the customers endpoint already exposes via
+   * `only_debtors=1`; this route just gives it a screen.
+   */
+  accountingDebts: '/accounting/debts',
   notFound: '*',
 } as const;
 

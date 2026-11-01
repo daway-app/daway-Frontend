@@ -75,6 +75,8 @@ export function pharmacyKeys(id: string | number) {
     expenses: (q?: ListQuery) => [...base, 'expenses', q] as const,
     customers: [...base, 'customers'] as const,
     customerSearch: (term: string) => [...base, 'customers', 'search', term] as const,
+    /** Debtors-only view of the customers list (`only_debtors=1`). */
+    debtors: (q?: ListQuery) => [...base, 'customers', 'debtors', q] as const,
     suppliers: [...base, 'suppliers'] as const,
     notifications: {
       all: [...base, 'notifications'] as const,

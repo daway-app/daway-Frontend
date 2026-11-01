@@ -599,6 +599,23 @@ export const EN = {
       outstanding_label: 'Amount held by platform', waiting_transfer: 'Awaiting transfer', no_outstanding: 'No amount is awaiting transfer.', download_receipt: 'Download transfer receipt',
       reason: 'Adjustment reason', no_adjustments: 'No adjustments in this settlement.', back: 'Back to settlements',
     },
+
+    /** Drill-down behind the overview's outstanding-debts KPI. */
+    debts: {
+      title: 'Outstanding Debts',
+      subtitle: 'Customers who still owe a balance',
+      total_debt: 'Total debt',
+      debtors_count: 'Debtors',
+      col_customer: 'Customer',
+      col_phone: 'Phone',
+      col_balance: 'Current balance',
+      col_limit: 'Credit limit',
+      col_flag: 'Limit',
+      over_limit: 'Over limit',
+      within_limit: 'Within limit',
+      empty: 'No outstanding debts',
+      empty_desc: 'Every customer balance is settled. New credit sales will show up here.',
+    },
     common: {
       currency: '₪',
       search: 'Search',

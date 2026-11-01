@@ -59,6 +59,7 @@ const AccountingRefundCreatePage = lazyPage(() => import('@/features/pharmacy/ac
 const AccountingRefundShowPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingRefundShowPage'));
 const AccountingCashPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingCashPage'));
 const AccountingPlatformSettlementsPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingPlatformSettlementsPage'));
+const AccountingDebtsPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingDebtsPage'));
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 const AdminDashboardPage = lazyPage(() => import('@/features/admin/dashboard/AdminDashboardPage'));
@@ -347,6 +348,13 @@ export const router = createBrowserRouter([
               },
               { path: 'accounting/platform-settlements', element: <AccountingPlatformSettlementsPage /> },
               { path: 'accounting/platform-settlements/:id', element: <AccountingPlatformSettlementsPage /> },
+              {
+                // Drill-down behind the overview's «ديون مستحقة» KPI.
+                // Declared before the `accounting/*` catch-all so the real page
+                // wins over the placeholder.
+                path: 'accounting/debts',
+                element: <AccountingDebtsPage />,
+              },
               {
                 // Catch-all last, so unknown accounting sub-paths still land on
                 // the placeholder rather than a silent 404 inside the section.

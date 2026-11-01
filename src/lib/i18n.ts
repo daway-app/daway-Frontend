@@ -711,6 +711,23 @@ export const AR = {
       reason: 'سبب التعديل', no_adjustments: 'لا توجد تعديلات لهذه الدفعة.', back: 'العودة للتسويات',
     },
 
+    /** Drill-down behind the overview's «ديون مستحقة» KPI. */
+    debts: {
+      title: 'ديون مستحقة',
+      subtitle: 'العملاء الذين عليهم أرصدة غير مسدَّدة',
+      total_debt: 'إجمالي الديون',
+      debtors_count: 'عدد المدينين',
+      col_customer: 'العميل',
+      col_phone: 'الهاتف',
+      col_balance: 'الدين الحالي',
+      col_limit: 'سقف الائتمان',
+      col_flag: 'التجاوز',
+      over_limit: 'تجاوز السقف',
+      within_limit: 'داخل السقف',
+      empty: 'لا توجد ديون مستحقة',
+      empty_desc: 'كل أرصدة العملاء مسدَّدة. أي بيع آجل جديد سيظهر هنا.',
+    },
+
     common: {
       currency: '₪',
       search: 'بحث',

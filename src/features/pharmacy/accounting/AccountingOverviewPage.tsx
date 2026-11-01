@@ -36,6 +36,18 @@ import { ROUTES } from '@/routes/paths';
 
 const RANGE_KEYS: readonly AccountingRange[] = ['today', '7d', '30d', 'month'] as const;
 
+/**
+ * KPIs that drill down, keyed by the backend's `kpi.key`.
+ *
+ * The backend sends `href: null` for these and that is deliberate:
+ * `AccountingReports` is a shared service whose own comment says the API must
+ * not depend on the web route table. The SPA owns its routes, so the mapping
+ * lives here rather than in a backend deploy.
+ */
+const KPI_DRILLDOWN: Record<string, string> = {
+  outstanding_debts: ROUTES.accountingDebts,
+};
+
 /** Blade `$expenseChartColors` — CSS custom-property names, resolved by the browser. */
 const EXPENSE_COLORS = [
   '--info',
@@ -104,7 +116,7 @@ export function AccountingOverviewPage() {
       >
         <div className="ac-kpi-grid">
           {(data?.kpis ?? []).map((kpi) => {
-            const route = toAppRoute(kpi.href);
+            const route = toAppRoute(kpi.href) ?? KPI_DRILLDOWN[kpi.key] ?? null;
             const display = kpi.format === 'money' ? money(kpi.value) : num(kpi.value);
             const body = (
               <>

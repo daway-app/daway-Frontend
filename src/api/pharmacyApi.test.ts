@@ -58,10 +58,11 @@ describe('pharmacy incoming orders API', () => {
 describe('pharmacy platform settlements API', () => {
   it('loads the pharmacy settlement list with pagination', async () => {
     const { client, get } = fakeClient();
-    const row = { id: 7, pharmacy_id: 2, pharmacy_name: 'صيدلية الاختبار', period_start: '2026-10-27', period_end: '2026-11-02', currency: 'ILS', orders_total: 100, adjustments_total: -10, net_total: 90, status: 'paid', transfer_reference: 'BANK-7', paid_at: '2026-11-01T12:00:00Z', items: [], adjustments: [] };
-    get.mockResolvedValue({ success: true, data: [row], pagination: { total: 1, per_page: 20, current_page: 1, last_page: 1 } });
+    const row = { id: 7, pharmacy_id: 2, pharmacy_name: 'صيدلية الاختبار', period_start: '2026-10-27', period_end: '2026-11-02', currency: 'ILS', orders_total: 100, adjustments_total: -10, net_total: 90, status: 'paid', transfer_reference: 'BANK-7', paid_at: '2026-11-01T12:00:00Z', receipt_available: true, items: [], adjustments: [] };
+    const outstanding = { orders_count: 1, orders_total: 35, draft_count: 0, drafts_total: 0, adjustments_total: 0, total_due: 35 };
+    get.mockResolvedValue({ success: true, data: [row], outstanding, pagination: { total: 1, per_page: 20, current_page: 1, last_page: 1 } });
 
-    await expect(createPharmacyApi(client).platformSettlements()).resolves.toMatchObject({ data: [row], pagination: { total: 1 } });
+    await expect(createPharmacyApi(client).platformSettlements()).resolves.toMatchObject({ data: [row], outstanding, pagination: { total: 1 } });
     expect(get).toHaveBeenCalledWith('/api/pharmacy/accounting/platform-settlements', { query: { page: 1 }, signal: undefined });
   });
 
@@ -72,6 +73,13 @@ describe('pharmacy platform settlements API', () => {
 
     await expect(createPharmacyApi(client).platformSettlement(7)).resolves.toEqual(row);
     expect(get).toHaveBeenCalledWith('/api/pharmacy/accounting/platform-settlements/7', { signal: undefined });
+  });
+
+  it('downloads the transfer receipt through the authenticated API client', async () => {
+    const download = vi.fn().mockResolvedValue(new Blob(['notice']));
+    const client = { download } as unknown as ApiClient;
+    await createPharmacyApi(client).downloadPlatformSettlementReceipt(7);
+    expect(download).toHaveBeenCalledWith('/api/pharmacy/accounting/platform-settlements/7/receipt');
   });
 });
 

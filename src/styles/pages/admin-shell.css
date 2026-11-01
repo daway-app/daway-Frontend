@@ -1499,3 +1499,14 @@ body.dark-mode .admin-page .legend-row:hover {
 .admin-page .admin-settlement-row p { margin: 10px 0; }
 .admin-page .admin-settlement-row ul { padding-inline-start: 24px; }
 .admin-page .admin-settlement-actions input { min-width: 220px; }
+.admin-page .admin-settlement-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.admin-page .admin-dues-row > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.admin-page .admin-dues-row h2 { margin: 0; }
+.admin-page .admin-dues-amount { display: block; margin: 16px 0 8px; font-size: 1.3rem; }
+.admin-page .admin-dues-parts { display: flex; flex-wrap: wrap; gap: 18px; margin-block: 12px; }
+.admin-page .admin-dues-payment-form { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(180px, 1fr) auto; gap: 12px; align-items: end; margin-top: 18px; }
+.admin-page .admin-dues-error { color: var(--danger, #b42318); }
+@media (max-width: 760px) {
+    .admin-page .admin-dues-payment-form { grid-template-columns: 1fr; }
+    .admin-page .admin-dues-payment-form input[type="file"] { max-width: 100%; }
+}

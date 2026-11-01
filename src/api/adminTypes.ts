@@ -110,8 +110,13 @@ export interface AdminPlatformSettlement {
   id: number; pharmacy_id: number; pharmacy_name: string; period_start: string; period_end: string;
   currency: 'ILS'; orders_total: number; adjustments_total: number; net_total: number;
   status: 'draft' | 'paid'; transfer_reference: string | null; paid_at: string | null;
+  receipt_available: boolean;
   items: Array<{ sub_order_id: number; order_id: number; amount: number; items: Array<{ name: string; quantity: number; total: number }> }>;
   adjustments: Array<{ id: number; amount: number; reason: string; effective_period_start: string }>;
+}
+export interface AdminPlatformSettlementDue {
+  pharmacy_id: number; pharmacy_name: string; orders_count: number; orders_total: number;
+  draft_count: number; drafts_total: number; adjustments_total: number; total_due: number; currency: 'ILS';
 }
 export interface AdminEligibleSettlementOrder {
   sub_order_id: number; order_id: number; delivered_at: string; amount: number; currency: 'ILS'; items_count: number;

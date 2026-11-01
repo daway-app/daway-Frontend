@@ -22,6 +22,7 @@ import type {
   AdminPaymentRow,
   AdminPlatformSettlement,
   AdminEligibleSettlementOrder,
+  AdminPlatformSettlementDue,
   AdminPaymentsResponse,
   PaymentBank,
   PaymentProblemStatus,
@@ -81,6 +82,9 @@ export const ADMIN_ENDPOINTS = {
   paymentProblems: '/api/admin/payment-problems',
   paymentProblemResolve: (id: number) => `/api/admin/payment-problems/${id}/resolve`,
   platformSettlements: '/api/admin/platform-settlements',
+  platformSettlementsDue: '/api/admin/platform-settlements/due',
+  platformSettlementPayPharmacy: (pharmacyId: number) => `/api/admin/platform-settlements/pharmacies/${pharmacyId}/pay`,
+  platformSettlementReceipt: (id: number) => `/api/admin/platform-settlements/${id}/receipt`,
   platformSettlement: (id: number) => `/api/admin/platform-settlements/${id}`,
   platformSettlementEligible: '/api/admin/platform-settlements/eligible',
   platformSettlementPaid: (id: number) => `/api/admin/platform-settlements/${id}/paid`,
@@ -558,6 +562,19 @@ export function createAdminApi(client: ApiClient) {
     async platformSettlements(signal?: AbortSignal) {
       const res = await client.get<{ success: boolean; data: AdminPlatformSettlement[]; pagination: Pagination }>(ADMIN_ENDPOINTS.platformSettlements, { query: { per_page: 100 }, signal });
       return res;
+    },
+    async platformSettlementsDue(signal?: AbortSignal) {
+      const res = await client.get<{ success: boolean; data: AdminPlatformSettlementDue[] }>(ADMIN_ENDPOINTS.platformSettlementsDue, { signal });
+      return res.data;
+    },
+    async payPlatformPharmacy(pharmacyId: number, receipt: File, transferReference: string) {
+      const body = new FormData();
+      body.append('receipt', receipt);
+      if (transferReference.trim()) body.append('transfer_reference', transferReference.trim());
+      return client.post<{ success: boolean; message: string; data: AdminPlatformSettlement[] }>(ADMIN_ENDPOINTS.platformSettlementPayPharmacy(pharmacyId), body);
+    },
+    async downloadPlatformSettlementReceipt(id: number) {
+      return client.download(ADMIN_ENDPOINTS.platformSettlementReceipt(id));
     },
     async platformSettlementEligible(params: { pharmacy_id: number; period_start: string; period_end: string }, signal?: AbortSignal) {
       const res = await client.get<{ success: boolean; data: AdminEligibleSettlementOrder[] }>(ADMIN_ENDPOINTS.platformSettlementEligible, { query: params, signal });

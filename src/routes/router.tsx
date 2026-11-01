@@ -43,6 +43,8 @@ const InquiryChatPage = lazyPage(() => import('@/features/pharmacy/inquiries/Inq
 const AlternativesPage = lazyPage(() => import('@/features/pharmacy/alternatives/AlternativesPage'));
 const AlternativeCreatePage = lazyPage(() => import('@/features/pharmacy/alternatives/AlternativeCreatePage'));
 const RatingsPage = lazyPage(() => import('@/features/pharmacy/ratings/RatingsPage'));
+const OrdersPage = lazyPage(() => import('@/features/pharmacy/orders/OrdersPage'));
+const OrderDetailsPage = lazyPage(() => import('@/features/pharmacy/orders/OrderDetailsPage'));
 const ProfilePage = lazyPage(() => import('@/features/pharmacy/profile/ProfilePage'));
 const ProfileCompletePage = lazyPage(() => import('@/features/pharmacy/profile/ProfileCompletePage'));
 
@@ -56,6 +58,7 @@ const AccountingRefundsPage = lazyPage(() => import('@/features/pharmacy/account
 const AccountingRefundCreatePage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingRefundCreatePage'));
 const AccountingRefundShowPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingRefundShowPage'));
 const AccountingCashPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingCashPage'));
+const AccountingPlatformSettlementsPage = lazyPage(() => import('@/features/pharmacy/accounting/AccountingPlatformSettlementsPage'));
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 const AdminDashboardPage = lazyPage(() => import('@/features/admin/dashboard/AdminDashboardPage'));
@@ -78,6 +81,7 @@ const AdminPaymentsPage = lazyPage(() => import('@/features/admin/payments/Admin
 const AdminPaymentProblemsPage = lazyPage(
   () => import('@/features/admin/payments/AdminPaymentProblemsPage'),
 );
+const AdminPlatformSettlementsPage = lazyPage(() => import('@/features/admin/settlements/AdminPlatformSettlementsPage'));
 const AdminProfilePage = lazyPage(() => import('@/features/admin/profile/AdminProfilePage'));
 const AdminPasswordChangePage = lazyPage(() => import('@/features/admin/profile/AdminPasswordChangePage'));
 
@@ -175,6 +179,7 @@ export const router = createBrowserRouter([
               { path: ADMIN_ROUTES.paymentBanks, element: <AdminPaymentBanksPage /> },
               { path: ADMIN_ROUTES.payments, element: <AdminPaymentsPage /> },
               { path: ADMIN_ROUTES.paymentProblems, element: <AdminPaymentProblemsPage /> },
+              { path: ADMIN_ROUTES.platformSettlements, element: <AdminPlatformSettlementsPage /> },
               { path: ADMIN_ROUTES.profile, element: <AdminProfilePage /> },
               {
                 // Declared AFTER `profile` — the literal `/admin/profile/password`
@@ -285,6 +290,8 @@ export const router = createBrowserRouter([
                 path: 'ratings',
                 element: <RatingsPage />,
               },
+              { path: 'orders', element: <OrdersPage /> },
+              { path: 'orders/:id', element: <OrderDetailsPage /> },
               {
                 path: 'profile',
                 element: <ProfilePage />,
@@ -338,6 +345,8 @@ export const router = createBrowserRouter([
                 path: 'accounting/cash',
                 element: <AccountingCashPage />,
               },
+              { path: 'accounting/platform-settlements', element: <AccountingPlatformSettlementsPage /> },
+              { path: 'accounting/platform-settlements/:id', element: <AccountingPlatformSettlementsPage /> },
               {
                 // Catch-all last, so unknown accounting sub-paths still land on
                 // the placeholder rather than a silent 404 inside the section.

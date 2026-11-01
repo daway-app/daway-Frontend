@@ -36,6 +36,7 @@ export const ROUTES = {
   inquiries: '/inquiries',
   alternatives: '/alternatives',
   ratings: '/ratings',
+  orders: '/orders',
   profile: '/profile',
   /** `pharmacy.profile.complete` — first-run profile completion wizard. */
   profileComplete: '/profile/complete',
@@ -48,6 +49,7 @@ export const ROUTES = {
   accountingRefunds: '/accounting/refunds',
   accountingRefundsCreate: '/accounting/refunds/create',
   accountingCash: '/accounting/cash',
+  accountingPlatformSettlements: '/accounting/platform-settlements',
   notFound: '*',
 } as const;
 

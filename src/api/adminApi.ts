@@ -20,10 +20,13 @@ import type {
   AdminPaymentDetail,
   AdminPaymentProblemsResponse,
   AdminPaymentRow,
+  AdminPlatformSettlement,
+  AdminEligibleSettlementOrder,
   AdminPaymentsResponse,
   PaymentBank,
   PaymentProblemStatus,
   PaymentStatus,
+  Pagination,
 } from './adminTypes';
 
 /**
@@ -77,6 +80,11 @@ export const ADMIN_ENDPOINTS = {
     `/api/admin/payments/${orderId}/submissions/${submissionId}/receipt`,
   paymentProblems: '/api/admin/payment-problems',
   paymentProblemResolve: (id: number) => `/api/admin/payment-problems/${id}/resolve`,
+  platformSettlements: '/api/admin/platform-settlements',
+  platformSettlement: (id: number) => `/api/admin/platform-settlements/${id}`,
+  platformSettlementEligible: '/api/admin/platform-settlements/eligible',
+  platformSettlementPaid: (id: number) => `/api/admin/platform-settlements/${id}/paid`,
+  platformSettlementAdjustments: '/api/admin/platform-settlements/adjustments',
   /**
    * Own profile + password change.
    *
@@ -545,6 +553,24 @@ export function createAdminApi(client: ApiClient) {
         ADMIN_ENDPOINTS.paymentProblemResolve(id),
         { admin_note: adminNote },
       );
+    },
+
+    async platformSettlements(signal?: AbortSignal) {
+      const res = await client.get<{ success: boolean; data: AdminPlatformSettlement[]; pagination: Pagination }>(ADMIN_ENDPOINTS.platformSettlements, { query: { per_page: 100 }, signal });
+      return res;
+    },
+    async platformSettlementEligible(params: { pharmacy_id: number; period_start: string; period_end: string }, signal?: AbortSignal) {
+      const res = await client.get<{ success: boolean; data: AdminEligibleSettlementOrder[] }>(ADMIN_ENDPOINTS.platformSettlementEligible, { query: params, signal });
+      return res.data;
+    },
+    async createPlatformSettlementDraft(body: { pharmacy_id: number; period_start: string; period_end: string }) {
+      return client.post<{ success: boolean; message: string; data: AdminPlatformSettlement }>(ADMIN_ENDPOINTS.platformSettlements, body);
+    },
+    async markPlatformSettlementPaid(id: number, body: { transfer_reference: string; paid_at: string }) {
+      return client.post<{ success: boolean; message: string; data: AdminPlatformSettlement }>(ADMIN_ENDPOINTS.platformSettlementPaid(id), body);
+    },
+    async addPlatformSettlementAdjustment(body: { pharmacy_id: number; effective_period_start: string; amount: number; reason: string }) {
+      return client.post<{ success: boolean; message: string }>(ADMIN_ENDPOINTS.platformSettlementAdjustments, body);
     },
 
     // ── Own profile ─────────────────────────────────────────────────────────

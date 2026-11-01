@@ -1,6 +1,8 @@
 import type { ApiClient } from './client';
 import type { ApiSuccess } from './types';
 import type {
+  ApiIncomingOrder,
+  ApiPlatformSettlement,
   AccountingRange,
   ApiAccountingOverview,
   ApiAccountingBarcodeResult,
@@ -84,6 +86,7 @@ const P = {
   accSalesSummary: '/api/pharmacy/accounting/sales-summary',
   accRefunds: '/api/pharmacy/accounting/refunds',
   accCash: '/api/pharmacy/accounting/cash',
+  accPlatformSettlements: '/api/pharmacy/accounting/platform-settlements',
   accCashAdjustments: '/api/pharmacy/accounting/cash/adjustments',
   accExpenses: '/api/pharmacy/accounting/expenses',
   accExpenseCategories: '/api/pharmacy/accounting/expense-categories',
@@ -124,6 +127,32 @@ type ListEnvelope<T, Extra extends object> = ApiSuccess<T[]> & Extra;
 
 export function createPharmacyApi(client: ApiClient) {
   return {
+    async incomingOrders(page = 1, signal?: AbortSignal): Promise<Paginated<ApiIncomingOrder>> {
+      return paginated(await client.get<ApiSuccess<ApiIncomingOrder[]>>(
+        '/api/pharmacy/sub-orders', { query: { page }, signal },
+      ));
+    },
+
+    async incomingOrder(id: number, signal?: AbortSignal): Promise<ApiIncomingOrder> {
+      const response = await client.get<ApiSuccess<ApiIncomingOrder>>(
+        `/api/pharmacy/sub-orders/${id}`, { signal },
+      );
+      return response.data;
+    },
+
+    async platformSettlements(page = 1, signal?: AbortSignal): Promise<Paginated<ApiPlatformSettlement>> {
+      return paginated(await client.get<ApiSuccess<ApiPlatformSettlement[]>>(
+        P.accPlatformSettlements, { query: { page }, signal },
+      ));
+    },
+
+    async platformSettlement(id: number, signal?: AbortSignal): Promise<ApiPlatformSettlement> {
+      const response = await client.get<ApiSuccess<ApiPlatformSettlement>>(
+        `${P.accPlatformSettlements}/${id}`, { signal },
+      );
+      return response.data;
+    },
+
     // ══════════════════════════════════════════════════════════════════
     // Dashboard
     // ══════════════════════════════════════════════════════════════════

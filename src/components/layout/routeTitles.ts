@@ -94,8 +94,10 @@ function pharmacyEntries(STR: Strings): Entry[] {
     { path: ROUTES.inquiries, title: STR.pharmacy.inquiries.heading },
     { path: ROUTES.alternatives, title: STR.pharmacy.alternatives.index.heading_page },
     { path: ROUTES.ratings, title: STR.pharmacy.ratings.heading_page },
+    { path: ROUTES.orders, title: STR.orders.title },
     { path: ROUTES.profile, title: STR.pharmacy.profile.heading_page },
     { path: ROUTES.accounting, title: STR.accounting.sidebar.section_title },
+    { path: ROUTES.accountingPlatformSettlements, title: STR.accounting.sidebar.platform_settlements },
   ];
 }
 

@@ -13,6 +13,26 @@
  */
 
 export const AR = {
+  orders: {
+    title: 'الطلبات الواردة', subtitle: 'طلبات الأدوية الخاصة بصيدليتك',
+    details: 'تفاصيل الطلب', parent: 'رقم الطلب', sub_order: 'رقم طلب الصيدلية',
+    patient: 'المريض', date: 'تاريخ الطلب', status: 'حالة طلب الصيدلية',
+    order_status: 'حالة الطلب الكاملة', payment: 'حالة الدفع', method: 'طريقة الاستلام',
+    delivery: 'توصيل', subtotal: 'مجموع أدوية الصيدلية', discount: 'الخصم', total: 'صافي أدوية الصيدلية',
+    medicine: 'الدواء', quantity: 'الكمية', unit_price: 'سعر الوحدة', line_total: 'إجمالي البند',
+    items_count: 'عدد الأدوية',
+    empty: 'لا توجد طلبات واردة', empty_hint: 'ستظهر هنا الطلبات التي تحتوي على أدوية من صيدليتك.',
+    back: 'العودة للطلبات', refresh: 'تحديث', previous: 'السابق', next: 'التالي',
+    unavailable: 'الطلب غير متاح', delivered_at: 'وقت التسليم',
+    totals_hint: 'المبلغ يشمل أدوية صيدليتك فقط. رسوم التوصيل ضمن الطلب الكامل، وحالة الدفع يحدّثها الأدمن بعد مراجعة الإثبات.',
+    problem_hint: 'أبلغ المريض عن مشكلة في الدفع. الطلب قيد المراجعة؛ لا تعتبر المبلغ محصّلًا حتى يؤكد الأدمن الدفع.',
+    medicine_types: 'أصناف دوائية', units: 'وحدات', pharmacy_amount: 'مستحقات أدوية الصيدلية', net_amount: 'صافي الصيدلية',
+    statuses: { pending: 'قيد الانتظار', confirmed: 'تم تأكيد الطلب', preparing: 'جاري تجهيز الطلب',
+      ready: 'جاهز للاستلام أو التوصيل', picked_up: 'استلمه المندوب', out_for_delivery: 'خرج للتوصيل',
+      delivered: 'تم الاستلام', cancelled: 'ملغي' },
+    payments: { pending: 'بانتظار الدفع', under_review: 'بانتظار مراجعة الدفع', paid: 'تم تأكيد الدفع',
+      rejected: 'الدفع مرفوض — يلزم التصحيح', problem_reported: 'بلاغ مشكلة دفع' },
+  },
   layout: {
     app_title: 'دواك',
     app_subtitle: 'الصحة، في مكان واحد',
@@ -96,6 +116,7 @@ export const AR = {
       manage_alternatives: 'إدارة البدائل',
       pharmacy_profile: 'ملف الصيدلية',
       ratings: 'التقييمات',
+      incoming_orders: 'الطلبات الواردة',
       inventory: 'إدارة المخزون',
       bulk_import: 'استيراد المخزون بالجملة',
       inquiries: 'استفسارات التوفر',
@@ -677,6 +698,16 @@ export const AR = {
       reports: 'التقارير',
       settings: 'الإعدادات',
       soon: 'قريبًا',
+      platform_settlements: 'تسويات المنصة',
+    },
+
+    platform_settlements: {
+      title: 'تسويات المنصة', subtitle: 'دفعات الطلبات الإلكترونية المسلّمة والمعتمدة',
+      empty: 'لا توجد تسويات بعد', empty_hint: 'ستظهر هنا دفعات المنصة عند إعدادها من الإدارة.',
+      period: 'الفترة', orders_total: 'الطلبات المسلّمة', adjustments: 'التعديلات', net_total: 'صافي التحويل',
+      status: 'حالة الدفعة', draft: 'قيد التحويل', paid: 'تم التحويل', reference: 'مرجع التحويل', paid_at: 'تاريخ التحويل',
+      details: 'تفاصيل الدفعة', order: 'رقم الطلب', pharmacy_order: 'رقم طلب الصيدلية', amount: 'المبلغ',
+      reason: 'سبب التعديل', no_adjustments: 'لا توجد تعديلات لهذه الدفعة.', back: 'العودة للتسويات',
     },
 
     common: {
@@ -1496,6 +1527,7 @@ export const AR = {
       payment_banks: 'بنوك الدفع',
       payments: 'المدفوعات',
       payment_problems: 'مشاكل الدفع',
+      platform_settlements: 'تسويات المنصة',
       activity_log: 'سجل النشاط',
       profile: 'ملفي الشخصي',
       logout: 'تسجيل الخروج',

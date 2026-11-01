@@ -20,6 +20,7 @@
 @import './pages/medicines-edit.css';
 @import './pages/medicines-create.css';
 @import './pages/pharmacy-chat.css';
+@import './pages/orders.css';
 /* Loaded before the accounting screens so the shared barcode/scan widgets
    (`ac-*`) used by the medicine-request page render in the same order Blade
    uses: the page CSS then the accounting layer. */

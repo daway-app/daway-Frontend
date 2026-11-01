@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from './client';
 import { createPharmacyApi } from './pharmacyApi';
-import type { ApiUncategorizedMedicine } from './pharmacyTypes';
+import type { ApiIncomingOrder, ApiUncategorizedMedicine } from './pharmacyTypes';
 
 function fakeClient() {
   const get = vi.fn();
@@ -25,6 +25,55 @@ const row: ApiUncategorizedMedicine = {
   image_url: null,
   quantity: 12,
 };
+
+const incomingOrder: ApiIncomingOrder = {
+  id: 41, order_id: 9, pharmacy_id: 2, pharmacy_name: 'صيدلية الاختبار',
+  patient: { name: 'عبود' }, order_status: 'ready', status: 'ready',
+  payment_status: 'problem_reported', fulfillment_method: 'delivery', currency: 'ILS',
+  subtotal: 20, discount: 0, shipping_fee: 0, commission: 0, total: 20,
+  delivered_at: null, created_at: '2026-10-31 10:00:00',
+  items: [{ id: 1, medicine_trade_name: 'Panadol', quantity: 2, unit_price: 10, total_price: 20 }],
+};
+
+describe('pharmacy incoming orders API', () => {
+  it('keeps the list response pagination and requests the exact authenticated endpoint', async () => {
+    const { client, get } = fakeClient();
+    get.mockResolvedValue({ success: true, data: [incomingOrder], pagination: { total: 1, per_page: 20, current_page: 2, last_page: 2 } });
+
+    await expect(createPharmacyApi(client).incomingOrders(2)).resolves.toMatchObject({
+      data: [incomingOrder], pagination: { current_page: 2, last_page: 2 },
+    });
+    expect(get).toHaveBeenCalledWith('/api/pharmacy/sub-orders', { query: { page: 2 }, signal: undefined });
+  });
+
+  it('loads only the requested pharmacy sub-order detail', async () => {
+    const { client, get } = fakeClient();
+    get.mockResolvedValue({ success: true, data: incomingOrder });
+
+    await expect(createPharmacyApi(client).incomingOrder(41)).resolves.toEqual(incomingOrder);
+    expect(get).toHaveBeenCalledWith('/api/pharmacy/sub-orders/41', { signal: undefined });
+  });
+});
+
+describe('pharmacy platform settlements API', () => {
+  it('loads the pharmacy settlement list with pagination', async () => {
+    const { client, get } = fakeClient();
+    const row = { id: 7, pharmacy_id: 2, pharmacy_name: 'صيدلية الاختبار', period_start: '2026-10-27', period_end: '2026-11-02', currency: 'ILS', orders_total: 100, adjustments_total: -10, net_total: 90, status: 'paid', transfer_reference: 'BANK-7', paid_at: '2026-11-01T12:00:00Z', items: [], adjustments: [] };
+    get.mockResolvedValue({ success: true, data: [row], pagination: { total: 1, per_page: 20, current_page: 1, last_page: 1 } });
+
+    await expect(createPharmacyApi(client).platformSettlements()).resolves.toMatchObject({ data: [row], pagination: { total: 1 } });
+    expect(get).toHaveBeenCalledWith('/api/pharmacy/accounting/platform-settlements', { query: { page: 1 }, signal: undefined });
+  });
+
+  it('loads only the requested pharmacy settlement details', async () => {
+    const { client, get } = fakeClient();
+    const row = { id: 7, pharmacy_id: 2, pharmacy_name: 'صيدلية الاختبار', period_start: '2026-10-27', period_end: '2026-11-02', currency: 'ILS', orders_total: 100, adjustments_total: 0, net_total: 100, status: 'draft', transfer_reference: null, paid_at: null, items: [], adjustments: [] };
+    get.mockResolvedValue({ success: true, data: row });
+
+    await expect(createPharmacyApi(client).platformSettlement(7)).resolves.toEqual(row);
+    expect(get).toHaveBeenCalledWith('/api/pharmacy/accounting/platform-settlements/7', { signal: undefined });
+  });
+});
 
 describe('pharmacy uncategorized API', () => {
   it('requests the paginated uncategorized endpoint with its filters', async () => {

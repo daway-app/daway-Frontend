@@ -56,6 +56,14 @@ export function pharmacyKeys(id: string | number) {
       list: (q?: ListQuery) => [...base, 'alternatives', 'list', q] as const,
     },
     ratings: [...base, 'ratings'] as const,
+    incomingOrders: {
+      list: (page: number) => [...base, 'incoming-orders', 'list', page] as const,
+      detail: (subOrderId: number) => [...base, 'incoming-orders', 'detail', subOrderId] as const,
+    },
+    platformSettlements: {
+      list: (page = 1) => [...base, 'accounting', 'platform-settlements', 'list', page] as const,
+      detail: (id: number) => [...base, 'accounting', 'platform-settlements', 'detail', id] as const,
+    },
     sales: (q?: ListQuery) => [...base, 'sales', q] as const,
     sale: (saleNumber: string) => [...base, 'sales', 'detail', saleNumber] as const,
     refundableItems: (saleNumber: string) =>

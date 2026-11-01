@@ -25,6 +25,8 @@ const PRELOAD_MAP: Record<string, () => Promise<unknown>> = {
   '/alternatives': () => import('@/features/pharmacy/alternatives/AlternativesPage'),
   '/alternatives/create': () => import('@/features/pharmacy/alternatives/AlternativeCreatePage'),
   '/ratings': () => import('@/features/pharmacy/ratings/RatingsPage'),
+  '/orders': () => import('@/features/pharmacy/orders/OrdersPage'),
+  '/orders/:id': () => import('@/features/pharmacy/orders/OrderDetailsPage'),
   '/profile': () => import('@/features/pharmacy/profile/ProfilePage'),
   '/profile/complete': () => import('@/features/pharmacy/profile/ProfileCompletePage'),
 
@@ -35,6 +37,7 @@ const PRELOAD_MAP: Record<string, () => Promise<unknown>> = {
   '/accounting/refunds': () => import('@/features/pharmacy/accounting/AccountingRefundsPage'),
   '/accounting/refunds/create': () => import('@/features/pharmacy/accounting/AccountingRefundCreatePage'),
   '/accounting/cash': () => import('@/features/pharmacy/accounting/AccountingCashPage'),
+  '/accounting/platform-settlements': () => import('@/features/pharmacy/accounting/AccountingPlatformSettlementsPage'),
 
   // Admin
   '/admin': () => import('@/features/admin/dashboard/AdminDashboardPage'),

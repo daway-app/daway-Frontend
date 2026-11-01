@@ -70,6 +70,7 @@ const PHARMACY_NAV: NavItem[] = [
   },
   { to: ROUTES.alternatives, labelKey: 'manage_alternatives', icon: <IconAlertTriangle /> },
   { to: ROUTES.profile, labelKey: 'pharmacy_profile', icon: <IconUser /> },
+  { to: ROUTES.orders, labelKey: 'incoming_orders', icon: <IconCart /> },
   { to: ROUTES.ratings, labelKey: 'ratings', icon: <IconStar /> },
 ];
 
@@ -267,5 +268,6 @@ const ACCOUNTING_NAV: { to: string; labelKey: string; icon: React.ReactNode }[] 
   { to: ROUTES.accountingSales, labelKey: 'sales', icon: <IconCart /> },
   { to: ROUTES.accountingRefunds, labelKey: 'refunds', icon: <IconRefund /> },
   { to: ROUTES.accountingCash, labelKey: 'cash_register', icon: <IconCash /> },
+  { to: ROUTES.accountingPlatformSettlements, labelKey: 'platform_settlements', icon: <IconReceipt /> },
 ];
 

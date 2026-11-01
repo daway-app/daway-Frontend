@@ -1483,3 +1483,19 @@ body.dark-mode .admin-page .legend-row:hover {
 .admin-page .card-header-modern .header-icon {
     flex-shrink: 0;
 }
+
+.admin-page .admin-settlement-form,
+.admin-page .admin-settlement-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: end;
+}
+.admin-page .admin-settlement-form > * { flex: 1 1 180px; }
+.admin-page .admin-settlement-actions { margin-top: 16px; }
+.admin-page .admin-settlement-list { display: grid; gap: 14px; }
+.admin-page .admin-settlement-row { padding: 16px; border: 1px solid var(--line); border-radius: 12px; }
+.admin-page .admin-settlement-row > header { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.admin-page .admin-settlement-row p { margin: 10px 0; }
+.admin-page .admin-settlement-row ul { padding-inline-start: 24px; }
+.admin-page .admin-settlement-actions input { min-width: 220px; }

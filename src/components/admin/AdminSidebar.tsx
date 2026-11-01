@@ -57,6 +57,7 @@ const MANAGEMENT_NAV: NavItem[] = [
     icon: <IconAlert />,
     activePrefix: true,
   },
+  { to: ADMIN_ROUTES.platformSettlements, labelKey: 'platform_settlements', icon: <IconBank />, activePrefix: true },
 ];
 
 /** Settings group (layout.php: settings_section). */

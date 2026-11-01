@@ -18,6 +18,56 @@
 export type { ApiPagination, ApiSuccess } from './types';
 import type { ApiPagination } from './types';
 
+/** Only the authenticated pharmacy's slice; parent totals are never exposed. */
+export interface ApiIncomingOrder {
+  id: number;
+  order_id: number;
+  pharmacy_id: number;
+  pharmacy_name: string | null;
+  patient: { name: string } | null;
+  order_status: string;
+  status: string;
+  payment_status: string;
+  fulfillment_method: 'delivery';
+  currency: 'ILS';
+  subtotal: number;
+  discount: number;
+  shipping_fee: number;
+  commission: number;
+  total: number;
+  delivered_at: string | null;
+  created_at: string | null;
+  items: Array<{
+    id: number;
+    medicine_trade_name: string;
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+  }>;
+}
+
+export interface ApiPlatformSettlement {
+  id: number;
+  pharmacy_id: number | null;
+  pharmacy_name: string;
+  period_start: string;
+  period_end: string;
+  currency: 'ILS';
+  orders_total: number;
+  adjustments_total: number;
+  net_total: number;
+  status: 'draft' | 'paid';
+  transfer_reference: string | null;
+  paid_at: string | null;
+  items: Array<{
+    sub_order_id: number;
+    order_id: number;
+    amount: number;
+    items: Array<{ name: string; quantity: number; total: number }>;
+  }>;
+  adjustments: Array<{ id: number; amount: number; reason: string; effective_period_start: string }>;
+}
+
 /** A paginated list response. */
 export interface Paginated<T> {
   data: T[];

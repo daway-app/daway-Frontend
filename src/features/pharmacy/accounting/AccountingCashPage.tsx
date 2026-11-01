@@ -294,18 +294,20 @@ export function AccountingCashPage() {
             resolves it is "new sale" — a real next step, not decoration.
             (Phase 2 — item A. Reuses the existing `new_sale` label.)
           */
-          <EmptyState
-            icon="fas fa-wallet"
-            title={A.cash_registers.empty}
-            description={A.cash_registers.empty_desc}
-            action={
-              <Btn variant="primary" to={ROUTES.accountingSalesCreate}>
-                <i className="fas fa-plus" /> {A.sales.new_sale}
-              </Btn>
-            }
-          />
+          <div className="ph-card">
+            <EmptyState
+              icon="fas fa-wallet"
+              title={A.cash_registers.empty}
+              description={A.cash_registers.empty_desc}
+              action={
+                <Btn variant="primary" to={ROUTES.accountingSalesCreate}>
+                  <i className="fas fa-plus" /> {A.sales.new_sale}
+                </Btn>
+              }
+            />
+          </div>
         ) : (
-          <>
+          <div className="ph-card">
             {/* 🔴 إصلاح React: غلاف تمرير أفقي (Blade يرسم الجدول عاريًا). */}
             <div className="ph-table-wrap">
               <table className="ph-table">
@@ -377,7 +379,7 @@ export function AccountingCashPage() {
                 </button>
               </div>
             )}
-          </>
+          </div>
         )}
       </AsyncBoundary>
 

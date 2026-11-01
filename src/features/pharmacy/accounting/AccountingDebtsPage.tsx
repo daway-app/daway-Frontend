@@ -23,6 +23,13 @@ import { ROUTES } from '@/routes/paths';
  * `total_debt` is deliberately read from the server rather than summed from the
  * visible rows: the list is paged, so a client-side sum would silently
  * under-report as soon as a pharmacy has more debtors than `PER_PAGE`.
+ *
+ * WHY THE TABLE IS WRAPPED IN `.ph-card`
+ * `.ph-table-wrap` only supplies `overflow-x: auto` — it draws no border. The
+ * app's framed-table pattern is `.ph-card > .ph-table-wrap`, which also picks
+ * up `padding: 0 22px 22px` from `pharmacy-accounting.css`. A bare
+ * `.ph-table-wrap` therefore renders a table floating on the page with no
+ * frame, which is what this screen looked like before.
  */
 
 const PER_PAGE = 50;
@@ -66,7 +73,7 @@ export function AccountingDebtsPage() {
         loadingRows={4}
       >
         <>
-          <div className="ph-card" style={{ marginBlockEnd: 20 }}>
+          <div className="ph-card">
             <div className="ph-grid">
               <div className="ph-grid-item">
                 <span className="label">{D.total_debt}</span>
@@ -80,47 +87,51 @@ export function AccountingDebtsPage() {
           </div>
 
           {rows.length === 0 ? (
-            <div className="ph-empty">
-              <i className="fas fa-hand-holding-dollar" aria-hidden="true" />
-              <h3>{D.empty}</h3>
-              <p>{D.empty_desc}</p>
+            <div className="ph-card">
+              <div className="ph-empty">
+                <i className="fas fa-hand-holding-dollar" aria-hidden="true" />
+                <h3>{D.empty}</h3>
+                <p>{D.empty_desc}</p>
+              </div>
             </div>
           ) : (
-            <div className="ph-table-wrap">
-              <table className="ph-table">
-                <caption className="ac-hidden">{D.title}</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">{D.col_customer}</th>
-                    <th scope="col">{D.col_phone}</th>
-                    <th scope="col" className="ac-num">
-                      {D.col_balance}
-                    </th>
-                    <th scope="col" className="ac-num">
-                      {D.col_limit}
-                    </th>
-                    <th scope="col">{D.col_flag}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((customer) => (
-                    <tr key={customer.id}>
-                      <td>{customer.name}</td>
-                      <td dir="ltr">{customer.phone ?? '—'}</td>
-                      <td className="ac-num ac-neg">{money(customer.current_balance)}</td>
-                      {/* `credit_limit_label` is server-formatted («غير محدود»). */}
-                      <td className="ac-num ac-muted">{customer.credit_limit_label}</td>
-                      <td>
-                        <span
-                          className={`ph-badge ${customer.exceeds_credit_limit ? 'low' : 'ok'}`}
-                        >
-                          {customer.exceeds_credit_limit ? D.over_limit : D.within_limit}
-                        </span>
-                      </td>
+            <div className="ph-card">
+              <div className="ph-table-wrap">
+                <table className="ph-table">
+                  <caption className="ac-hidden">{D.title}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{D.col_customer}</th>
+                      <th scope="col">{D.col_phone}</th>
+                      <th scope="col" className="ac-num">
+                        {D.col_balance}
+                      </th>
+                      <th scope="col" className="ac-num">
+                        {D.col_limit}
+                      </th>
+                      <th scope="col">{D.col_flag}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {rows.map((customer) => (
+                      <tr key={customer.id}>
+                        <td>{customer.name}</td>
+                        <td dir="ltr">{customer.phone ?? '—'}</td>
+                        <td className="ac-num ac-neg">{money(customer.current_balance)}</td>
+                        {/* `credit_limit_label` is server-formatted («غير محدود»). */}
+                        <td className="ac-num ac-muted">{customer.credit_limit_label}</td>
+                        <td>
+                          <span
+                            className={`ph-badge ${customer.exceeds_credit_limit ? 'low' : 'ok'}`}
+                          >
+                            {customer.exceeds_credit_limit ? D.over_limit : D.within_limit}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </>

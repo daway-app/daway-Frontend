@@ -164,13 +164,15 @@ export function AccountingRefundsPage() {
         loadingRows={5}
       >
         {rows.length === 0 ? (
-          <div className="ph-empty">
-            <i className="fas fa-rotate-left" aria-hidden="true" />
-            <h3>{A.refunds.empty}</h3>
-            <p>{A.refunds.empty_desc}</p>
+          <div className="ph-card">
+            <div className="ph-empty">
+              <i className="fas fa-rotate-left" aria-hidden="true" />
+              <h3>{A.refunds.empty}</h3>
+              <p>{A.refunds.empty_desc}</p>
+            </div>
           </div>
         ) : (
-          <>
+          <div className="ph-card">
             {/*
               🔴 إصلاح React: Blade يرسم هذا الجدول عاريًا (`<table class="ph-table">`)
               بلا غلاف تمرير — وهو خلل كامن يظهر عند ضيق المساحة (768px). `ph-table-wrap`
@@ -266,7 +268,7 @@ export function AccountingRefundsPage() {
                 </button>
               </div>
             )}
-          </>
+          </div>
         )}
       </AsyncBoundary>
     </div>

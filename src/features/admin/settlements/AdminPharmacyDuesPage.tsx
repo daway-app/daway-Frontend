@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AsyncBoundary, Badge, Btn, Card, FormField, PageHeader } from '@/components/ui';
+import { AsyncBoundary, Badge, Btn, Card, FormField, Notice, PageHeader } from '@/components/ui';
 import { useAdminApi, useAdminKeys } from '@/auth/adminContext';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { useLang } from '@/lib/lang/useLang';
@@ -18,6 +18,7 @@ export function AdminPlatformSettlementsPage() {
   const [tab, setTab] = useState<Tab>('unpaid');
   const [files, setFiles] = useState<Record<number, File | undefined>>({});
   const [references, setReferences] = useState<Record<number, string>>({});
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const dueKey = [...keys.all, 'platform-settlements', 'due'];
   const historyKey = [...keys.all, 'platform-settlements', 'history'];
   const due = useApiQuery<AdminPlatformSettlementDue[]>((signal) => api.admin.platformSettlementsDue(signal), [], { queryKey: dueKey });
@@ -40,13 +41,19 @@ export function AdminPlatformSettlementsPage() {
   }
 
   async function downloadReceipt(id: number) {
-    const blob = await api.admin.downloadPlatformSettlementReceipt(id);
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `transfer-receipt-${id}`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    // فشل التنزيل كان يذهب إلى unhandled rejection: الزر لا يقول شيئًا للمستخدم.
+    try {
+      setDownloadError(null);
+      const blob = await api.admin.downloadPlatformSettlementReceipt(id);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `transfer-receipt-${id}`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setDownloadError(S.download_failed);
+    }
   }
 
   return (
@@ -68,7 +75,7 @@ export function AdminPlatformSettlementsPage() {
                 <p>{S.orders_count}: {row.orders_count} · {S.draft_count}: {row.draft_count}</p>
                 <div className="admin-dues-parts"><span>{S.orders_total}: {money(row.orders_total)}</span><span>{S.adjustments}: {money(row.adjustments_total)}</span></div>
                 <div className="admin-dues-payment-form">
-                  <FormField label={S.receipt}><input key={files[row.pharmacy_id]?.name ?? 'empty'} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(event) => setFiles((current) => ({ ...current, [row.pharmacy_id]: event.target.files?.[0] }))} /></FormField>
+                  <FormField label={S.receipt} required hint={S.receipt_required}><input key={files[row.pharmacy_id]?.name ?? 'empty'} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(event) => setFiles((current) => ({ ...current, [row.pharmacy_id]: event.target.files?.[0] }))} /></FormField>
                   <FormField label={S.transfer_reference}><input value={references[row.pharmacy_id] ?? ''} onChange={(event) => setReferences((current) => ({ ...current, [row.pharmacy_id]: event.target.value }))} /></FormField>
                   <Btn variant="primary" disabled={!files[row.pharmacy_id] || payment.isPending} onClick={() => void submitPayment(row)}>{payment.isPending ? S.saving : S.mark_paid}</Btn>
                 </div>
@@ -80,6 +87,7 @@ export function AdminPlatformSettlementsPage() {
       ) : (
         <AsyncBoundary isLoading={history.isLoading} isError={history.isError} error={history.error} onRetry={history.refetch}
           isEmpty={!paidRows.length} emptyTitle={S.no_paid}>
+          {downloadError && <Notice tone="error">{downloadError}</Notice>}
           <div className="admin-settlement-list">{paidRows.map((row) => (
             <Card key={row.id}><article className="admin-dues-row">
               <header><h2>{row.pharmacy_name}</h2><Badge variant="paid">{S.paid}</Badge></header>

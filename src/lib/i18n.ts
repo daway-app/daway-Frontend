@@ -708,6 +708,7 @@ export const AR = {
       status: 'حالة الدفعة', draft: 'قيد التحويل', paid: 'تم التحويل', reference: 'مرجع التحويل', paid_at: 'تاريخ التحويل',
       details: 'تفاصيل الدفعة', order: 'رقم الطلب', pharmacy_order: 'رقم طلب الصيدلية', amount: 'المبلغ',
       outstanding_label: 'مستحق لدى الإدارة', waiting_transfer: 'بانتظار التحويل', no_outstanding: 'لا توجد مبالغ بانتظار التحويل.', download_receipt: 'تنزيل إشعار التحويل',
+      download_failed: 'تعذّر تنزيل الإشعار. أعد المحاولة، أو تواصل مع الإدارة.',
       reason: 'سبب التعديل', no_adjustments: 'لا توجد تعديلات لهذه الدفعة.', back: 'العودة للتسويات',
     },
 
@@ -1560,6 +1561,7 @@ export const AR = {
       due_amount: 'المبلغ المستحق', orders_count: 'طلبات مستحقة', draft_count: 'دفعات معلقة', transfer_reference: 'مرجع التحويل (اختياري)',
       receipt: 'إشعار التحويل', receipt_required: 'أرفق إشعار التحويل قبل تسجيل الدفع.', mark_paid: 'تسجيل الدفع', saving: 'جارٍ الحفظ…',
       download_receipt: 'تنزيل إشعار التحويل', period: 'الفترة', paid_at: 'تاريخ التحويل', amount: 'المبلغ المحوّل',
+      download_failed: 'تعذّر تنزيل الإشعار. أعد المحاولة، أو تواصل مع الدعم.',
       outstanding_label: 'مستحق لدى الإدارة', waiting_transfer: 'بانتظار التحويل', no_outstanding: 'لا توجد مبالغ بانتظار التحويل.',
       orders_total: 'قيمة الطلبات', adjustments: 'التعديلات', net_total: 'صافي التحويل', status: 'الحالة', reference: 'مرجع التحويل',
       details: 'تفاصيل الدفعة', order: 'رقم الطلب', pharmacy_order: 'رقم طلب الصيدلية', reason: 'سبب التعديل', no_adjustments: 'لا توجد تعديلات لهذه الدفعة.', back: 'العودة للتسويات',

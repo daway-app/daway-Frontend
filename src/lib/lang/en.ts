@@ -597,6 +597,7 @@ export const EN = {
       status: 'Payout status', draft: 'Pending transfer', paid: 'Transferred', reference: 'Transfer reference', paid_at: 'Transfer date',
       details: 'Settlement details', order: 'Order number', pharmacy_order: 'Pharmacy order number', amount: 'Amount',
       outstanding_label: 'Amount held by platform', waiting_transfer: 'Awaiting transfer', no_outstanding: 'No amount is awaiting transfer.', download_receipt: 'Download transfer receipt',
+      download_failed: 'Could not download the receipt. Try again, or contact the platform.',
       reason: 'Adjustment reason', no_adjustments: 'No adjustments in this settlement.', back: 'Back to settlements',
     },
 
@@ -1347,6 +1348,7 @@ export const EN = {
       due_amount: 'Amount due', orders_count: 'Due orders', draft_count: 'Pending payouts', transfer_reference: 'Transfer reference (optional)',
       receipt: 'Transfer receipt', receipt_required: 'Attach the transfer receipt before recording payment.', mark_paid: 'Record payment', saving: 'Saving…',
       download_receipt: 'Download transfer receipt', period: 'Period', paid_at: 'Transfer date', amount: 'Transferred amount',
+      download_failed: 'Could not download the receipt. Try again, or contact support.',
       outstanding_label: 'Amount held by platform', waiting_transfer: 'Awaiting transfer', no_outstanding: 'No amount is awaiting transfer.',
       orders_total: 'Order total', adjustments: 'Adjustments', net_total: 'Net transfer', status: 'Status', reference: 'Transfer reference',
       details: 'Payout details', order: 'Order number', pharmacy_order: 'Pharmacy order number', reason: 'Adjustment reason', no_adjustments: 'No adjustments in this payout.', back: 'Back to settlements',

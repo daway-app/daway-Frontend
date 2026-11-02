@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { AsyncBoundary, Btn, Card, DataTable, EmptyState, PageHeader } from '@/components/ui';
+import { AsyncBoundary, Btn, Card, DataTable, EmptyState, Notice, PageHeader } from '@/components/ui';
 import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
 import type { ApiPlatformSettlement } from '@/api/pharmacyTypes';
@@ -18,6 +19,7 @@ export default function AccountingPlatformSettlementsPage() {
 }
 
 function SettlementListPage() {
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const { STR } = useLang();
   const S = STR.accounting.platform_settlements;
   const api = usePharmacyApi();
@@ -27,13 +29,18 @@ function SettlementListPage() {
   });
 
   async function downloadReceipt(id: number) {
-    const blob = await api.downloadPlatformSettlementReceipt(id);
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `transfer-receipt-${id}`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    try {
+      setDownloadError(null);
+      const blob = await api.downloadPlatformSettlementReceipt(id);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `transfer-receipt-${id}`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setDownloadError(S.download_failed);
+    }
   }
 
   return (
@@ -48,6 +55,7 @@ function SettlementListPage() {
               <small>{query.data.outstanding.orders_count} · {S.orders_total} + {query.data.outstanding.draft_count} · {S.draft}</small>
             </div>
           </Card>
+          {downloadError && <Notice tone="error">{downloadError}</Notice>}
           {query.data.data.length ? <Card>
             <DataTable caption={S.title} columns={[S.period, S.orders_total, S.adjustments, S.net_total, S.status, S.reference, S.download_receipt]}>
               {query.data.data.map((row) => (

@@ -75,10 +75,11 @@ export function AdminPlatformSettlementsPage() {
                 <p>{S.orders_count}: {row.orders_count} · {S.draft_count}: {row.draft_count}</p>
                 <div className="admin-dues-parts"><span>{S.orders_total}: {money(row.orders_total)}</span><span>{S.adjustments}: {money(row.adjustments_total)}</span></div>
                 <div className="admin-dues-payment-form">
-                  <FormField label={S.receipt} required hint={S.receipt_required}><input key={files[row.pharmacy_id]?.name ?? 'empty'} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" onChange={(event) => setFiles((current) => ({ ...current, [row.pharmacy_id]: event.target.files?.[0] }))} /></FormField>
+                  <FormField label={S.receipt} required hint={S.receipt_required}><input key={files[row.pharmacy_id]?.name ?? 'empty'} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFiles((current) => ({ ...current, [row.pharmacy_id]: event.target.files?.[0] }))} /></FormField>
                   <FormField label={S.transfer_reference}><input value={references[row.pharmacy_id] ?? ''} onChange={(event) => setReferences((current) => ({ ...current, [row.pharmacy_id]: event.target.value }))} /></FormField>
                   <Btn variant="primary" disabled={!files[row.pharmacy_id] || payment.isPending} onClick={() => void submitPayment(row)}>{payment.isPending ? S.saving : S.mark_paid}</Btn>
                 </div>
+                <Notice tone="warning">{S.receipt_public_warning}</Notice>
                 {payment.error && <p className="admin-dues-error" role="alert">{payment.error.message}</p>}
               </article>
             </Card>

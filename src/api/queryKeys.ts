@@ -32,6 +32,10 @@ export function pharmacyKeys(id: string | number) {
     all: [...base, 'all'] as const,
     dashboardStats: [...base, 'dashboard', 'stats'] as const,
     profile: [...base, 'profile'] as const,
+    accountClosure: {
+      all: [...base, 'account-closure'] as const,
+      detail: [...base, 'account-closure', 'detail'] as const,
+    },
     inventory: {
       all: [...base, 'inventory'] as const,
       list: (q?: ListQuery) => [...base, 'inventory', 'list', q] as const,
@@ -130,6 +134,10 @@ export function adminKeys(id: string | number) {
     paymentProblems: {
       all: [...base, 'payment-problems'] as const,
       list: (q?: ListQuery) => [...base, 'payment-problems', 'list', q] as const,
+    },
+    accountClosures: {
+      all: [...base, 'account-closures'] as const,
+      list: (q?: ListQuery) => [...base, 'account-closures', 'list', q] as const,
     },
     notifications: {
       all: [...base, 'notifications'] as const,

@@ -30,6 +30,7 @@ export const ADMIN_ROUTES = {
   payments: '/admin/payments',
   paymentProblems: '/admin/payment-problems',
   platformSettlements: '/admin/platform-settlements',
+  accountClosures: '/admin/account-closures',
   profile: '/admin/profile',
   /**
    * Password change is a SEPARATE route, not a modal on the profile page.

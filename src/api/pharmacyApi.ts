@@ -1,6 +1,8 @@
 import type { ApiClient } from './client';
 import type { ApiSuccess } from './types';
 import type {
+  PharmacyAccountClosureRequest,
+  PharmacyAccountClosureState,
   ApiIncomingOrder,
   ApiPlatformSettlement,
   ApiPlatformSettlementOutstanding,
@@ -88,6 +90,7 @@ const P = {
   accRefunds: '/api/pharmacy/accounting/refunds',
   accCash: '/api/pharmacy/accounting/cash',
   accPlatformSettlements: '/api/pharmacy/accounting/platform-settlements',
+  accountClosure: '/api/pharmacy/account/closure-request',
   accCashAdjustments: '/api/pharmacy/accounting/cash/adjustments',
   accExpenses: '/api/pharmacy/accounting/expenses',
   accExpenseCategories: '/api/pharmacy/accounting/expense-categories',
@@ -840,6 +843,22 @@ export function createPharmacyApi(client: ApiClient) {
         data: res.data,
         stats: res.stats ?? { total_payables: 0, suppliers_count: 0 },
       };
+    },
+
+    /** حالة إغلاق الحساب + الموانع الحالية (يحسبها الباك-إند لحظيًا). */
+    async accountClosureState(signal?: AbortSignal) {
+      const res = await client.get<{ success: boolean; data: PharmacyAccountClosureState }>(
+        P.accountClosure,
+        { signal },
+      );
+      return res.data;
+    },
+
+    async requestAccountClosure(reason: string) {
+      return client.post<{ success: boolean; message: string; data: PharmacyAccountClosureRequest }>(
+        P.accountClosure,
+        { reason },
+      );
     },
   };
 }

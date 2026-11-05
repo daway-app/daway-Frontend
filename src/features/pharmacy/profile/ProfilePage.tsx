@@ -3,6 +3,7 @@ import { useLang } from '@/lib/lang/useLang';
 import { AsyncBoundary, FormField, Modal } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { useAuth, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
+import { AccountClosureSection } from './AccountClosureSection';
 import { useApiMutation, useApiQuery } from '@/api/useApiQuery';
 import { thumbUrl } from '@/lib/format';
 import {
@@ -1112,6 +1113,8 @@ export function ProfilePage() {
           <p>{P.password_change.changed_body}</p>
         </div>
       </Modal>
+      <AccountClosureSection />
+
     </div>
   );
 }

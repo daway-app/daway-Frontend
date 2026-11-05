@@ -59,6 +59,7 @@ const MANAGEMENT_NAV: NavItem[] = [
     activePrefix: true,
   },
   { to: ADMIN_ROUTES.platformSettlements, labelKey: 'platform_settlements', icon: <IconBank />, activePrefix: true },
+  { to: ADMIN_ROUTES.accountClosures, labelKey: 'account_closures', icon: <IconBox />, activePrefix: true },
 ];
 
 /** Settings group (layout.php: settings_section). */

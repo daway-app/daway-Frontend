@@ -537,3 +537,33 @@ export interface AdminPaymentProblemsResponse {
   problems: AdminPaymentProblem[];
   pagination: Pagination;
 }
+
+
+// ── Account closure requests ────────────────────────────────────────────────
+
+export type AccountClosureStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+/** One reason the backend refuses to complete a closure. `key` is stable. */
+export interface AccountClosureBlocker {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface AdminAccountClosureRequest {
+  id: number;
+  subject_type: 'pharmacy' | 'user';
+  subject_id: number;
+  subject_name: string | null;
+  status: AccountClosureStatus;
+  reason: string | null;
+  blockers: AccountClosureBlocker[];
+  review_note: string | null;
+  reviewed_at: string | null;
+  created_at: string | null;
+}
+
+export interface AdminAccountClosuresResponse {
+  success: boolean;
+  data: AdminAccountClosureRequest[];
+}

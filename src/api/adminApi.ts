@@ -22,6 +22,7 @@ import type {
   AdminPaymentRow,
   AdminPlatformSettlement,
   AdminEligibleSettlementOrder,
+  AdminAccountClosuresResponse,
   AdminPlatformSettlementDue,
   AdminPaymentsResponse,
   PaymentBank,
@@ -89,6 +90,10 @@ export const ADMIN_ENDPOINTS = {
   platformSettlementEligible: '/api/admin/platform-settlements/eligible',
   platformSettlementPaid: (id: number) => `/api/admin/platform-settlements/${id}/paid`,
   platformSettlementAdjustments: '/api/admin/platform-settlements/adjustments',
+  accountClosures: '/api/admin/account-closures',
+  accountClosureApprove: (id: number) => `/api/admin/account-closures/${id}/approve`,
+  accountClosureReject: (id: number) => `/api/admin/account-closures/${id}/reject`,
+  pharmacyReopen: (id: number) => `/api/admin/pharmacies/${id}/reopen`,
   /**
    * Own profile + password change.
    *
@@ -575,6 +580,45 @@ export function createAdminApi(client: ApiClient) {
     async platformSettlementsDue(signal?: AbortSignal) {
       const res = await client.get<{ success: boolean; data: AdminPlatformSettlementDue[] }>(ADMIN_ENDPOINTS.platformSettlementsDue, { signal });
       return res.data;
+    },
+
+    /**
+     * Account closure requests awaiting review.
+     *
+     * The backend owns every rule about when a closure may complete; this
+     * screen only renders the `blockers` it returns. A 409 on approve is a
+     * normal outcome (obligations appeared since the request), not a bug.
+     */
+    async accountClosures(
+      status: 'pending' | 'approved' | 'rejected' | 'cancelled' | 'all',
+      signal?: AbortSignal,
+    ) {
+      const res = await client.get<AdminAccountClosuresResponse>(
+        `${ADMIN_ENDPOINTS.accountClosures}?status=${status}`,
+        { signal },
+      );
+      return res.data;
+    },
+
+    async approveAccountClosure(id: number, note: string) {
+      return client.post<{ success: boolean; message: string }>(
+        ADMIN_ENDPOINTS.accountClosureApprove(id),
+        { note },
+      );
+    },
+
+    async rejectAccountClosure(id: number, note: string) {
+      return client.post<{ success: boolean; message: string }>(
+        ADMIN_ENDPOINTS.accountClosureReject(id),
+        { note },
+      );
+    },
+
+    async reopenPharmacy(id: number) {
+      return client.post<{ success: boolean; message: string }>(
+        ADMIN_ENDPOINTS.pharmacyReopen(id),
+        {},
+      );
     },
     async payPlatformPharmacy(pharmacyId: number, receipt: File, transferReference: string) {
       const body = new FormData();

@@ -1072,3 +1072,29 @@ export interface ApiSalePayload {
   paid?: number;
   payment_method: string;
 }
+
+
+// ── Account closure ─────────────────────────────────────────────────────────
+
+export interface ClosureBlocker {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface PharmacyAccountClosureRequest {
+  id: number;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  reason: string | null;
+  created_at: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+  blockers: ClosureBlocker[];
+}
+
+export interface PharmacyAccountClosureState {
+  account_status: 'active' | 'closed';
+  closed_at: string | null;
+  request: PharmacyAccountClosureRequest | null;
+  blockers: ClosureBlocker[];
+}

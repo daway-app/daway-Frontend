@@ -83,6 +83,7 @@ const AdminPaymentProblemsPage = lazyPage(
   () => import('@/features/admin/payments/AdminPaymentProblemsPage'),
 );
 const AdminPlatformSettlementsPage = lazyPage(() => import('@/features/admin/settlements/AdminPharmacyDuesPage'));
+const AdminAccountClosuresPage = lazyPage(() => import('@/features/admin/accountClosures/AdminAccountClosuresPage'));
 const AdminProfilePage = lazyPage(() => import('@/features/admin/profile/AdminProfilePage'));
 const AdminPasswordChangePage = lazyPage(() => import('@/features/admin/profile/AdminPasswordChangePage'));
 
@@ -181,6 +182,7 @@ export const router = createBrowserRouter([
               { path: ADMIN_ROUTES.payments, element: <AdminPaymentsPage /> },
               { path: ADMIN_ROUTES.paymentProblems, element: <AdminPaymentProblemsPage /> },
               { path: ADMIN_ROUTES.platformSettlements, element: <AdminPlatformSettlementsPage /> },
+              { path: ADMIN_ROUTES.accountClosures, element: <AdminAccountClosuresPage /> },
               { path: ADMIN_ROUTES.profile, element: <AdminProfilePage /> },
               {
                 // Declared AFTER `profile` — the literal `/admin/profile/password`

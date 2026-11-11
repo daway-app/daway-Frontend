@@ -11,7 +11,6 @@
  */
 const PRELOAD_MAP: Record<string, () => Promise<unknown>> = {
   // Auth
-  '/login': () => import('@/features/auth/LoginPage'),
   '/change-password': () => import('@/features/auth/PasswordChangePage'),
 
   // Pharmacy

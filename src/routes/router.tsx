@@ -10,9 +10,9 @@ import { ADMIN_ROUTES } from './adminPaths';
 import { RequireAdmin, RedirectAdminLoginToUnified } from './adminGuards';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { NotFoundPage, PlaceholderPage } from '@/features/PlaceholderPage';
+import { LoginPage } from '@/features/auth/LoginPage';
 
 // ── Auth pages (eager: needed before lazy chunks load) ───────────────────────
-const LoginPage = lazyPage(() => import('@/features/auth/LoginPage'));
 /**
  * Public self-registration for a pharmacy. It lives in the SAME guest branch as
  * `login` because it is the counterpart of it — a signed-out visitor's screen.

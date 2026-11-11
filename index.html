@@ -22,17 +22,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     />
-    <!--
-      Chart.js 4 UMD — decision B7 (vendored, not an npm dependency).
-      The Blade pages load the identical file with `defer`; Chart.tsx reads
-      `window.Chart`. Without this tag the charts render empty canvases with no
-      console error (audit B-1), so it MUST stay here.
-
-      `defer` is required, not cosmetic: it guarantees Chart.js executes before
-      the module script but after HTML parsing, which is the ordering the
-      Chart.tsx mount path relies on.
-    -->
-    <script defer src="/vendor/chart.umd.js"></script>
+    <link rel="preload" href="/fonts/tajawal-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/tajawal-700.woff2" as="font" type="font/woff2" crossorigin />
     <!--
       Theme pre-paint — LIGHT ONLY (طلب عبود: بلا دارك مود).
       يضمن عدم وجود صنف `dark-mode` على <html> من أول رسم، ويمسح أي

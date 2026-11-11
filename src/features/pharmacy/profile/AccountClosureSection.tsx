@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { AsyncBoundary, Btn, Card, FormField, Notice } from '@/components/ui';
+import { AsyncBoundary, Btn, FormField, Modal, Notice } from '@/components/ui';
 import { toast } from '@/lib/toast';
 import { usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery, useApiMutation } from '@/api/useApiQuery';
@@ -54,19 +54,15 @@ export function AccountClosureSection() {
   }
 
   return (
-    <Card>
+    <>
       <button
         type="button"
-        className="ph-btn outline"
-        aria-expanded={expanded}
-        aria-controls="pharmacy-account-closure-details"
-        onClick={() => setExpanded((value) => !value)}
-        style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        className="ph-btn outline sm"
+        onClick={() => setExpanded(true)}
       >
-        <span>{C.title}</span>
-        <span aria-hidden="true">{expanded ? '−' : '+'}</span>
+        {C.title}
       </button>
-      {expanded && <div id="pharmacy-account-closure-details" style={{ marginBlockStart: 16 }}>
+      <Modal open={expanded} title={C.title} onClose={() => setExpanded(false)}>
       <section className="ph-settings-section">
         <header>
           <h2>{C.title}</h2>
@@ -132,7 +128,7 @@ export function AccountClosureSection() {
           )}
         </AsyncBoundary>
       </section>
-      </div>}
-    </Card>
+      </Modal>
+    </>
   );
 }

@@ -252,12 +252,12 @@ export function AccountingOverviewPage() {
                   <p>{A.overview.no_transactions_desc}</p>
                 </div>
               ) : (
-                <div className="ac-recent-transactions" style={{ padding: '4px 16px' }}>
+                <div className="ac-recent-transactions" style={{ padding: '4px 12px', width: '100%', minWidth: 0, maxWidth: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
                   {transactions.map((tx, i) => (
-                    <div key={`${tx.reference}-${tx.date}-${i}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border, #e5e7eb)' }}>
-                      <div style={{ minWidth: 0, flex: '1 1 auto' }}>
-                        <div style={{ overflowWrap: 'anywhere' }}>{tx.description || labelOf(A.payment_types, tx.type)}</div>
-                        <small className="ac-muted">{(tx.date ?? '').replace('T', ' ').slice(0, 16) || '—'} · {tx.reference}</small>
+                    <div key={`${tx.reference}-${tx.date}-${i}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) max-content', alignItems: 'center', gap: 8, minWidth: 0, maxWidth: '100%', padding: '12px 0', borderBottom: '1px solid var(--border, #e5e7eb)' }}>
+                      <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                        <div title={tx.description || labelOf(A.payment_types, tx.type)} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{tx.description || labelOf(A.payment_types, tx.type)}</div>
+                        <small className="ac-muted" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(tx.date ?? '').replace('T', ' ').slice(0, 16) || '—'}</small>
                       </div>
                       <strong dir="ltr" className={tx.amount < 0 ? 'ac-neg' : 'ac-pos'} style={{ flex: '0 0 auto', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                         {tx.amount < 0 ? '−' : ''}{money(Math.abs(tx.amount))}

@@ -57,10 +57,11 @@ export function AccountClosureSection() {
     <>
       <button
         type="button"
-        className="ph-btn outline sm"
+        className="ph-text-action"
         onClick={() => setExpanded(true)}
+        style={{ color: "var(--danger, #c62828)" }}
       >
-        {C.title}
+        <i className="fas fa-user-xmark" aria-hidden="true" /> {C.title}
       </button>
       <Modal open={expanded} title={C.title} onClose={() => setExpanded(false)}>
       <section className="ph-settings-section">

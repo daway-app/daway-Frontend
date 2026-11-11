@@ -48,11 +48,10 @@ function SettlementListPage() {
       <PageHeader title={S.title} subtitle={S.subtitle} icon="fas fa-money-bill-transfer" />
       <AsyncBoundary isLoading={query.isLoading} isError={query.isError} error={query.error} onRetry={query.refetch}>
         {query.data && <>
-          <Card title={S.outstanding_label}>
-            <div className="platform-settlement-outstanding">
-              <span>{S.waiting_transfer}</span>
-              <strong dir="ltr">{money(query.data.outstanding.total_due)}</strong>
-              <small>{query.data.outstanding.orders_count} · {S.orders_total} + {query.data.outstanding.draft_count} · {S.draft}</small>
+          <Card>
+            <div className="platform-settlement-outstanding" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', padding: 0 }}>
+              <span>{S.outstanding_label}</span>
+              <strong dir="ltr" style={{ fontSize: '1.25rem', lineHeight: 1.3 }}>{money(query.data.outstanding.total_due)}</strong>
             </div>
           </Card>
           {downloadError && <Notice tone="error">{downloadError}</Notice>}

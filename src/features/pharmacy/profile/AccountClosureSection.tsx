@@ -25,6 +25,7 @@ export function AccountClosureSection() {
   const C = STR.pharmacy.account_closure;
 
   const [reason, setReason] = useState('');
+  const [expanded, setExpanded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const query = useApiQuery<PharmacyAccountClosureState>(
@@ -54,6 +55,18 @@ export function AccountClosureSection() {
 
   return (
     <Card>
+      <button
+        type="button"
+        className="ph-btn outline"
+        aria-expanded={expanded}
+        aria-controls="pharmacy-account-closure-details"
+        onClick={() => setExpanded((value) => !value)}
+        style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+      >
+        <span>{C.title}</span>
+        <span aria-hidden="true">{expanded ? '−' : '+'}</span>
+      </button>
+      {expanded && <div id="pharmacy-account-closure-details" style={{ marginBlockStart: 16 }}>
       <section className="ph-settings-section">
         <header>
           <h2>{C.title}</h2>
@@ -119,6 +132,7 @@ export function AccountClosureSection() {
           )}
         </AsyncBoundary>
       </section>
+      </div>}
     </Card>
   );
 }

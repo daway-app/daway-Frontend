@@ -260,7 +260,7 @@ export function AccountingOverviewPage() {
                       <th scope="col">{A.common.type}</th>
                       <th scope="col">{A.common.reference}</th>
                       <th scope="col">{A.common.description}</th>
-                      <th scope="col" className="ac-num">
+                      <th scope="col" className="ac-num" style={{ width: '1%', whiteSpace: 'nowrap' }}>
                         {A.common.amount}
                       </th>
                       <th scope="col">{A.common.payment_method}</th>
@@ -285,7 +285,7 @@ export function AccountingOverviewPage() {
                           <span className="ac-mono">{tx.reference}</span>
                         </td>
                         <td>{tx.description}</td>
-                        <td className={`ac-num ${tx.amount < 0 ? 'ac-neg' : 'ac-pos'}`}>
+                        <td className={`ac-num ${tx.amount < 0 ? 'ac-neg' : 'ac-pos'}`} style={{ width: '1%', whiteSpace: 'nowrap' }}>
                           {tx.amount < 0 ? '−' : ''}
                           {money(Math.abs(tx.amount))}
                         </td>

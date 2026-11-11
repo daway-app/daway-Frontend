@@ -42,32 +42,11 @@
 }
 
 /* ==========================================================
-   شريط تنبيه «بيانات تجريبية»
-   ========================================================== */
-.ac-demo-banner {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 16px;
-    margin-block-end: 18px;
-    border-radius: var(--ac-r-md);
-    background: var(--ac-blue-bg);
-    color: var(--ac-blue-text);
-    border: 1px solid transparent;
-    font-size: var(--fs-sm);
-    font-weight: 600;
-    line-height: 1.5;
-}
-.ac-demo-banner i { flex-shrink: 0; }
-body.dark-mode .ac-demo-banner { border-color: var(--line); }
-
-/* ==========================================================
    شبكات عامة
    ========================================================== */
 .ac-grid { display: grid; gap: 20px; }
 .ac-grid-2 { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
 .ac-grid-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-.ac-stack { display: flex; flex-direction: column; gap: 8px; }
 
 /* شريط فلاتر عام — يكمّل .ph-filters (لا يستبدله) */
 .ac-filter-bar {
@@ -542,31 +521,6 @@ a.ac-kpi:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2
 .ac-invoice-doc-meta dt { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .03em; color: var(--ac-ink-faint); margin-block-end: 3px; }
 .ac-invoice-doc-meta dd { margin: 0; font-size: var(--fs-md); font-weight: 600; color: var(--ac-ink); }
 .ac-totals-block { padding: 18px 22px; display: flex; flex-direction: column; gap: 8px; max-width: 340px; margin-inline-start: auto; }
-
-/* ==========================================================
-   الصفحات القادمة (Placeholders) — لا روابط ميتة
-   ========================================================== */
-.ac-soon {
-    display: grid;
-    place-items: center;
-    text-align: center;
-    padding: 56px 24px;
-    background: var(--ac-paper);
-    border: 1px dashed var(--ac-line);
-    border-radius: var(--ac-r-lg);
-}
-.ac-soon i { font-size: 2.6rem; color: var(--ac-teal-text); opacity: .45; margin-block-end: 14px; display: block; }
-.ac-soon h2 { margin: 0 0 8px; font-size: var(--fs-lg2); }
-.ac-soon p { margin: 0 0 4px; color: var(--ac-ink-faint); font-size: var(--fs-md); max-width: 480px; line-height: 1.6; }
-.ac-soon .ac-soon-badge {
-    margin-block-start: 14px;
-    font-size: var(--fs-xs);
-    font-weight: 700;
-    padding: 4px 12px;
-    border-radius: var(--ac-r-full);
-    background: var(--ac-teal-mist);
-    color: var(--ac-teal-text);
-}
 
 /* ==========================================================
    الاستجابة — الحاسوب → الجوال
@@ -1641,38 +1595,6 @@ body.dark-mode .ph-card > .ph-card-title { color: var(--ink); }
     background: var(--ph-teal-mist);
 }
 
-/* شريط الإجراء الجماعي — يظهر فقط عند وجود تحديد */
-.ph-bulk-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    padding: 12px 22px;
-    background: var(--ph-teal-mist);
-    border-block-end: 1px solid var(--ph-line-soft);
-}
-body.dark-mode .ph-bulk-bar { background: var(--teal-mist); }
-.ph-bulk-count {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 700;
-    font-size: var(--fs-md);
-    color: var(--ph-teal-text);
-}
-.ph-bulk-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-.ph-bulk-qty {
-    width: 80px;
-    min-width: 0;
-    text-align: center;
-}
-
 /* على اللمس: كل ما يُنقر في شريط التحديد يبلغ 44px — نفس منطقة اللمس
    المستخدمة في شاشة البيع (انظر قسم الـPOS اللمسي أعلاه). */
 @media (pointer: coarse) {
@@ -1680,8 +1602,6 @@ body.dark-mode .ph-bulk-bar { background: var(--teal-mist); }
     .ph-select-head input[type='checkbox'] {
         margin: 14px;
     }
-    .ph-bulk-qty { min-height: 44px; }
-    .ph-bulk-actions .ph-btn { min-height: 44px; }
 }
 
 /* ==========================================================

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { loadChartLibrary } from './loadChartLibrary';
 
 /**
  * Chart.js wrapper — reproduces resources/js/pharmacy_hub.js `phBuildChart`
@@ -178,53 +179,16 @@ export function Chart({ kind, labels, data, colors = [], legend = true, centerVa
     }
     window.addEventListener('daway:theme-changed', onThemeChanged);
 
-    let intervalId: number | null = null;
-    if (window.Chart) {
-      build();
-    } else {
-      /**
-       * Chart.js is loaded with `defer` from index.html, so it may land a few
-       * microseconds after this effect runs.
-       *
-       * AUDIT B-1 FIX: the previous implementation polled every 50 ms with NO
-       * upper bound. If the script tag was missing (which it was), the charts
-       * silently rendered nothing, forever, with no console error — the defect
-       * was invisible. Now the wait is bounded and a missing library fails
-       * LOUDLY so it can never regress silently again.
-       */
-      const MAX_WAIT_MS = 5000;
-      const POLL_MS = 50;
-      let waited = 0;
-
-      intervalId = window.setInterval(() => {
-        if (cancelled) {
-          window.clearInterval(intervalId!);
-          return;
-        }
-        if (window.Chart) {
-          window.clearInterval(intervalId!);
-          intervalId = null;
-          build();
-          return;
-        }
-        waited += POLL_MS;
-        if (waited >= MAX_WAIT_MS) {
-          window.clearInterval(intervalId!);
-          intervalId = null;
-          console.error(
-            '[Chart] window.Chart is unavailable after %d ms. Chart.js must be loaded ' +
-              'by a <script defer src="/vendor/chart.umd.js"> tag in index.html — ' +
-              'the chart cannot render without it.',
-            MAX_WAIT_MS,
-          );
-          console.warn('[Chart] chart did not render', { kind, labels });
-        }
-      }, POLL_MS);
-    }
+    loadChartLibrary()
+      .then(() => {
+        if (!cancelled && !instanceRef.current) build();
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) console.error('[Chart] Unable to load Chart.js', error);
+      });
 
     return () => {
       cancelled = true;
-      if (intervalId !== null) window.clearInterval(intervalId);
       window.removeEventListener('daway:theme-changed', onThemeChanged);
       instanceRef.current?.destroy();
       instanceRef.current = null;

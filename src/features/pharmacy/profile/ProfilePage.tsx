@@ -616,6 +616,7 @@ export function ProfilePage() {
                     >
                       <i className="fas fa-key" /> {P.password_change.title}
                     </button>
+                    <AccountClosureSection />
                   </div>
                 </div>
 
@@ -1113,8 +1114,6 @@ export function ProfilePage() {
           <p>{P.password_change.changed_body}</p>
         </div>
       </Modal>
-      <AccountClosureSection />
-
     </div>
   );
 }

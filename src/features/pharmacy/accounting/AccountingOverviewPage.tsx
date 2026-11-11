@@ -6,7 +6,7 @@ import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary } from '@/components/ui';
 import { useAuth, usePharmacyApi, usePharmacyKeys } from '@/auth/authHooks';
 import { useApiQuery } from '@/api/useApiQuery';
-import { money, num } from '@/lib/format';
+import { money, num, statusBadgeClass } from '@/lib/format';
 import { toAppRoute } from '@/lib/appRoute';
 import type { AccountingRange, ApiAccountingOverview } from '@/api/pharmacyTypes';
 import { ROUTES } from '@/routes/paths';
@@ -252,19 +252,61 @@ export function AccountingOverviewPage() {
                   <p>{A.overview.no_transactions_desc}</p>
                 </div>
               ) : (
-                <div className="ac-recent-transactions" style={{ padding: '4px 12px', width: '100%', minWidth: 0, maxWidth: '100%', overflow: 'hidden', boxSizing: 'border-box' }}>
-                  {transactions.map((tx, i) => (
-                    <div key={`${tx.reference}-${tx.date}-${i}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) max-content', alignItems: 'center', gap: 8, minWidth: 0, maxWidth: '100%', padding: '12px 0', borderBottom: '1px solid var(--border, #e5e7eb)' }}>
-                      <div style={{ minWidth: 0, overflow: 'hidden' }}>
-                        <div title={tx.description || labelOf(A.payment_types, tx.type)} style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{tx.description || labelOf(A.payment_types, tx.type)}</div>
-                        <small className="ac-muted" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(tx.date ?? '').replace('T', ' ').slice(0, 16) || '—'}</small>
-                      </div>
-                      <strong dir="ltr" className={tx.amount < 0 ? 'ac-neg' : 'ac-pos'} style={{ flex: '0 0 auto', whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
-                        {tx.amount < 0 ? '−' : ''}{money(Math.abs(tx.amount))}
-                      </strong>
-                    </div>
-                  ))}
-                </div>
+                <table className="ph-table">
+                  <caption className="ac-hidden">{A.overview.recent_transactions}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">{A.common.date}</th>
+                      <th scope="col">{A.common.type}</th>
+                      <th scope="col">{A.common.reference}</th>
+                      <th scope="col">{A.common.description}</th>
+                      <th scope="col" className="ac-num">
+                        {A.common.amount}
+                      </th>
+                      <th scope="col">{A.common.payment_method}</th>
+                      <th scope="col">{A.common.status}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map((tx, i) => (
+                      <tr key={`${tx.reference}-${tx.date}-${i}`}>
+                        <td>
+                          <div className="ac-cell-stack">
+                            <span>{(tx.date ?? '').replace('T', ' ').slice(0, 16) || '—'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          {/* `type` is a raw key, not pre-localised. */}
+                          <span className="ac-muted">
+                            {labelOf(A.payment_types, tx.type)}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="ac-mono">{tx.reference}</span>
+                        </td>
+                        <td>{tx.description}</td>
+                        <td className={`ac-num ${tx.amount < 0 ? 'ac-neg' : 'ac-pos'}`}>
+                          {tx.amount < 0 ? '−' : ''}
+                          {money(Math.abs(tx.amount))}
+                        </td>
+                        <td>
+                          <span className="ac-muted">
+                            {labelOf(A.payment_methods, tx.method)}
+                          </span>
+                        </td>
+                        <td>
+                          {tx.status ? (
+                            <span className={`ph-badge ${statusBadgeClass(tx.status)}`}>
+                              {labelOf(A.statuses, tx.status)}
+                            </span>
+                          ) : (
+                            '—'
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               )}
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { GooglePharmacySignIn } from './GooglePharmacySignIn';
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
@@ -429,11 +430,9 @@ export function LoginPage() {
                 إلى صفحة الطلب المستقلة `/forgot-password` — بنية صفحة كاملة
                 نظير `/register`، لا لوحة مطوية داخل النموذج. للصيدلية فقط:
                 استعادة الأدمن تمرّ عبر مساره الخاص. */}
-            {!isAdmin ? (
-              <Link to={ROUTES.forgotPassword} className="forgot-hint">
-                {L.forgot}
-              </Link>
-            ) : null}
+            <Link to={isAdmin ? '/account-recovery' : ROUTES.forgotPassword} className="forgot-hint">
+              {L.forgot}
+            </Link>
           </div>
 
           {/* 7A: one-system primary button (was the auth-only `.btn-p`).
@@ -455,6 +454,9 @@ export function LoginPage() {
                 : L.submit_pharmacy}
           </Btn>
         </form>
+
+        {!isAdmin && <GooglePharmacySignIn />}
+        <div className="auth-footer"><Link to="/patient/login">دخول أو تسجيل المريض</Link></div>
 
         {/* كان نصّاً ميّتاً: «ليس لديك حساب؟ تواصل مع إدارة النظام لإنشاء حساب.»
             — بلا رابط وبلا مسار، أي وعدٌ لا يمكن الوفاء به. الآن `/register`

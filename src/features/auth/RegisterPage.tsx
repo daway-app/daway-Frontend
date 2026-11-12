@@ -1,56 +1,14 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '@/lib/lang/useLang';
 import { Btn } from '@/components/ui';
 import { ApiError } from '@/api/errors';
 import { useApi } from '@/auth/authHooks';
+import { createGoogleAuthApi } from '@/api/googleAuthApi';
+import { loadGoogleIdentity } from '@/lib/googleIdentity';
 import { ROUTES } from '@/routes/paths';
 
-/**
- * Pharmacy self-registration — the public counterpart of `/login`.
- *
- * ============================================================================
- * 🔴 THIS IS AN APPLICATION, NOT A SIGNUP
- * ============================================================================
- * `POST /api/register/pharmacy` does NOT create a usable account. It stores the
- * pharmacy with `is_active = false` / `status = 'pending_approval'` (HTTP 201)
- * and returns NO token. The credentials — a Pharmacy ID and a password — are
- * issued later, by SMS, once an admin approves the request.
- *
- * So the success state must say that plainly. A screen that congratulates the
- * user and drops them on the login form would send them straight back to a
- * failing login with credentials that do not exist yet, and the natural
- * conclusion is "the app is broken" — which is exactly how the missing
- * `vercel.json` and the CORS mismatch both presented.
- *
- * ============================================================================
- * WHAT THE BACKEND VALIDATES (keep these in sync)
- * ============================================================================
- *   pharmacy_name  required | string | max:150
- *   phone          required | string | max:20 | unique:users,phone
- *   region         required | string | max:150
- *   password       required | string | min:8
- *
- * Field errors come back as a 422 with `errors: { <field>: string[] }`, already
- * in Arabic. They are mapped onto the matching inputs rather than dumped into
- * one banner, so the user can see WHICH field is wrong.
- */
-
-/**
- * `register` sits at the TOP level of the dictionary, alongside `users` and
- * `accounting` — not nested under `pharmacy`. Those feature blocks that grew
- * large were promoted to top level, and this one is an auth flow rather than
- * a pharmacy screen, so it follows them instead of inventing a third
- * convention.
- */
-
-/**
- * The brand tag is read from the unified-login block on purpose: there is ONE
- * source of truth for the platform name. It lives under `admin.unified` because
- * that screen serves both roles — reading it here is deliberate, not a mistake,
- * and it is what stops the brand name drifting between screens (it already did
- * once: the login hero said "دوائي" while the admin panel said "دواك").
- */
+/** A Google-linked application stays inactive until an administrator approves it. */
 
 type FieldName = 'pharmacy_name' | 'phone' | 'region' | 'password' | 'password_confirm';
 type FieldErrors = Partial<Record<FieldName, string>>;
@@ -59,7 +17,14 @@ export function RegisterPage() {
   const { STR } = useLang();
   const Rt = STR.register;
   const brandTag = STR.admin.unified.brand_tag;
-  const api = useApi();
+  const api = createGoogleAuthApi(useApi().client);
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() ?? '';
+  const googleButton = useRef<HTMLDivElement>(null);
+  const alive = useRef(false);
+  const attempt = useRef(0);
+  const [googleReady, setGoogleReady] = useState(false);
+  const [pharmacyId, setPharmacyId] = useState('');
+  useEffect(() => { alive.current = true; return () => { alive.current = false; attempt.current += 1; }; }, []);
 
   const [pharmacyName, setPharmacyName] = useState('');
   const [phone, setPhone] = useState('');
@@ -85,7 +50,7 @@ export function RegisterPage() {
     if (!region.trim()) found.region = Rt.err_region_required;
 
     if (!password) found.password = Rt.err_password_required;
-    else if (password.length < 8) found.password = Rt.err_password_short;
+    else if (password.length < 10 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) found.password = '10 أحرف على الأقل، وتتضمن حروفًا كبيرة وصغيرة وأرقامًا.';
 
     if (confirm !== password) found.password_confirm = Rt.err_confirm_mismatch;
 
@@ -122,19 +87,36 @@ export function RegisterPage() {
     setErrors(found);
     if (Object.keys(found).length > 0) return;
 
+    if (!clientId) {
+      setBanner('ربط Google غير مهيأ حاليًا. حاول لاحقًا.');
+      return;
+    }
+    const current = ++attempt.current;
     setSubmitting(true);
     try {
-      await api.auth.registerPharmacy({
-        pharmacy_name: pharmacyName.trim(),
-        phone: phone.trim(),
-        region: region.trim(),
-        password,
-      });
-      setDone(true);
-    } catch (caught) {
-      applyServerError(caught);
+      await loadGoogleIdentity();
+      const nonce = await api.challenge('register_pharmacy');
+      if (!alive.current || current !== attempt.current || !googleButton.current || !window.google?.accounts.id) return;
+      setGoogleReady(true);
+      googleButton.current.replaceChildren();
+      window.google.accounts.id.initialize({ client_id: clientId, nonce, callback: (credential) => {
+        if (!credential.credential || !alive.current || current !== attempt.current) return;
+        attempt.current += 1;
+        setSubmitting(true);
+        void api.registerPharmacy({ pharmacy_name: pharmacyName.trim(), phone: phone.trim(), region: region.trim(),
+          password, password_confirmation: confirm, nonce, id_token: credential.credential })
+          .then((result) => {
+            if (!result.success || result.data?.status !== 'pending_approval' || !result.data.pharmacy_id) throw new Error('Invalid registration response');
+            if (alive.current) { setPharmacyId(result.data.pharmacy_id); setPassword(''); setConfirm(''); setDone(true); }
+          })
+          .catch((caught: unknown) => { if (alive.current) { setGoogleReady(false); applyServerError(caught); } })
+          .finally(() => { if (alive.current) setSubmitting(false); });
+      } });
+      window.google.accounts.id.renderButton(googleButton.current, { theme: 'outline', size: 'large', locale: 'ar' });
+    } catch {
+      if (alive.current) setBanner('تعذر إعداد ربط Google، حاول مرة أخرى.');
     } finally {
-      setSubmitting(false);
+      if (alive.current) setSubmitting(false);
     }
   }
 
@@ -144,12 +126,12 @@ export function RegisterPage() {
       <div className="auth-container">
         <div className="auth-form-side">
           <h1 className="form-title">{Rt.success_title}</h1>
-          <p className="form-subtitle">{Rt.success_body}</p>
+          <p className="form-subtitle">تم إرسال طلب الصيدلية وهو بانتظار موافقة الإدارة.</p>
 
           {/* The load-bearing sentence. Without it the user goes and tries to
               log in immediately and reports the app as broken. */}
           <div className="info-hint info-hint--success" role="status">
-            ℹ️ {Rt.success_note}
+            ℹ️ معرّف الصيدلية: <strong dir="ltr">{pharmacyId}</strong>. احتفظ به لتسجيل الدخول بعد الموافقة.
           </div>
 
           <div className="fg" style={{ marginTop: 24 }}>
@@ -205,7 +187,7 @@ export function RegisterPage() {
                 maxLength={150}
                 aria-invalid={errors.pharmacy_name ? true : undefined}
                 aria-describedby={errors.pharmacy_name ? 'pharmacyNameError' : undefined}
-                disabled={submitting}
+                disabled={submitting || googleReady}
                 required
               />
             </div>
@@ -235,7 +217,7 @@ export function RegisterPage() {
                 maxLength={20}
                 aria-invalid={errors.phone ? true : undefined}
                 aria-describedby={errors.phone ? 'registerPhoneError' : undefined}
-                disabled={submitting}
+                disabled={submitting || googleReady}
                 required
               />
             </div>
@@ -266,7 +248,7 @@ export function RegisterPage() {
                 maxLength={150}
                 aria-invalid={errors.region ? true : undefined}
                 aria-describedby={errors.region ? 'regionError' : undefined}
-                disabled={submitting}
+                disabled={submitting || googleReady}
                 required
               />
             </div>
@@ -291,10 +273,10 @@ export function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="new-password"
-                minLength={8}
+                minLength={10}
                 aria-invalid={errors.password ? true : undefined}
                 aria-describedby={errors.password ? 'registerPasswordError' : undefined}
-                disabled={submitting}
+                disabled={submitting || googleReady}
                 required
               />
               <button
@@ -308,7 +290,7 @@ export function RegisterPage() {
               </button>
             </div>
             <div className="info-hint" role="note">
-              💡 {Rt.rules}
+              💡 10 أحرف على الأقل، وحروف كبيرة وصغيرة وأرقام.
             </div>
             {errors.password ? (
               <div className="error-message" id="registerPasswordError" role="alert">
@@ -331,10 +313,10 @@ export function RegisterPage() {
                 onChange={(e) => setConfirm(e.target.value)}
                 placeholder="••••••••"
                 autoComplete="new-password"
-                minLength={8}
+                minLength={10}
                 aria-invalid={errors.password_confirm ? true : undefined}
                 aria-describedby={errors.password_confirm ? 'registerConfirmError' : undefined}
-                disabled={submitting}
+                disabled={submitting || googleReady}
                 required
               />
             </div>
@@ -352,15 +334,13 @@ export function RegisterPage() {
           ) : null}
 
           <div className="fg" style={{ marginTop: 24 }}>
-            <Btn
-              type="submit"
-              variant="primary"
-              id="registerSubmitBtn"
-              className="auth-submit"
-              disabled={submitting}
-            >
-              {submitting ? Rt.submitting : Rt.submit}
-            </Btn>
+            {!googleReady && <Btn type="submit" variant="primary" id="registerSubmitBtn" className="auth-submit" disabled={submitting}>
+              {submitting ? Rt.submitting : 'متابعة وربط Google'}
+            </Btn>}
+            <div ref={googleButton} />
+            {googleReady && <button type="button" className="ph-btn ghost" disabled={submitting} onClick={() => {
+              attempt.current += 1; setGoogleReady(false); googleButton.current?.replaceChildren();
+            }}>إلغاء ربط Google</button>}
           </div>
         </form>
 

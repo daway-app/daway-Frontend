@@ -48,13 +48,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return apiStack.login(pharmacyId, password);
   }, []);
 
+  const loginWithGoogle = useCallback(async (credentials: import('@/api/googleAuthApi').GoogleCredentialInput) => {
+    return apiStack.loginWithGoogle(credentials);
+  }, []);
+
   const logout = useCallback(async () => {
     await apiStack.logout();
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isAuthenticated, login, logout }),
-    [user, isAuthenticated, login, logout],
+    () => ({ user, isAuthenticated, login, loginWithGoogle, logout }),
+    [user, isAuthenticated, login, loginWithGoogle, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

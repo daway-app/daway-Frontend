@@ -1,3 +1,4 @@
+import { GoogleLinkPanel } from './GoogleLinkPanel';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLang } from '@/lib/lang/useLang';
 import { AsyncBoundary, FormField, Modal } from '@/components/ui';
@@ -644,6 +645,7 @@ export function ProfilePage() {
             </div>
 
             <div className="ph-profile-side">
+              <GoogleLinkPanel />
               <div className="ph-card">
                 <div className="ph-card-head">
                   <h2>

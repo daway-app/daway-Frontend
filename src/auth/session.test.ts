@@ -17,6 +17,28 @@ describe('refresh through the session and storage contract', () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
+  it('stores a verified pharmacy Google login without changing the admin session', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ success: true, data: {
+      token: 'google-pharmacy-token', user: { id: 7, name: 'Pharmacy', role: 'pharmacy', pharmacy_id: 'PH-7', must_change_password: false },
+    } }))) as typeof fetch;
+    const stack = createApiStack({ fetchImpl, baseUrl: 'https://api.test' });
+    await stack.loginWithGoogle({ nonce: 'nonce', id_token: 'credential' });
+    expect(stack.tokens.get()).toBe('google-pharmacy-token');
+    expect(stack.getUser()?.pharmacy_id).toBe('PH-7');
+    expect(values.get('daway.admin.token')).toBe('admin-token');
+    expect((vi.mocked(fetchImpl).mock.calls[0][1]?.headers as Record<string, string>).Authorization).toBeUndefined();
+  });
+
+  it('does not overwrite a pharmacy session with a patient Google result', async () => {
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ success: true, data: {
+      token: 'patient-token', user: { id: 8, name: 'Patient', role: 'patient' },
+    } }))) as typeof fetch;
+    const stack = createApiStack({ fetchImpl, baseUrl: 'https://api.test' });
+    await expect(stack.loginWithGoogle({ nonce: 'nonce', id_token: 'credential' })).rejects.toThrow();
+    expect(stack.tokens.get()).toBe('old-pharmacy');
+    expect(values.get('daway.admin.token')).toBe('admin-token');
+  });
+
   it.each(['request', 'download'] as const)('persists a root refresh token for the next %s', async (mode) => {
     const seen: string[] = [];
     let first = true;

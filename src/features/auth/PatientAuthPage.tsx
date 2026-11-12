@@ -55,6 +55,7 @@ export function PatientAuthPage() {
   function accept(result: PatientAuthResult) {
     storage.set(result.token);
     setPatient(result.user);
+    setGoogleReady(false);
     setPassword(''); setConfirm(''); setError('');
   }
   function validProfile() {

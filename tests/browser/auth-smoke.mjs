@@ -39,6 +39,7 @@ try {
     requests.push({ path, authorization: request.headers().authorization ?? null, body: request.postDataJSON() });
     const reply = (value) => route.fulfill({ json: value });
     if (path === '/api/auth/patient/login') return reply({ success: true, data: { user: { id: 9, name: 'Test Patient', role: 'patient' }, token: 'fake-patient-token' } });
+    if (path === '/api/auth/google/register-patient' || path === '/api/auth/google/login') return reply({ success: true, data: { user: { id: 10, name: 'Google Patient', role: 'patient' }, token: 'fake-google-patient-token' } });
     if (path === '/api/auth/patient/me') return reply({ success: true, data: { user: { id: 9, name: 'Test Patient', role: 'patient' } } });
     if (path === '/api/logout') return reply({ success: true });
     if (path === '/api/auth/google/challenge') return reply({ nonce: 'a'.repeat(64), expires_in: 300 });
@@ -59,6 +60,27 @@ try {
   assert.equal(requests.find((r) => r.path === '/api/auth/patient/login').authorization, null);
   assert.equal(requests.find((r) => r.path === '/api/auth/patient/me').authorization, 'Bearer fake-patient-token');
   assert.equal(requests.find((r) => r.path === '/api/logout').authorization, 'Bearer fake-patient-token');
+
+  await page.getByRole('button', { name: 'إنشاء حساب مريض' }).click();
+  await page.locator('#patient-name').fill('Google Patient');
+  await page.locator('#patient-email').fill('patient@example.test');
+  await page.locator('#patient-phone').fill('0591234567');
+  await page.locator('#patient-age').fill('24');
+  await page.locator('input[type=checkbox]').check();
+  await page.getByRole('button', { name: 'المتابعة باستخدام Google' }).click();
+  await page.getByRole('button', { name: 'Mock Google' }).click();
+  await page.getByRole('heading', { name: 'مرحبًا Google Patient' }).waitFor();
+  const googlePatient = requests.find((r) => r.path === '/api/auth/google/register-patient');
+  assert.equal(googlePatient.authorization, null);
+  assert.equal(googlePatient.body.terms_accepted, true);
+  assert.equal(googlePatient.body.nonce, 'a'.repeat(64));
+  await page.getByRole('button', { name: 'تسجيل الخروج' }).click();
+  await page.getByRole('button', { name: 'عندي حساب' }).click();
+  await page.getByRole('button', { name: 'المتابعة باستخدام Google' }).click();
+  await page.getByRole('button', { name: 'Mock Google' }).click();
+  await page.getByRole('heading', { name: 'مرحبًا Google Patient' }).waitFor();
+  assert.equal(requests.find((r) => r.path === '/api/auth/google/login').body.role, 'patient');
+  await page.getByRole('button', { name: 'تسجيل الخروج' }).click();
 
   await page.goto(`${origin}/register`);
   await page.locator('#pharmacyNameInput').fill('Test Pharmacy');

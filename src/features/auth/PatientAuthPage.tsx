@@ -43,11 +43,8 @@ export function PatientAuthPage() {
   useEffect(() => {
     alive.current = true;
     if (storage.get()) {
-      void client.get<{ success: boolean; data: { user: Patient } }>('/api/auth/patient/me', { skipRefresh: true })
-        .then((result) => {
-          if (!result.success || result.data?.user?.role !== 'patient') throw new Error('Invalid patient');
-          if (alive.current) setPatient(result.data.user);
-        }).catch((e: unknown) => {
+      void passwordApi.me()
+        .then((user) => { if (alive.current) setPatient(user); }).catch((e: unknown) => {
           if (e instanceof ApiError && (e.status === 401 || e.status === 403)) storage.clear();
           if (alive.current) setError('تعذر التحقق من الجلسة، حاول تسجيل الدخول مجددًا.');
         }).finally(() => { if (alive.current) setLoading(false); });

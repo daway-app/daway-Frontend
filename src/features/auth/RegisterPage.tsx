@@ -8,51 +8,7 @@ import { createGoogleAuthApi } from '@/api/googleAuthApi';
 import { loadGoogleIdentity } from '@/lib/googleIdentity';
 import { ROUTES } from '@/routes/paths';
 
-/**
- * Pharmacy self-registration — the public counterpart of `/login`.
- *
- * ============================================================================
- * 🔴 THIS IS AN APPLICATION, NOT A SIGNUP
- * ============================================================================
- * `POST /api/register/pharmacy` does NOT create a usable account. It stores the
- * pharmacy with `is_active = false` / `status = 'pending_approval'` (HTTP 201)
- * and returns NO token. The credentials — a Pharmacy ID and a password — are
- * issued later, by SMS, once an admin approves the request.
- *
- * So the success state must say that plainly. A screen that congratulates the
- * user and drops them on the login form would send them straight back to a
- * failing login with credentials that do not exist yet, and the natural
- * conclusion is "the app is broken" — which is exactly how the missing
- * `vercel.json` and the CORS mismatch both presented.
- *
- * ============================================================================
- * WHAT THE BACKEND VALIDATES (keep these in sync)
- * ============================================================================
- *   pharmacy_name  required | string | max:150
- *   phone          required | string | max:20 | unique:users,phone
- *   region         required | string | max:150
- *   password       required | string | min:8
- *
- * Field errors come back as a 422 with `errors: { <field>: string[] }`, already
- * in Arabic. They are mapped onto the matching inputs rather than dumped into
- * one banner, so the user can see WHICH field is wrong.
- */
-
-/**
- * `register` sits at the TOP level of the dictionary, alongside `users` and
- * `accounting` — not nested under `pharmacy`. Those feature blocks that grew
- * large were promoted to top level, and this one is an auth flow rather than
- * a pharmacy screen, so it follows them instead of inventing a third
- * convention.
- */
-
-/**
- * The brand tag is read from the unified-login block on purpose: there is ONE
- * source of truth for the platform name. It lives under `admin.unified` because
- * that screen serves both roles — reading it here is deliberate, not a mistake,
- * and it is what stops the brand name drifting between screens (it already did
- * once: the login hero said "دوائي" while the admin panel said "دواك").
- */
+/** A Google-linked application stays inactive until an administrator approves it. */
 
 type FieldName = 'pharmacy_name' | 'phone' | 'region' | 'password' | 'password_confirm';
 type FieldErrors = Partial<Record<FieldName, string>>;

@@ -5,6 +5,14 @@ import { createPatientAuthApi } from './patientAuthApi';
 const user = { id: 8, name: 'Patient', role: 'patient' };
 
 describe('patient password auth client', () => {
+  it('rehydrates only a valid patient identity without refreshing another session', async () => {
+    const get = vi.fn().mockResolvedValue({ success: true, data: { user } });
+    const api = createPatientAuthApi({ get } as unknown as ApiClient);
+    await expect(api.me()).resolves.toEqual(user);
+    expect(get).toHaveBeenCalledWith('/api/auth/patient/me', { skipRefresh: true });
+    get.mockResolvedValue({ success: true, data: { user: { ...user, role: 'admin' } } });
+    await expect(api.me()).rejects.toThrow();
+  });
   it('posts credentials without attaching or refreshing an existing session', async () => {
     const post = vi.fn().mockResolvedValue({ success: true, data: { user, token: 'patient-token' } });
     const api = createPatientAuthApi({ post } as unknown as ApiClient);

@@ -4,6 +4,7 @@ import type { ApiClient } from './client';
 export const PATIENT_AUTH_ENDPOINTS = {
   register: '/api/auth/patient/register',
   login: '/api/auth/patient/login',
+  me: '/api/auth/patient/me',
 } as const;
 
 export interface PatientRegistrationInput {
@@ -48,6 +49,17 @@ function readPatientResult(response: unknown): PatientAuthResult {
 export function createPatientAuthApi(client: ApiClient) {
   const options = { skipAuth: true, skipRefresh: true } as const;
   return {
+    async me(): Promise<PatientAuthResult['user']> {
+      const response = await client.get<unknown>(PATIENT_AUTH_ENDPOINTS.me, { skipRefresh: true });
+      if (typeof response !== 'object' || response === null) throw new Error('Invalid patient identity');
+      const body = response as Record<string, unknown>;
+      if (body.success !== true || typeof body.data !== 'object' || body.data === null) throw new Error('Invalid patient identity');
+      const user = (body.data as Record<string, unknown>).user;
+      if (typeof user !== 'object' || user === null) throw new Error('Invalid patient identity');
+      const identity = user as Record<string, unknown>;
+      if (identity.role !== 'patient' || typeof identity.id !== 'number' || !Number.isSafeInteger(identity.id) || identity.id <= 0 || typeof identity.name !== 'string') throw new Error('Invalid patient identity');
+      return { id: identity.id, name: identity.name, role: 'patient' };
+    },
     async register(input: PatientRegistrationInput): Promise<PatientAuthResult> {
       return readPatientResult(await client.post(PATIENT_AUTH_ENDPOINTS.register, input, options));
     },

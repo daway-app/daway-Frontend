@@ -33,7 +33,7 @@ try {
       },
     } } };
   });
-  await page.route('**/api/**', async (route) => {
+  await page.route(`${origin}/api/**`, async (route) => {
     const request = route.request();
     const path = new URL(request.url()).pathname;
     requests.push({ path, authorization: request.headers().authorization ?? null, body: request.postDataJSON() });

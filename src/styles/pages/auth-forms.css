@@ -522,6 +522,8 @@ body.dark-mode .auth-shell {
     border-radius: 50%;
     animation: spin .8s linear infinite;
 }
+/* Override shared spinner dimensions only inside the login overlay. */
+.loader-spinner-box .spinner { width: 100%; height: 100%; box-sizing: border-box; }
 .loader-icon { font-size: var(--fs-lg2); }
 .loader-text { font-size: var(--fs-sm); font-weight: 700; color: var(--teal-text); }
 
@@ -674,6 +676,8 @@ body.dark-mode .auth-container {
 }
 
 .role-switch__option i { font-size: 15px; }
+.role-switch__icon { font-size: 15px; width: 1.125em; height: 1em; flex: none; }
+.role-switch__icon--shield { width: 1.25em; }
 
 /* الداكن: `--teal-mist-2` شبه شفاف ⇒ لا سطح للمسار، و`--paper` يصير داكناً
    فلا يبرز المؤشّر. نستخدم سطح الحقل المعتمد + ظلّاً أوضح. */

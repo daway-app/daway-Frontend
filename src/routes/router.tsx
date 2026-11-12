@@ -20,6 +20,7 @@ import { LoginPage } from '@/features/auth/LoginPage';
  * must never sit behind `RequireAuth`.
  */
 const RegisterPage = lazyPage(() => import('@/features/auth/RegisterPage'));
+const PatientAuthPage = lazyPage(() => import('@/features/auth/PatientAuthPage'));
 /**
  * Forgot-password REQUEST page. Same guest branch as its siblings: a
  * signed-out visitor's screen that FILES a review request for an admin — it
@@ -204,6 +205,7 @@ export const router = createBrowserRouter([
         element: <AuthLayout />,
         errorElement: <RouteErrorBoundary />,
         children: [
+          { path: '/patient/login', element: <PatientAuthPage /> },
           { path: '/account-recovery', element: <EmailRecoveryPage /> },
           { path: '/reset-password', element: <EmailRecoveryPage /> },
         ],

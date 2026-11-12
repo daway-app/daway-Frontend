@@ -456,6 +456,7 @@ export function LoginPage() {
         </form>
 
         {!isAdmin && <GooglePharmacySignIn />}
+        <div className="auth-footer"><Link to="/patient/login">دخول أو تسجيل المريض</Link></div>
 
         {/* كان نصّاً ميّتاً: «ليس لديك حساب؟ تواصل مع إدارة النظام لإنشاء حساب.»
             — بلا رابط وبلا مسار، أي وعدٌ لا يمكن الوفاء به. الآن `/register`

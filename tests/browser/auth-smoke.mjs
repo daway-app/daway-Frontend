@@ -8,6 +8,8 @@ const server = spawn('npm', ['run', 'dev', '--', '--host', '127.0.0.1', '--port'
   stdio: 'inherit', env: { ...process.env, VITE_API_BASE_URL: origin, VITE_GOOGLE_CLIENT_ID: 'test-client.invalid' },
 });
 let browser;
+let page;
+const errors = [];
 try {
   for (let i = 0; i < 100; i++) {
     if (server.exitCode !== null) throw new Error('Vite server stopped');
@@ -16,8 +18,7 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 200));
   }
   browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
-  const errors = [];
+  page = await browser.newPage();
   const requests = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.addInitScript(() => {
@@ -82,6 +83,9 @@ try {
   assert.equal(requests.find((r) => r.path === '/api/auth/google/recover-pharmacy').authorization, null);
   assert.deepEqual(errors, []);
   console.log('Browser UI smoke passed using mocked API and Google SDK.');
+} catch (error) {
+  console.error('Browser diagnostics:', JSON.stringify({ url: page?.url(), errors, page: page ? (await page.locator('body').innerText()).slice(0, 1500) : null }));
+  throw error;
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

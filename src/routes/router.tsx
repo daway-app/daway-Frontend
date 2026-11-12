@@ -25,7 +25,7 @@ const RegisterPage = lazyPage(() => import('@/features/auth/RegisterPage'));
  * signed-out visitor's screen that FILES a review request for an admin — it
  * issues no token and resets nothing, so it must never sit behind RequireAuth.
  */
-const ForgotPasswordPage = lazyPage(() => import('@/features/auth/ForgotPasswordPage'));
+const ForgotPasswordPage = lazyPage(() => import('@/features/auth/GooglePharmacyRecoveryPage'));
 const EmailRecoveryPage = lazyPage(() => import('@/features/auth/EmailRecoveryPage'));
 const PasswordChangePage = lazyPage(() => import('@/features/auth/PasswordChangePage'));
 

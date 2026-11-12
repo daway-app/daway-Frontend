@@ -1,5 +1,6 @@
 import { createApiClient, type ApiClient } from '@/api/client';
 import { createAuthApi, type AuthApi } from '@/api/authApi';
+import { createGoogleAuthApi, type GoogleCredentialInput } from '@/api/googleAuthApi';
 import { createPharmacyApi, type PharmacyApi } from '@/api/pharmacyApi';
 import { createScanSessionApi, type ScanSessionApi } from '@/api/scanSessionApi';
 import { createAdminApi, type AdminApi } from '@/api/adminApi';
@@ -82,6 +83,7 @@ export function createApiStack(options?: {
   });
 
   const auth: AuthApi = createAuthApi(client);
+  const googleAuth = createGoogleAuthApi(client);
   const pharmacy: PharmacyApi = createPharmacyApi(client);
   // Shared notification surface, bound to the pharmacy token. The same API
   // module is instantiated with the admin client below — the two instances
@@ -123,6 +125,22 @@ export function createApiStack(options?: {
       browserUserStorage.set(result.user);
       notify();
       return result.user;
+    },
+
+    async loginWithGoogle(credentials: GoogleCredentialInput): Promise<AuthUser> {
+      const result = await googleAuth.login(credentials, 'pharmacy');
+      // googleAuth validates role and pharmacy_id before any local session changes.
+      const next: AuthUser = {
+        id: result.user.id, name: result.user.name, role: result.user.role,
+        pharmacy_id: result.user.pharmacy_id!,
+        must_change_password: result.user.must_change_password === true,
+      };
+      queryClient.clear();
+      tokens.set(result.token);
+      user = next;
+      browserUserStorage.set(next);
+      notify();
+      return next;
     },
 
     async logout(): Promise<void> {

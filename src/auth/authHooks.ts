@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo } from 'react';
 import type { ApiStack } from './session';
 import type { AuthUser } from './authContract';
+import type { GoogleCredentialInput } from '@/api/googleAuthApi';
 import type { PharmacyApi } from '@/api/pharmacyApi';
 import type { NotificationsApi } from '@/api/notificationsApi';
 import type { ScanSessionApi } from '@/api/scanSessionApi';
@@ -33,6 +34,7 @@ export interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   login: (pharmacyId: string, password: string) => Promise<AuthUser>;
+  loginWithGoogle: (credentials: GoogleCredentialInput) => Promise<AuthUser>;
   logout: () => Promise<void>;
 }
 

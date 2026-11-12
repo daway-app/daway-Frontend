@@ -1,3 +1,4 @@
+import { GooglePharmacySignIn } from './GooglePharmacySignIn';
 import { useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, usePharmacyApi } from '@/auth/authHooks';
@@ -453,6 +454,8 @@ export function LoginPage() {
                 : L.submit_pharmacy}
           </Btn>
         </form>
+
+        {!isAdmin && <GooglePharmacySignIn />}
 
         {/* كان نصّاً ميّتاً: «ليس لديك حساب؟ تواصل مع إدارة النظام لإنشاء حساب.»
             — بلا رابط وبلا مسار، أي وعدٌ لا يمكن الوفاء به. الآن `/register`

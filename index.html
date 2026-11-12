@@ -12,16 +12,16 @@
     -->
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#1C72A6" />
-    <!--
-      Font Awesome 6.7.2 — decision B8.
-      Blade loads FA from this exact CDN URL (layouts/app.blade.php); no local
-      FA assets exist in the backend, so the same CDN stylesheet is reused
-      like-for-like rather than introducing a new dependency.
-    -->
-    <link
-      rel="stylesheet"
+    <!-- The two login role icons are inline, so this stylesheet need not block
+         their first paint. Other entry pages keep their normal CSS priority. -->
+    <link id="font-awesome" rel="stylesheet" media="print"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-    />
+      onload="this.media='all'" />
+    <script>
+      if (location.pathname !== '/login' && location.pathname !== '/') {
+        document.getElementById('font-awesome').media = 'all';
+      }
+    </script>
     <link rel="preload" href="/fonts/tajawal-400.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/tajawal-700.woff2" as="font" type="font/woff2" crossorigin />
     <!--

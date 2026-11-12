@@ -318,6 +318,7 @@ export function LoginPage() {
           </div>
         ) : null}
 
+        {/* Icons: Font Awesome Free 6.7.2, CC BY 4.0 (fontawesome.com/license/free). */}
         {/* مُبدِّل نوع الحساب — المؤشّر عنصر منفصل ينزلق بـ transform. */}
         <div className="fg">
           <span className="fl" id="roleSwitchLabel">
@@ -337,7 +338,7 @@ export function LoginPage() {
               onClick={() => selectRole('pharmacy')}
               disabled={isSubmitting}
             >
-              <i className="fas fa-store" aria-hidden="true" />
+              <svg className="role-switch__icon" aria-hidden="true" viewBox="0 0 576 512" fill="currentColor"><path d="M547.6 103.8L490.3 13.1C485.2 5 476.1 0 466.4 0L109.6 0C99.9 0 90.8 5 85.7 13.1L28.3 103.8c-29.6 46.8-3.4 111.9 51.9 119.4c4 .5 8.1 .8 12.1 .8c26.1 0 49.3-11.4 65.2-29c15.9 17.6 39.1 29 65.2 29c26.1 0 49.3-11.4 65.2-29c15.9 17.6 39.1 29 65.2 29c26.2 0 49.3-11.4 65.2-29c16 17.6 39.1 29 65.2 29c4.1 0 8.1-.3 12.1-.8c55.5-7.4 81.8-72.5 52.1-119.4zM499.7 254.9c0 0 0 0-.1 0c-5.3 .7-10.7 1.1-16.2 1.1c-12.4 0-24.3-1.9-35.4-5.3L448 384l-320 0 0-133.4c-11.2 3.5-23.2 5.4-35.6 5.4c-5.5 0-11-.4-16.3-1.1l-.1 0c-4.1-.6-8.1-1.3-12-2.3L64 384l0 64c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-64 0-131.4c-4 1-8 1.8-12.3 2.3z" /></svg>
               {L.switch_pharmacy}
             </button>
             <button
@@ -347,7 +348,7 @@ export function LoginPage() {
               onClick={() => selectRole('admin')}
               disabled={isSubmitting}
             >
-              <i className="fas fa-user-shield" aria-hidden="true" />
+              <svg className="role-switch__icon role-switch__icon--shield" aria-hidden="true" viewBox="0 0 640 512" fill="currentColor"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c1.8 0 3.5-.2 5.3-.5c-76.3-55.1-99.8-141-103.1-200.2c-16.1-4.8-33.1-7.3-50.7-7.3l-91.4 0zm308.8-78.3l-120 48C358 277.4 352 286.2 352 296c0 63.3 25.9 168.8 134.8 214.2c5.9 2.5 12.6 2.5 18.5 0C614.1 464.8 640 359.3 640 296c0-9.8-6-18.6-15.1-22.3l-120-48c-5.7-2.3-12.1-2.3-17.8 0zM591.4 312c-3.9 50.7-27.2 116.7-95.4 149.7l0-187.8L591.4 312z" /></svg>
               {L.switch_admin}
             </button>
           </div>

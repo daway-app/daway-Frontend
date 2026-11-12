@@ -9,6 +9,7 @@ import { pharmacyKeys } from '@/api/queryKeys';
 import { PRESET_STALE_TIMES } from '@/api/queryClient';
 import { relativeTime } from '@/lib/format';
 import type { ApiDashboardStats, ApiPharmacyProfile, ApiSalesList } from '@/api/pharmacyTypes';
+import { shouldLoadSetupSales } from './setupSales';
 
 /**
  * Pharmacy dashboard — live against `GET /api/pharmacy/dashboard/stats`.
@@ -28,6 +29,9 @@ export function DashboardPage() {
   const api = usePharmacyApi();
   const { user } = useAuth();
   const keys = pharmacyKeys(user?.id ?? 'anon');
+  const [setupHidden, setSetupHidden] = useState(
+    () => localStorage.getItem('daway.setup.dismissed') === '1',
+  );
 
   const query = useApiQuery<ApiDashboardStats>(
     (signal) => api.dashboardStats(signal),
@@ -55,11 +59,7 @@ export function DashboardPage() {
     [user?.id],
     { queryKey: keys.profile, staleTime: PRESET_STALE_TIMES.settings },
   );
-  const salesQuery = useApiQuery<ApiSalesList>(
-    (signal) => api.sales({ per_page: 1 }, signal),
-    [user?.id],
-    { queryKey: keys.sales({ per_page: 1 }), staleTime: PRESET_STALE_TIMES.financial },
-  );
+
 
   const data = query.data;
 
@@ -129,7 +129,6 @@ export function DashboardPage() {
    */
   const profileDone = profile?.profile_completed_at != null;
 
-  const salesTotal = salesQuery.data?.pagination?.total ?? 0;
   const stockTotal = data?.total_medicines ?? 0;
 
   /*
@@ -150,6 +149,19 @@ export function DashboardPage() {
    */
   const showChecklist =
     !query.isLoading && (stockTotal === 0 || (profile != null && !profileDone));
+
+  // The sales count is only displayed in the onboarding checklist. Avoid the
+  // financial-list request entirely when that checklist is not displayed.
+  const salesQuery = useApiQuery<ApiSalesList>(
+    (signal) => api.sales({ per_page: 1 }, signal),
+    [user?.id],
+    {
+      queryKey: keys.sales({ per_page: 1 }),
+      staleTime: PRESET_STALE_TIMES.financial,
+      enabled: shouldLoadSetupSales(showChecklist, setupHidden),
+    },
+  );
+  const salesTotal = salesQuery.data?.pagination?.total ?? 0;
 
   const setupSteps: SetupStep[] = [
     { key: 'account', label: D.setup.account, done: true, to: '/' },
@@ -176,9 +188,6 @@ export function DashboardPage() {
     },
   ];
 
-  const [setupHidden, setSetupHidden] = useState(
-    () => localStorage.getItem('daway.setup.dismissed') === '1',
-  );
 
   return (
     <div className="ph-page">

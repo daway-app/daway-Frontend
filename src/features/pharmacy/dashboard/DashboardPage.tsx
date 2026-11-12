@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Chart } from '@/components/ui/Chart';
 import { AsyncBoundary, Card, SetupChecklist, StatCard } from '@/components/ui';
 import type { SetupStep } from '@/components/ui';
@@ -46,13 +46,8 @@ export function DashboardPage() {
   /*
    * First-run checklist sources.
    *
-   * Both are SMALL requests (`per_page: 1`, a single profile row) and run
-   * CONCURRENTLY with the stats query above, so the dashboard's total time is
-   * the slowest request rather than the sum — which matters because the API
-   * reads from a remote MySQL.
-   *
-   * They are only consulted to decide whether to show the checklist; once every
-   * step is done the component renders nothing at all.
+   * Profile is shared with the shell. Sales is requested only when the setup
+   * checklist is visible; neither request blocks the main dashboard stats.
    */
   const profileQuery = useApiQuery<ApiPharmacyProfile>(
     (signal) => api.profile(signal),
@@ -82,9 +77,11 @@ export function DashboardPage() {
   const lowPct = pct(low);
   const outPct = pct(out);
 
-  const statusLabels = [S.available, S.low_stock, S.out];
-  const statusData = [available, low, out];
-  const statusColors = ['--success', '--warning', '--danger'];
+  // Stable inputs prevent Chart.js destroying and recreating both charts
+  // when unrelated dashboard requests or checklist state update.
+  const statusLabels = useMemo(() => [S.available, S.low_stock, S.out], [S.available, S.low_stock, S.out]);
+  const statusData = useMemo(() => [available, low, out], [available, low, out]);
+  const statusColors = useMemo(() => ['--success', '--warning', '--danger'], []);
 
   const lowStockItems = data?.low_stock_items ?? [];
   /**

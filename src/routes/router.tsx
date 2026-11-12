@@ -26,6 +26,7 @@ const RegisterPage = lazyPage(() => import('@/features/auth/RegisterPage'));
  * issues no token and resets nothing, so it must never sit behind RequireAuth.
  */
 const ForgotPasswordPage = lazyPage(() => import('@/features/auth/ForgotPasswordPage'));
+const EmailRecoveryPage = lazyPage(() => import('@/features/auth/EmailRecoveryPage'));
 const PasswordChangePage = lazyPage(() => import('@/features/auth/PasswordChangePage'));
 
 // ── Pharmacy pages (split by feature area) ───────────────────────────────────
@@ -199,6 +200,14 @@ export const router = createBrowserRouter([
         ],
       },
 
+      {
+        element: <AuthLayout />,
+        errorElement: <RouteErrorBoundary />,
+        children: [
+          { path: '/account-recovery', element: <EmailRecoveryPage /> },
+          { path: '/reset-password', element: <EmailRecoveryPage /> },
+        ],
+      },
       {
         element: <RequireGuest />,
         errorElement: <RouteErrorBoundary />,

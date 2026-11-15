@@ -109,7 +109,7 @@ body.dark-mode .breadcrumb-nav a:hover { color: var(--teal-text); }
 }
 
 .main-content {
-    padding: 28px;
+    padding: clamp(12px, 1.2vw, 20px);
     flex: 1;
     min-width: 0;
 }

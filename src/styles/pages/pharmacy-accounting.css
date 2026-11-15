@@ -227,7 +227,7 @@ a.ac-kpi:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2
 .ac-table-summary b { color: var(--ac-ink); font-variant-numeric: tabular-nums; }
 
 /* خلية داخلية متعددة الأسطر (رقم + تسمية) */
-.ac-cell-stack { display: flex; flex-direction: column; gap: 2px; line-height: 1.35; }
+.ac-cell-stack { display: flex; flex-direction: column; gap: 2px; line-height: 1.35; white-space: nowrap; }
 
 /* ==========================================================
    أزرار صغيرة الأيقونة (view / print)
@@ -257,7 +257,7 @@ a.ac-kpi:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2
 /* ==========================================================
    الرسوم البيانية + تبويبات الفترة
    ========================================================== */
-.ac-chart-box { position: relative; height: 260px; }
+.ac-chart-box { position: relative; height: 220px; }
 .ac-range-tabs { display: inline-flex; gap: 4px; background: var(--ac-canvas); padding: 4px; border-radius: var(--ac-r-full); flex-wrap: wrap; }
 .ac-range-tab {
     padding: 6px 14px;

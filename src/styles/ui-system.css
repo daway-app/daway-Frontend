@@ -429,7 +429,7 @@ body {
     transition: box-shadow var(--tr-base), border-color var(--tr-base);
 }
 .ph-card-head {
-    padding: var(--sp-5) var(--sp-6);
+    padding: var(--sp-4) var(--sp-5);
     border-block-end: 1px solid var(--ph-line-soft);
 }
 
@@ -440,7 +440,7 @@ body {
 }
 
 .ph-card-body {
-    padding: var(--sp-5) var(--sp-6);
+    padding: var(--sp-4) var(--sp-5);
 }
 
 /* Consistent rhythm between stacked blocks on every page. */

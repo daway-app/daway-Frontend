@@ -55,7 +55,7 @@ html[dir="rtl"] .nav-section {
     width: var(--sidebar-width);
     height: 100vh;
     background: var(--sidebar-bg);
-    padding: 24px 16px;
+    padding: 18px 12px;
 
     display: flex;
     flex-direction: column;
@@ -98,7 +98,7 @@ body.dark-mode .sidebar-pro {
     display: flex;
     align-items: center;
     gap: 18px;
-    margin-bottom: 32px;
+    margin-bottom: 22px;
     padding: 0 4px;
     animation: sidebarSlideIn 0.5s var(--ease-smooth) both;
 }
@@ -149,7 +149,7 @@ body.dark-mode .sidebar-pro {
    مجمّعات التنقل والروابط
    ========================================== */
 .nav-section {
-    margin-bottom: 22px;
+    margin-bottom: 14px;
     animation: sidebarSlideIn 0.6s var(--ease-smooth) both;
 }
 
@@ -167,13 +167,13 @@ body.dark-mode .section-label { color: var(--ink-faint); }
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     text-decoration: none;
     border-radius: var(--ph-r-md);
     font-size: var(--fs-md);
     font-weight: 600;
     color: rgba(255, 255, 255, 0.85);
-    margin-bottom: 6px;
+    margin-bottom: 3px;
     position: relative;
     transition: all 0.25s var(--ease-smooth);
 }
@@ -600,6 +600,9 @@ body.dark-mode .confirm-modal-actions .modal-btn:hover { background: var(--teal-
         min-width: 0;
         align-items: center;
         gap: 4px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
     }
 
     .sidebar-logo-header { display: none; }
